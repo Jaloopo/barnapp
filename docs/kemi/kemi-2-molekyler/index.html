@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Molekyler — atomer som sätter ihop sig</title>
+<style>
+  :root {
+    --c-h: #7ec8e3;      /* väte — ljusblå */
+    --c-o: #e05c5c;      /* syre — röd */
+    --c-c: #333333;      /* kol — mörk */
+    --c-bg: #f4f8fb;
+    --c-surface: #ffffff;
+    --c-border: #d0dde8;
+    --c-text: #1a2a3a;
+    --c-muted: #6b7f90;
+    --c-ok: #4caf6e;
+    --c-warn: #f5a623;
+    --radius: 16px;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08);
+    --atom-size: 80px;
+    --transition: 300ms ease-out;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--c-bg);
+    color: var(--c-text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+    user-select: none;
+  }
+  /* ── Progress bar ── */
+  #progress {
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    padding: 18px 0 8px;
+  }
+  .prog-dot {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--c-border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700;
+    transition: background var(--transition), transform var(--transition);
+  }
+  .prog-dot.active { background: #4a90d9; color: #fff; transform: scale(1.2); }
+  .prog-dot.done { background: var(--c-ok); color: #fff; }
+
+  /* ── Step container ── */
+  #step-container {
+    width: 100%;
+    max-width: 900px;
+    flex: 1;
+    padding: 12px 16px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .step { display: none; width: 100%; flex-direction: column; align-items: center; gap: 16px; }
+  .step.active { display: flex; }
+  .step-title {
+    font-size: 1.4rem; font-weight: 700; text-align: center;
+    color: var(--c-text);
+  }
+  .step-sub {
+    font-size: 0.95rem; color: var(--c-muted); text-align: center;
+    max-width: 500px;
+  }
+
+  /* ── Atoms ── */
+  .atom {
+    width: var(--atom-size); height: var(--atom-size);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.85rem; color: #fff;
+    cursor: grab; touch-action: none;
+    box-shadow: var(--shadow);
+    position: relative;
+    transition: transform 200ms, box-shadow 200ms;
+  }
+  .atom:hover { transform: scale(1.08); }
+  .atom.dragging { opacity: 0.7; cursor: grabbing; }
+  .atom[data-type="H"] { background: var(--c-h); color: #1a2a3a; }
+  .atom[data-type="O"] { background: var(--c-o); }
+  .atom[data-type="C"] { background: var(--c-c); }
+
+  /* ── Atom box ── */
+  .atom-box {
+    background: var(--c-surface);
+    border: 2px solid var(--c-border);
+    border-radius: var(--radius);
+    padding: 16px;
+    display: flex; flex-direction: column; gap: 12px; align-items: center;
+    min-width: 120px;
+  }
+  .atom-slot { position: relative; cursor: grab; }
+  .atom-count {
+    font-size: 0.8rem; font-weight: 700;
+    color: var(--c-muted); text-align: center;
+  }
+
+  /* ── Build zone ── */
+  .build-zone {
+    width: 240px; height: 240px;
+    border: 3px dashed var(--c-border);
+    border-radius: 50%;
+    background: rgba(255,255,255,0.7);
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+    gap: 8px; position: relative;
+    transition: border-color 200ms, background 200ms;
+  }
+  .build-zone.drag-over {
+    border-color: #4a90d9;
+    background: rgba(74,144,217,0.08);
+  }
+
+  /* ── Result box ── */
+  .result-box {
+    background: var(--c-surface);
+    border: 2px solid var(--c-border);
+    border-radius: var(--radius);
+    padding: 16px; min-width: 160px; min-height: 160px;
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 8px; text-align: center;
+  }
+  .result-label { font-size: 1rem; font-weight: 700; }
+
+  /* ── Choice buttons ── */
+  .choice-btn {
+    width: 100%; max-width: 420px;
+    padding: 16px 20px;
+    border: 2px solid var(--c-border);
+    border-radius: var(--radius);
+    background: var(--c-surface);
+    font-size: 1rem; font-weight: 600; cursor: pointer;
+    text-align: left; color: var(--c-text);
+    transition: border-color 200ms, background 200ms, transform 200ms;
+    touch-action: manipulation;
+  }
+  .choice-btn:hover { border-color: #4a90d9; background: #f0f6ff; }
+  .choice-btn.selected { border-color: #4a90d9; background: #e8f0fb; }
+
+  /* ── Next button ── */
+  .next-btn {
+    margin-top: 8px;
+    padding: 14px 40px;
+    border: none; border-radius: 40px;
+    background: #4a90d9; color: #fff;
+    font-size: 1.05rem; font-weight: 700; cursor: pointer;
+    box-shadow: var(--shadow);
+    transition: transform 200ms, background 200ms;
+    touch-action: manipulation;
+  }
+  .next-btn:hover { background: #357abd; transform: scale(1.04); }
+  .next-btn:disabled { background: var(--c-border); cursor: not-allowed; transform: none; }
+
+  /* ── Feedback text ── */
+  .feedback {
+    font-size: 1rem; font-weight: 600;
+    text-align: center; padding: 10px 16px;
+    border-radius: 12px; max-width: 400px;
+    opacity: 0; transition: opacity 300ms;
+  }
+  .feedback.show { opacity: 1; }
+  .feedback.ok { background: #e6f9ee; color: #2d7a47; }
+  .feedback.err { background: #fde8e8; color: #c0392b; }
+  .feedback.info { background: #e8f0fb; color: #2a5590; }
+
+  /* ── Molecule display ── */
+  .molecule { display: flex; align-items: center; gap: 4px; }
+  .mol-atom {
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; color: #fff; font-size: 0.75rem;
+    box-shadow: var(--shadow);
+  }
+  .mol-atom.sm { width: 40px; height: 40px; font-size: 0.7rem; }
+  .mol-atom.md { width: 54px; height: 54px; }
+  .mol-atom.lg { width: 66px; height: 66px; }
+  .mol-atom[data-type="H"] { background: var(--c-h); color: #1a2a3a; }
+  .mol-atom[data-type="O"] { background: var(--c-o); }
+  .mol-atom[data-type="C"] { background: var(--c-c); }
+
+  /* ── Gallery ── */
+  #gallery {
+    display: flex; flex-wrap: wrap; gap: 12px;
+    justify-content: center; padding: 8px;
+  }
+  .gallery-card {
+    background: var(--c-surface);
+    border: 2px solid var(--c-ok);
+    border-radius: var(--radius);
+    padding: 10px 16px;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    font-size: 0.85rem; font-weight: 700;
+    animation: pop-in 300ms ease-out;
+  }
+
+  /* ── Layout helpers ── */
+  .row { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; justify-content: center; }
+  .col { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+
+  /* ── Animations ── */
+  @keyframes pop-in {
+    0% { transform: scale(0.5); opacity: 0; }
+    70% { transform: scale(1.1); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  @keyframes wiggle {
+    0%,100% { transform: translateX(0); }
+    20% { transform: translateX(-8px); }
+    40% { transform: translateX(8px); }
+    60% { transform: translateX(-5px); }
+    80% { transform: translateX(5px); }
+  }
+  @keyframes glow-pulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(245,166,35,0); }
+    50% { box-shadow: 0 0 0 10px rgba(245,166,35,0.35); }
+  }
+  @keyframes bounce-all {
+    0%,100% { transform: translateY(0); }
+    40% { transform: translateY(-10px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+  @media (max-width: 600px) {
+    .row { flex-direction: column; }
+    .build-zone { width: 180px; height: 180px; }
+    :root { --atom-size: 64px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Progress -->
+<nav id="progress" aria-label="Framsteg">
+  <div class="prog-dot active" id="pd1">1</div>
+  <div class="prog-dot" id="pd2">2</div>
+  <div class="prog-dot" id="pd3">3</div>
+  <div class="prog-dot" id="pd4">4</div>
+  <div class="prog-dot" id="pd5">5</div>
+  <div class="prog-dot" id="pd6">6</div>
+</nav>
+
+<main id="step-container">
+
+  <!-- STEG 1 -->
+  <section class="step active" id="step1" aria-label="Steg 1">
+    <p class="step-sub">Idag ska du bygga molekyler!</p>
+    <h1 class="step-title">Vattenhemligheten</h1>
+    <div class="row" style="margin:8px 0 4px">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+        <div style="width:60px;height:60px;border-radius:50%;background:var(--c-h);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8rem;color:#1a2a3a;box-shadow:var(--shadow)">Väte</div>
+        <span style="font-size:0.8rem;color:var(--c-muted)">osynlig gas</span>
+      </div>
+      <span style="font-size:1.6rem;color:var(--c-muted)">+</span>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+        <div style="width:72px;height:72px;border-radius:50%;background:var(--c-o);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8rem;color:#fff;box-shadow:var(--shadow)">Syre</div>
+        <span style="font-size:0.8rem;color:var(--c-muted)">osynlig gas</span>
+      </div>
+      <span style="font-size:1.6rem;color:var(--c-muted)">=</span>
+      <span style="font-size:2rem">🤔</span>
+    </div>
+    <p style="text-align:center;max-width:420px;font-size:1rem;line-height:1.5">
+      Du dricker vatten varje dag. Väte är en osynlig gas. Syre är också en gas.<br>
+      <strong>Vad tror du händer om de möts?</strong>
+    </p>
+    <div id="s1-choices" class="col" style="width:100%;max-width:440px;gap:10px"></div>
+    <div class="feedback" id="s1-fb"></div>
+    <button class="next-btn" id="s1-next" disabled>Nästa →</button>
+  </section>
+
+  <!-- STEG 2 -->
+  <section class="step" id="step2" aria-label="Steg 2">
+    <h1 class="step-title">Bygg vatten</h1>
+    <p class="step-sub" id="s2-hint">Dra atomer till byggzonen. Vatten behöver 2 väte och 1 syre.</p>
+    <div class="row" style="align-items:flex-start;gap:24px">
+      <div class="atom-box" id="s2-atombox">
+        <div class="atom-count">Väte</div>
+        <div class="atom" data-type="H" id="s2-h1" tabindex="0">H</div>
+        <div class="atom" data-type="H" id="s2-h2" tabindex="0">H</div>
+        <div class="atom-count" style="margin-top:8px">Syre</div>
+        <div class="atom" data-type="O" id="s2-o1" tabindex="0">O</div>
+      </div>
+      <div class="build-zone" id="s2-zone" aria-label="Byggzon"></div>
+      <div class="result-box" id="s2-result">
+        <span style="color:var(--c-muted);font-size:0.9rem">Här visas din molekyl</span>
+      </div>
+    </div>
+    <div class="feedback" id="s2-fb"></div>
+    <button class="next-btn" id="s2-next" disabled>Nästa →</button>
+  </section>
+
+  <!-- STEG 3 -->
+  <section class="step" id="step3" aria-label="Steg 3">
+    <h1 class="step-title">Något helt nytt</h1>
+    <p class="step-sub">Tryck på varje för att se vad den är.</p>
+    <div class="row" id="s3-cols" style="align-items:flex-start;gap:20px;width:100%"></div>
+    <div class="feedback" id="s3-summary"></div>
+    <button class="next-btn" id="s3-next">Nästa →</button>
+  </section>
+
+  <!-- STEG 4 -->
+  <section class="step" id="step4" aria-label="Steg 4">
+    <h1 class="step-title">Bygg koldioxid</h1>
+    <p class="step-sub" id="s4-hint">Nu ska du bygga det du andas ut! Koldioxid behöver 1 kol och 2 syre.</p>
+    <div class="row" style="align-items:flex-start;gap:24px">
+      <div class="atom-box" id="s4-atombox">
+        <div class="atom-count">Kol</div>
+        <div class="atom" data-type="C" id="s4-c1" tabindex="0">C</div>
+        <div class="atom-count" style="margin-top:8px">Syre</div>
+        <div class="atom" data-type="O" id="s4-o1" tabindex="0">O</div>
+        <div class="atom" data-type="O" id="s4-o2" tabindex="0">O</div>
+      </div>
+      <div class="build-zone" id="s4-zone" aria-label="Byggzon"></div>
+      <div class="result-box" id="s4-result">
+        <span style="color:var(--c-muted);font-size:0.9rem">Här visas din molekyl</span>
+      </div>
+    </div>
+    <div class="feedback" id="s4-fb"></div>
+    <button class="next-btn" id="s4-next" disabled>Nästa →</button>
+  </section>
+
+  <!-- STEG 5 -->
+  <section class="step" id="step5" aria-label="Steg 5">
+    <h1 class="step-title">Molekylverkstad</h1>
+    <p class="step-sub">Vad kan du bygga? Dra atomer och testa!</p>
+    <div class="row" style="align-items:flex-start;gap:24px;width:100%">
+      <div class="atom-box" id="s5-atombox" style="min-width:100px">
+        <div class="atom-count">Väte</div>
+        <div class="atom" data-type="H" data-pool="H" id="s5-h" tabindex="0">H</div>
+        <div class="atom-count" style="margin-top:8px">Syre</div>
+        <div class="atom" data-type="O" data-pool="O" id="s5-o" tabindex="0">O</div>
+        <div class="atom-count" style="margin-top:8px">Kol</div>
+        <div class="atom" data-type="C" data-pool="C" id="s5-c" tabindex="0">C</div>
+      </div>
+      <div class="col" style="flex:1;gap:12px;align-items:center">
+        <div class="build-zone" id="s5-zone" style="width:260px;height:260px" aria-label="Byggzon"></div>
+        <button class="next-btn" id="s5-clear" style="background:#e05c5c;padding:10px 24px;font-size:0.9rem">Töm zon</button>
+      </div>
+    </div>
+    <div class="feedback" id="s5-fb"></div>
+    <div id="gallery" style="max-width:700px;width:100%"></div>
+    <button class="next-btn" id="s5-next">Avsluta →</button>
+  </section>
+
+  <!-- STEG 6 -->
+  <section class="step" id="step6" aria-label="Steg 6">
+    <h1 class="step-title">Vad vet du nu?</h1>
+    <div id="s6-recap" style="background:var(--c-surface);border:2px solid var(--c-border);border-radius:var(--radius);padding:16px 20px;max-width:460px;text-align:center;font-size:0.95rem;line-height:1.6"></div>
+    <p style="font-weight:700;font-size:1rem;text-align:center">Vad stämmer om molekyler?</p>
+    <div id="s6-choices" class="col" style="width:100%;max-width:440px;gap:10px"></div>
+    <div class="feedback" id="s6-fb"></div>
+    <div id="s6-gallery-wrap" style="display:none;width:100%;max-width:700px">
+      <p style="font-weight:700;text-align:center;margin-bottom:8px">Molekyler du byggt:</p>
+      <div id="s6-gallery"></div>
+    </div>
+    <div id="s6-end" style="display:none;text-align:center;max-width:440px;padding:12px">
+      <p style="font-size:1.05rem;font-weight:700;color:var(--c-ok)">Du lärde dig att atomer sätter ihop sig till molekyler — och att molekylen är något helt nytt! 🎉</p>
+    </div>
+  </section>
+
+</main>
+
+<script>
+'use strict';
+
+// ── State ──────────────────────────────────────────
+const state = {
+  currentStep: 1,
+  step1Choice: null,        // 'A','B','C'
+  step2Errors: 0,
+  step4Errors: 0,
+  step6Errors: 0,
+  builtMolecules: new Set() // molecule keys built in step 5
+};
+
+// ── Audio ──────────────────────────────────────────
+const AC = window.AudioContext || window.webkitAudioContext;
+let ac = null;
+function getAC() { if (!ac) ac = new AC(); return ac; }
+
+function playPop() {
+  try {
+    const a = getAC(); const o = a.createOscillator(); const g = a.createGain();
+    o.connect(g); g.connect(a.destination);
+    o.type='sine'; o.frequency.setValueAtTime(520,a.currentTime);
+    o.frequency.exponentialRampToValueAtTime(380,a.currentTime+0.18);
+    g.gain.setValueAtTime(0.22,a.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,a.currentTime+0.2);
+    o.start(a.currentTime); o.stop(a.currentTime+0.2);
+  } catch(e){}
+}
+function playBlub() {
+  try {
+    const a = getAC(); const o = a.createOscillator(); const g = a.createGain();
+    o.connect(g); g.connect(a.destination);
+    o.type='sine'; o.frequency.setValueAtTime(200,a.currentTime);
+    o.frequency.exponentialRampToValueAtTime(120,a.currentTime+0.14);
+    g.gain.setValueAtTime(0.18,a.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,a.currentTime+0.15);
+    o.start(a.currentTime); o.stop(a.currentTime+0.15);
+  } catch(e){}
+}
+function playPling() {
+  try {
+    const a = getAC(); const o = a.createOscillator(); const g = a.createGain();
+    o.connect(g); g.connect(a.destination);
+    o.type='triangle'; o.frequency.setValueAtTime(440,a.currentTime);
+    o.frequency.exponentialRampToValueAtTime(660,a.currentTime+0.22);
+    g.gain.setValueAtTime(0.2,a.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,a.currentTime+0.25);
+    o.start(a.currentTime); o.stop(a.currentTime+0.25);
+  } catch(e){}
+}
+function playDoublePop() {
+  playPop();
+  setTimeout(playPop, 160);
+}
+
+// ── Helpers ────────────────────────────────────────
+function showFeedback(el, msg, type) {
+  el.textContent = msg; el.className = 'feedback show ' + type;
+}
+function hideFeedback(el) { el.className = 'feedback'; }
+
+function makeMoleculeHTML(key) {
+  const configs = {
+    H2O: `<div class="molecule">
+      <div class="mol-atom sm" data-type="H">H</div>
+      <div class="mol-atom md" data-type="O">O</div>
+      <div class="mol-atom sm" data-type="H">H</div>
+    </div>`,
+    CO2: `<div class="molecule">
+      <div class="mol-atom sm" data-type="O">O</div>
+      <div class="mol-atom md" data-type="C">C</div>
+      <div class="mol-atom sm" data-type="O">O</div>
+    </div>`,
+    H2: `<div class="molecule">
+      <div class="mol-atom sm" data-type="H">H</div>
+      <div class="mol-atom sm" data-type="H">H</div>
+    </div>`,
+    O2: `<div class="molecule">
+      <div class="mol-atom sm" data-type="O">O</div>
+      <div class="mol-atom sm" data-type="O">O</div>
+    </div>`,
+    CH4: `<div class="molecule">
+      <div class="mol-atom sm" data-type="H">H</div>
+      <div class="mol-atom sm" data-type="H">H</div>
+      <div class="mol-atom md" data-type="C">C</div>
+      <div class="mol-atom sm" data-type="H">H</div>
+      <div class="mol-atom sm" data-type="H">H</div>
+    </div>`
+  };
+  return configs[key] || '';
+}
+
+// molecule names
+const molNames = { H2:'Vätgas', O2:'Syrgas', H2O:'Vatten', CO2:'Koldioxid', CH4:'Metan' };
+const molFun   = { H2:'', O2:'', H2O:'Du kan dricka den!', CO2:'Det andas du ut!', CH4:'Finns i kossornas fisar!' };
+
+// ── STEP 1 ─────────────────────────────────────────
+function initStep1() {
+  const choices = [
+    { k:'A', t:'De blandas till en ny gas' },
+    { k:'B', t:'De sätter ihop sig till något nytt' },
+    { k:'C', t:'Ingenting' }
+  ];
+  const box = document.getElementById('s1-choices');
+  const fb  = document.getElementById('s1-fb');
+  const nxt = document.getElementById('s1-next');
+  choices.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.textContent = c.k + ')  ' + c.t;
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#s1-choices .choice-btn').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+      state.step1Choice = c.k;
+      showFeedback(fb, 'Spännande tanke! Låt oss testa.', 'info');
+      nxt.disabled = false;
+      playPop();
+    });
+    box.appendChild(btn);
+  });
+  nxt.addEventListener('click', () => goToStep(2));
+}
+
+// ── STEP 2 — drag-and-drop build H2O ──────────────
+function initStep2() {
+  const zone   = document.getElementById('s2-zone');
+  const result = document.getElementById('s2-result');
+  const fb     = document.getElementById('s2-fb');
+  const nxt    = document.getElementById('s2-next');
+  const zoneAtoms = [];   // atoms dropped in zone
+  let errors = 0;
+
+  function refreshScaffold() {
+    if (errors === 1) {
+      // hint: glow on missing atom type
+      const hasH = zoneAtoms.filter(a=>a==='H').length;
+      const hasO = zoneAtoms.filter(a=>a==='O').length;
+      if (hasH < 2) document.querySelectorAll('#s2-atombox .atom[data-type="H"]').forEach(a=>a.style.animation='glow-pulse 1s 2');
+      if (hasO < 1) document.getElementById('s2-o1').style.animation='glow-pulse 1s 2';
+    }
+    if (errors === 2) {
+      document.getElementById('s2-hint').textContent = 'Vatten har 2 väte. Du har ' + zoneAtoms.filter(a=>a==='H').length + '. Prova igen!';
+    }
+    if (errors >= 3) {
+      // full scaffold: flash correct atoms
+      document.querySelectorAll('#s2-atombox .atom').forEach(a=>{ a.style.animation='glow-pulse 1s infinite'; });
+    }
+  }
+
+  function checkZone() {
+    const h = zoneAtoms.filter(a=>a==='H').length;
+    const o = zoneAtoms.filter(a=>a==='O').length;
+    if (zoneAtoms.length < 3) return;
+    if (h===2 && o===1) {
+      // success
+      result.innerHTML = `${makeMoleculeHTML('H2O')}<div class="result-label">Vattenmolekyl!</div>`;
+      result.style.animation='pop-in 300ms ease-out';
+      showFeedback(fb, 'Du byggde en vattenmolekyl! 💧', 'ok');
+      nxt.disabled = false;
+      playPop();
+      document.querySelectorAll('#s2-atombox .atom').forEach(a=>{a.style.animation='';});
+    } else {
+      // wrong combo — trigger scaffolding
+      errors++; state.step2Errors = errors;
+      playBlub();
+      showFeedback(fb, 'Inte rätt kombination. Tryck på atomer i zonen för att ta bort dem.', 'err');
+      refreshScaffold();
+    }
+  }
+
+  setupDragDrop({
+    sources: ['s2-h1','s2-h2','s2-o1'],
+    zone,
+    onDrop(type) {
+      if (zoneAtoms.length >= 3) { playBlub(); return false; }
+      zoneAtoms.push(type);
+      checkZone();
+      return true;
+    },
+    onBadDrop: null
+  });
+
+  // Allow clicking atoms in zone to remove them
+  zone.addEventListener('click', e => {
+    if (e.target.classList.contains('atom') && zone.contains(e.target)) {
+      const type = e.target.dataset.type;
+      const idx = zoneAtoms.indexOf(type);
+      if (idx !== -1) zoneAtoms.splice(idx,1);
+      zone.removeChild(e.target);
+      hideFeedback(fb);
+      nxt.disabled = true;
+    }
+  });
+
+  nxt.addEventListener('click', () => goToStep(3));
+}
+
+// ── STEP 3 — compare properties ───────────────────
+function initStep3() {
+  const container = document.getElementById('s3-cols');
+  const summary   = document.getElementById('s3-summary');
+  const nxt       = document.getElementById('s3-next');
+  const items = [
+    { label:'Väte', type:'H', props:['Osynlig gas','Kan inte drickas','Väger lite'], size:52 },
+    { label:'Syre', type:'O', props:['Osynlig gas','Vi andas den','Väger lite'], size:66 },
+    { label:'Vatten', type:'H2O', props:['En vätska! 💧','Du kan dricka den!','Formar droppar'], size:null }
+  ];
+  let tapped = 0;
+  items.forEach(item => {
+    const col = document.createElement('div');
+    col.className = 'col';
+    col.style.cssText = 'background:var(--c-surface);border:2px solid var(--c-border);border-radius:var(--radius);padding:16px 18px;cursor:pointer;min-width:140px;max-width:200px;flex:1;transition:border-color 300ms,transform 300ms';
+    let atomHTML = item.type === 'H2O'
+      ? makeMoleculeHTML('H2O')
+      : `<div class="mol-atom" data-type="${item.type}" style="width:${item.size}px;height:${item.size}px">${item.label}</div>`;
+    col.innerHTML = `<div style="display:flex;justify-content:center;margin-bottom:8px">${atomHTML}</div>
+      <div style="font-weight:700;text-align:center;margin-bottom:8px">${item.label}</div>
+      <ul id="props-${item.type}" style="list-style:none;opacity:0;transition:opacity 300ms;font-size:0.85rem;color:var(--c-muted)">
+        ${item.props.map(p=>`<li style="padding:3px 0">• ${p}</li>`).join('')}
+      </ul>`;
+    col.addEventListener('click', () => {
+      if (col.dataset.tapped) return;
+      col.dataset.tapped = '1';
+      col.style.borderColor = item.type==='H2O' ? 'var(--c-ok)' : '#4a90d9';
+      col.style.transform = 'scale(1.04)';
+      col.querySelector('ul').style.opacity = '1';
+      playPop();
+      tapped++;
+      if (tapped === 3) {
+        setTimeout(() => {
+          showFeedback(summary, 'Molekylen är något helt nytt! Vatten är inte bara väte och syre bredvid varandra.', 'ok');
+        }, 300);
+      }
+    });
+    container.appendChild(col);
+  });
+  nxt.addEventListener('click', () => goToStep(4));
+}
+
+// ── DRAG-AND-DROP ENGINE ───────────────────────────
+function setupDragDrop({ sources, zone, onDrop, onBadDrop }) {
+  let dragging = null;
+  let ghost = null;
+  let ox = 0, oy = 0;
+
+  function createGhost(el, cx, cy) {
+    ghost = el.cloneNode(true);
+    ghost.style.cssText = `position:fixed;z-index:1000;pointer-events:none;width:${el.offsetWidth}px;height:${el.offsetHeight}px;border-radius:50%;opacity:0.85;transition:none;left:${cx - el.offsetWidth/2}px;top:${cy - el.offsetHeight/2}px`;
+    document.body.appendChild(ghost);
+  }
+  function moveGhost(cx, cy) {
+    if (!ghost) return;
+    ghost.style.left = (cx - ghost.offsetWidth/2) + 'px';
+    ghost.style.top  = (cy - ghost.offsetHeight/2) + 'px';
+  }
+  function removeGhost() { if (ghost) { document.body.removeChild(ghost); ghost = null; } }
+
+  function isOverZone(cx, cy) {
+    const r = zone.getBoundingClientRect();
+    return cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom;
+  }
+
+  sources.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('pointerdown', e => {
+      if (el.dataset.used) return;
+      e.preventDefault();
+      dragging = el;
+      el.setPointerCapture(e.pointerId);
+      el.classList.add('dragging');
+      createGhost(el, e.clientX, e.clientY);
+      zone.classList.add('drag-over');
+    });
+  });
+
+  document.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    moveGhost(e.clientX, e.clientY);
+  });
+
+  document.addEventListener('pointerup', e => {
+    if (!dragging) return;
+    dragging.classList.remove('dragging');
+    zone.classList.remove('drag-over');
+    const type = dragging.dataset.type;
+
+    if (isOverZone(e.clientX, e.clientY)) {
+      const accepted = onDrop(type, dragging.id);
+      if (accepted !== false) {
+        // add small atom to zone
+        const clone = dragging.cloneNode(true);
+        clone.style.cssText = 'width:56px;height:56px;font-size:0.75rem;position:static;cursor:pointer';
+        clone.removeAttribute('id');
+        delete clone.dataset.used;
+        zone.appendChild(clone);
+        dragging.style.visibility = 'hidden';
+        dragging.dataset.used = '1';
+      } else {
+        // rejected drop — wiggle source back
+        const src = dragging;
+        src.style.animation = 'wiggle 400ms ease-out';
+        setTimeout(() => { src.style.animation=''; }, 400);
+        if (onBadDrop) onBadDrop(type);
+      }
+    } else {
+      // dropped outside zone — wiggle back
+      const src = dragging;
+      dragging = null;
+      removeGhost();
+      src.style.animation = 'wiggle 400ms ease-out';
+      setTimeout(() => { src.style.animation=''; }, 400);
+      return;
+    }
+    removeGhost();
+    dragging = null;
+  });
+}
+
+// ── STEP 4 — drag-and-drop build CO2 ──────────────
+function initStep4() {
+  const zone   = document.getElementById('s4-zone');
+  const result = document.getElementById('s4-result');
+  const fb     = document.getElementById('s4-fb');
+  const nxt    = document.getElementById('s4-next');
+  const zoneAtoms = [];
+  let errors = 0;
+
+  function refreshScaffold() {
+    if (errors === 1) {
+      const hasC = zoneAtoms.filter(a=>a==='C').length;
+      const hasO = zoneAtoms.filter(a=>a==='O').length;
+      if (hasC < 1) document.getElementById('s4-c1').style.animation='glow-pulse 1s 2';
+      if (hasO < 2) document.querySelectorAll('#s4-atombox .atom[data-type="O"]').forEach(a=>a.style.animation='glow-pulse 1s 2');
+    }
+    if (errors === 2) {
+      const hasO = zoneAtoms.filter(a=>a==='O').length;
+      document.getElementById('s4-hint').textContent = 'Koldioxid har 2 syre. Du har ' + hasO + '. Prova igen!';
+    }
+    if (errors >= 3) {
+      document.querySelectorAll('#s4-atombox .atom').forEach(a=>{ a.style.animation='glow-pulse 1s infinite'; });
+    }
+  }
+
+  function checkZone() {
+    const c = zoneAtoms.filter(a=>a==='C').length;
+    const o = zoneAtoms.filter(a=>a==='O').length;
+    if (zoneAtoms.length < 3) return;
+    if (c===1 && o===2) {
+      result.innerHTML = `${makeMoleculeHTML('CO2')}<div class="result-label">Koldioxid!</div><div style="font-size:0.85rem;color:var(--c-muted)">Det andas du ut varje gång.</div>`;
+      result.style.animation='pop-in 300ms ease-out';
+      showFeedback(fb, 'Du byggde koldioxid! Det andas du ut varje gång. 🌬️', 'ok');
+      nxt.disabled = false;
+      playPop();
+      document.querySelectorAll('#s4-atombox .atom').forEach(a=>{a.style.animation='';});
+    } else {
+      errors++; state.step4Errors=errors;
+      playBlub();
+      showFeedback(fb, 'Inte rätt kombination. Tryck på atomer i zonen för att ta bort dem.', 'err');
+      refreshScaffold();
+    }
+  }
+
+  setupDragDrop({
+    sources: ['s4-c1','s4-o1','s4-o2'],
+    zone,
+    onDrop(type) {
+      if (zoneAtoms.length >= 3) { playBlub(); return false; }
+      zoneAtoms.push(type);
+      checkZone();
+      return true;
+    },
+    onBadDrop: null
+  });
+
+  zone.addEventListener('click', e => {
+    if (e.target.classList.contains('atom') && zone.contains(e.target)) {
+      const type = e.target.dataset.type;
+      const idx = zoneAtoms.indexOf(type);
+      if (idx !== -1) zoneAtoms.splice(idx,1);
+      zone.removeChild(e.target);
+      hideFeedback(fb);
+      nxt.disabled = true;
+    }
+  });
+
+  nxt.addEventListener('click', () => goToStep(5));
+}
+
+// ── STEP 5 — free molecule workshop ───────────────
+function initStep5() {
+  const zone = document.getElementById('s5-zone');
+  const fb   = document.getElementById('s5-fb');
+  const nxt  = document.getElementById('s5-next');
+  const gallery = document.getElementById('gallery');
+  const poolAtoms = { H:0, O:0, C:0 };
+
+  // known molecules: sorted atom counts
+  const knownMols = {
+    'H2':    {H:2,O:0,C:0},
+    'O2':    {H:0,O:2,C:0},
+    'H2O':   {H:2,O:1,C:0},
+    'CO2':   {H:0,O:2,C:1},
+    'CH4':   {H:4,O:0,C:1}
+  };
+
+  function getKey() {
+    const h = poolAtoms.H, o = poolAtoms.O, c = poolAtoms.C;
+    for (const [k,v] of Object.entries(knownMols)) {
+      if (v.H===h && v.O===o && v.C===c) return k;
+    }
+    return null;
+  }
+
+  function resetZone() {
+    zone.innerHTML = '';
+    poolAtoms.H = 0; poolAtoms.O = 0; poolAtoms.C = 0;
+    // restore source atoms
+    ['s5-h','s5-o','s5-c'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.style.visibility=''; delete el.dataset.used; }
+    });
+  }
+
+  document.getElementById('s5-clear').addEventListener('click', () => {
+    resetZone(); hideFeedback(fb);
+  });
+
+  // Step 5 uses a custom drag handler — atoms are infinite pool (never hide)
+  const s5Sources = ['s5-h','s5-o','s5-c'];
+  let s5Dragging = null, s5Ghost = null;
+
+  function s5CreateGhost(el, cx, cy) {
+    s5Ghost = el.cloneNode(true);
+    s5Ghost.style.cssText = `position:fixed;z-index:1000;pointer-events:none;width:${el.offsetWidth}px;height:${el.offsetHeight}px;border-radius:50%;opacity:0.85;transition:none;left:${cx-el.offsetWidth/2}px;top:${cy-el.offsetHeight/2}px`;
+    document.body.appendChild(s5Ghost);
+  }
+  function s5RemoveGhost() { if(s5Ghost){document.body.removeChild(s5Ghost);s5Ghost=null;} }
+  function s5IsOverZone(cx,cy) { const r=zone.getBoundingClientRect(); return cx>=r.left&&cx<=r.right&&cy>=r.top&&cy<=r.bottom; }
+
+  s5Sources.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      s5Dragging = el;
+      el.setPointerCapture(e.pointerId);
+      el.classList.add('dragging');
+      zone.classList.add('drag-over');
+      s5CreateGhost(el, e.clientX, e.clientY);
+    });
+  });
+
+  document.addEventListener('pointermove', e => {
+    if (!s5Dragging || !s5Ghost) return;
+    s5Ghost.style.left = (e.clientX - s5Ghost.offsetWidth/2) + 'px';
+    s5Ghost.style.top  = (e.clientY - s5Ghost.offsetHeight/2) + 'px';
+  });
+
+  document.addEventListener('pointerup', e => {
+    if (!s5Dragging) return;
+    s5Dragging.classList.remove('dragging');
+    zone.classList.remove('drag-over');
+    const type = s5Dragging.dataset.type;
+    s5RemoveGhost();
+
+    if (s5IsOverZone(e.clientX, e.clientY)) {
+      const total = poolAtoms.H + poolAtoms.O + poolAtoms.C;
+      if (total >= 5) { playBlub(); s5Dragging=null; return; }
+      poolAtoms[type]++;
+      // add visual in zone
+      const clone = s5Dragging.cloneNode(true);
+      clone.style.cssText='width:56px;height:56px;font-size:0.75rem;position:static;cursor:pointer';
+      clone.removeAttribute('id');
+      zone.appendChild(clone);
+      const key = getKey();
+      if (key) {
+        if (!state.builtMolecules.has(key)) {
+          state.builtMolecules.add(key);
+          const card = document.createElement('div');
+          card.className = 'gallery-card';
+          card.innerHTML = `${makeMoleculeHTML(key)}<div>${molNames[key]}</div><div style="font-size:0.75rem;color:var(--c-muted)">${molFun[key]}</div>`;
+          gallery.appendChild(card);
+          playDoublePop();
+          showFeedback(fb, molNames[key] + '! ' + molFun[key], 'ok');
+        } else {
+          playPop();
+          showFeedback(fb, 'Den har du redan byggt! Prova en annan kombination.', 'info');
+        }
+        setTimeout(resetZone, 900);
+      }
+    }
+    s5Dragging = null;
+  });
+
+  // tap atom in zone to remove
+  zone.addEventListener('click', e => {
+    if (e.target.classList.contains('atom') && zone.contains(e.target)) {
+      const type = e.target.dataset.type;
+      poolAtoms[type] = Math.max(0, poolAtoms[type]-1);
+      zone.removeChild(e.target);
+    }
+  });
+
+  nxt.addEventListener('click', () => goToStep(6));
+}
+
+// ── STEP 6 — consolidation ─────────────────────────
+function initStep6() {
+  const nxt = document.getElementById('s6-next');
+}
+
+function renderStep6() {
+  const recap   = document.getElementById('s6-recap');
+  const choicesBox = document.getElementById('s6-choices');
+  const fb      = document.getElementById('s6-fb');
+  const galWrap = document.getElementById('s6-gallery-wrap');
+  const galEl   = document.getElementById('s6-gallery');
+  const endEl   = document.getElementById('s6-end');
+
+  // recall step1 answer
+  const choiceText = { A:'De blandas till en ny gas', B:'De sätter ihop sig till något nytt', C:'Ingenting' };
+  recap.innerHTML = `<strong>Du gissade:</strong> "${choiceText[state.step1Choice] || '?'}"<br><br>Nu vet du: atomer sätter ihop sig till molekyler. Molekyler är något helt nytt!`;
+
+  // choices
+  const options = [
+    { k:'A', t:'De är bara blandade atomer' },
+    { k:'B', t:'De är nya ämnen med nya egenskaper' },
+    { k:'C', t:'De är samma som atomer, fast större' }
+  ];
+  let errors = 0;
+  options.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.textContent = c.k + ')  ' + c.t;
+    btn.addEventListener('click', () => {
+      if (btn.dataset.locked) return;
+      if (c.k === 'B') {
+        btn.classList.add('selected');
+        btn.style.borderColor='var(--c-ok)';
+        showFeedback(fb, 'Precis! En vattenmolekyl är inte bara väte och syre bredvid varandra — det är något helt nytt.', 'ok');
+        playPop();
+        // bounce all gallery cards
+        choicesBox.querySelectorAll('.choice-btn').forEach(b=>b.dataset.locked='1');
+        document.querySelectorAll('.gallery-card').forEach(card=>{
+          card.style.animation='bounce-all 500ms ease-out';
+        });
+        galWrap.style.display='block';
+        // populate recap gallery
+        state.builtMolecules.forEach(key => {
+          const card = document.createElement('div');
+          card.className='gallery-card';
+          card.innerHTML=`${makeMoleculeHTML(key)}<div>${molNames[key]}</div>`;
+          galEl.appendChild(card);
+        });
+        endEl.style.display='block';
+      } else {
+        errors++; state.step6Errors=errors;
+        playBlub();
+        btn.classList.add('selected'); btn.style.borderColor='var(--c-warn)';
+        if (errors === 1) showFeedback(fb, 'Inte riktigt — tänk på vattendropparna du ser!', 'err');
+        if (errors === 2) showFeedback(fb, 'Ledtråd: vatten är flytande men väte och syre är gasformiga.', 'info');
+        if (errors >= 3) {
+          // highlight correct
+          choicesBox.querySelectorAll('.choice-btn').forEach(b=>{
+            if (b.textContent.includes('nya ämnen')) { b.style.animation='glow-pulse 1s 3'; }
+          });
+        }
+        setTimeout(()=>{ btn.classList.remove('selected'); btn.style.borderColor=''; },500);
+      }
+    });
+    choicesBox.appendChild(btn);
+  });
+}
+
+// ── Navigation ─────────────────────────────────────
+function goToStep(n) {
+  document.getElementById('step'+state.currentStep).classList.remove('active');
+  const pd = document.getElementById('pd'+state.currentStep);
+  pd.classList.remove('active'); pd.classList.add('done'); pd.textContent='✓';
+  state.currentStep = n;
+  document.getElementById('step'+n).classList.add('active');
+  document.getElementById('pd'+n).classList.add('active');
+  playPling();
+  window.scrollTo({top:0, behavior:'smooth'});
+  if (n === 6) renderStep6();
+}
+
+// ── INIT ───────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  initStep1();
+  initStep2();
+  initStep3();
+  initStep4();
+  initStep5();
+  initStep6();
+});
+</script>
+</body>
+</html>
