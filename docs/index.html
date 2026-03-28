@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Barnappen — Lär dig genom att utforska</title>
+<style>
+  :root {
+    --c-bg: #f4f8fb;
+    --c-surface: #ffffff;
+    --c-border: #d0dde8;
+    --c-text: #1a2a3a;
+    --c-muted: #6b7f90;
+    --radius: 16px;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--c-bg);
+    color: var(--c-text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 48px;
+  }
+
+  h1 {
+    font-size: clamp(1.5rem, 4vw, 2.2rem);
+    font-weight: 800;
+    margin-bottom: 8px;
+    text-align: center;
+  }
+  .subtitle {
+    color: var(--c-muted);
+    font-size: clamp(0.95rem, 2.5vw, 1.15rem);
+    margin-bottom: 36px;
+    text-align: center;
+  }
+
+  /* ── Subject group ── */
+  .subject-group {
+    width: 100%;
+    max-width: 700px;
+    margin-bottom: 32px;
+  }
+  .subject-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--c-muted);
+    margin-bottom: 12px;
+    padding-left: 4px;
+  }
+
+  /* ── App card ── */
+  .card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--c-surface);
+    border: 2px solid var(--c-border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 12px;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  }
+  .card:hover, .card:focus-visible {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+    border-color: var(--accent, var(--c-border));
+    outline: none;
+  }
+  .card:active {
+    transform: translateY(0);
+  }
+  .card[data-status="upcoming"] {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  .card-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    flex-shrink: 0;
+  }
+
+  .card-body { flex: 1; min-width: 0; }
+  .card-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .card-desc {
+    font-size: 0.88rem;
+    color: var(--c-muted);
+    line-height: 1.4;
+  }
+
+  .card-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 4px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .badge-klar {
+    background: #e8f5e9;
+    color: #2e7d32;
+  }
+  .badge-byggd {
+    background: #e3f2fd;
+    color: #1565c0;
+  }
+  .badge-design {
+    background: #fff3e0;
+    color: #e65100;
+  }
+  .badge-kommande {
+    background: #f5f5f5;
+    color: #9e9e9e;
+  }
+
+  /* ── Subject colors ── */
+  .kemi .card-icon { background: #e8f5e9; }
+  .kemi .card { --accent: #66bb6a; }
+  .el .card-icon { background: #fff8e1; }
+  .el .card { --accent: #ffc107; }
+  .astro .card-icon { background: #ede7f6; }
+  .astro .card { --accent: #9575cd; }
+
+  /* ── Responsive ── */
+  @media (max-width: 480px) {
+    .card { padding: 16px; gap: 12px; }
+    .card-icon { width: 48px; height: 48px; font-size: 24px; border-radius: 12px; }
+    .card-badge { font-size: 0.65rem; padding: 3px 8px; }
+  }
+
+  /* ── Reduced motion ── */
+  @media (prefers-reduced-motion: reduce) {
+    .card { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Barnappen</h1>
+<p class="subtitle">Utforska naturvetenskap steg f&ouml;r steg</p>
+
+<!-- Kemi -->
+<section class="subject-group kemi">
+  <div class="subject-label">Kemi</div>
+
+  <a class="card" href="kemi/kemi-2-molekyler/" style="--accent: #66bb6a;">
+    <div class="card-icon">&#x1F9EA;</div>
+    <div class="card-body">
+      <div class="card-title">Molekyler</div>
+      <div class="card-desc">Atomer som s&auml;tter ihop sig &mdash; bygg vatten, koldioxid och mer</div>
+    </div>
+    <span class="card-badge badge-klar">Klar</span>
+  </a>
+</section>
+
+<!-- Astronomi -->
+<section class="subject-group astro">
+  <div class="subject-label">Astronomi</div>
+
+  <div class="card" data-status="upcoming">
+    <div class="card-icon">&#x2B50;</div>
+    <div class="card-body">
+      <div class="card-title">Stj&auml;rnk&ouml;ket</div>
+      <div class="card-desc">Hur stj&auml;rnor lyser &mdash; v&auml;te blir helium genom fusion</div>
+    </div>
+    <span class="card-badge badge-kommande">Kommer snart</span>
+  </div>
+</section>
+
+<!-- El -->
+<section class="subject-group el">
+  <div class="subject-label">Elektricitet</div>
+
+  <div class="card" data-status="upcoming">
+    <div class="card-icon">&#x26A1;</div>
+    <div class="card-body">
+      <div class="card-title">Ledare och isolatorer</div>
+      <div class="card-desc">Varf&ouml;r leder metall str&ouml;m men inte tr&auml;?</div>
+    </div>
+    <span class="card-badge badge-design">Design</span>
+  </div>
+</section>
+
+</body>
+</html>
