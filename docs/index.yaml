@@ -45,7 +45,7 @@ appar:
 
   - id: el-1-ledare
     ämne: el
-    titel: Ledare och isolatorer
+    titel: Ledare och isolatorer — kan elektronen hoppa?
     ålder: 8-9
     koncept:
       - elektrisk ström
@@ -55,4 +55,32 @@ appar:
       - kemi-1-atomer
     unlocks:
       - el-2-kretsar
+    status: byggd
+
+  - id: el-2-kretsar
+    ämne: el
+    titel: Spänning — vad driver strömmen?
+    ålder: 8-9
+    koncept:
+      - spänning
+      - kretsar
+      - batteri
+    prerequisites:
+      - el-1-ledare
+    unlocks: []
+    status: byggd
+
+  - id: astro-1-fusion
+    ämne: astro
+    titel: Stjärnköket — väte blir helium genom fusion
+    ålder: 8-9
+    koncept:
+      - fusion
+      - väte och helium
+      - stjärnors energikälla
+      - solen är en stjärna
+    prerequisites:
+      - kemi-1-atomer
+    unlocks:
+      - astro-2-livscykel
     status: design

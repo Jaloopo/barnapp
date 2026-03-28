@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kan elektronen hoppa? — Ledare och isolatorer</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { overflow-x: hidden; }
+  </style>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState } = React;
+
+
+/* ============================================================
+   App 1 — "Kan elektronen hoppa?"
+   Koncept: Ledare vs Isolator
+   Ålder: 8–9 år | Enhet: iPad 13–14" | Med vuxen
+   Touch targets: ≥ 84 px, statiska
+   Pace: långsam — förklaring visas INTILL varje interaktion
+   Inga frågor om saker barnet inte kan sedan tidigare
+   ============================================================ */
+
+const STYLE = `
+  @keyframes fadeUp  { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes popIn   { from{opacity:0;transform:scale(0.88)} to{opacity:1;transform:scale(1)} }
+  @keyframes pulse   { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.08);opacity:0.7} }
+  @keyframes glow    { 0%,100%{box-shadow:0 0 10px #ffd700} 50%{box-shadow:0 0 28px #ffd700, 0 0 48px #ffd700aa} }
+  @keyframes glowG   { 0%,100%{box-shadow:0 0 10px #4ade80} 50%{box-shadow:0 0 28px #4ade80, 0 0 48px #4ade80aa} }
+  @keyframes glowR   { 0%,100%{box-shadow:0 0 10px #f87171} 50%{box-shadow:0 0 28px #f87171} }
+  @keyframes slideR  { from{transform:translateX(0)} to{transform:translateX(220px)} }
+  @keyframes bounceL { 0%{transform:translateX(0)} 40%{transform:translateX(180px)} 100%{transform:translateX(0)} }
+  @keyframes wiggle  { 0%,100%{transform:rotate(0deg)} 25%{transform:rotate(-6deg)} 75%{transform:rotate(6deg)} }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+`;
+
+/* ── Audio ─────────────────────────────────────────────────── */
+function snd(type) {
+  try {
+    const A = new (window.AudioContext || window.webkitAudioContext)();
+    const M = A.createGain(); M.gain.value = 0.28; M.connect(A.destination);
+    const tone = (f,t,d,tp="sine") => {
+      const o=A.createOscillator(), g=A.createGain();
+      o.type=tp; o.frequency.value=f; o.connect(g); g.connect(M);
+      g.gain.setValueAtTime(0.5,A.currentTime+t);
+      g.gain.exponentialRampToValueAtTime(0.001,A.currentTime+t+d);
+      o.start(A.currentTime+t); o.stop(A.currentTime+t+d+0.01);
+    };
+    if (type==="pop")     { tone(520,0,0.07); tone(360,0.05,0.1); }
+    if (type==="whoosh")  {
+      const o=A.createOscillator(),g=A.createGain(); o.type="sine";
+      o.frequency.setValueAtTime(90,A.currentTime);
+      o.frequency.exponentialRampToValueAtTime(700,A.currentTime+0.36);
+      o.connect(g); g.connect(M);
+      g.gain.setValueAtTime(0.25,A.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001,A.currentTime+0.36);
+      o.start(); o.stop(A.currentTime+0.37);
+    }
+    if (type==="thud")    { tone(160,0,0.06,"sawtooth"); tone(100,0.05,0.14,"sawtooth"); }
+    if (type==="ding")    { tone(900,0,0.4); tone(1140,0.07,0.3); }
+    if (type==="cascade") { [0,.07,.13,.19,.25].forEach((t,i)=>tone(300+i*90,t,0.14)); }
+  } catch(e){}
+}
+
+/* ── Shared UI ─────────────────────────────────────────────── */
+function Fox({ msg, green }) {
+  return (
+    <div style={{
+      background: green ? "rgba(74,222,128,0.09)" : "rgba(255,215,0,0.09)",
+      border: `2px solid ${green?"rgba(74,222,128,0.3)":"rgba(255,215,0,0.3)"}`,
+      borderRadius:18, padding:"16px 20px",
+      fontSize:17, lineHeight:1.7,
+      animation:"popIn 0.3s ease",
+    }}>🦊 {msg}</div>
+  );
+}
+
+function Adult({ msg }) {
+  return (
+    <div style={{
+      background:"rgba(99,179,237,0.07)",
+      border:"2px solid rgba(99,179,237,0.25)",
+      borderRadius:16, padding:"14px 18px",
+      fontSize:14, color:"#90cdf4", lineHeight:1.65,
+    }}>
+      <strong>Till vuxen 🧑‍🔬 </strong>{msg}
+    </div>
+  );
+}
+
+function Btn({ label, onClick, muted, full }) {
+  return (
+    <button onClick={onClick} style={{
+      padding:"20px 40px", borderRadius:22, border:"none",
+      background: muted ? "rgba(255,255,255,0.13)" : "#ffd700",
+      color: muted ? "#fff" : "#1a1a2e",
+      fontSize:19, fontWeight:800, cursor:"pointer", minHeight:66,
+      width: full?"100%":"auto",
+    }}>{label}</button>
+  );
+}
+
+function Progress({ step, total }) {
+  return (
+    <div style={{display:"flex",gap:8,justifyContent:"center",marginBottom:24}}>
+      {Array.from({length:total}).map((_,i)=>(
+        <div key={i} style={{
+          width:i===step?28:11, height:11, borderRadius:6,
+          background:i<step?"#4ade80":i===step?"#ffd700":"rgba(255,255,255,0.16)",
+          transition:"all 0.35s",
+        }}/>
+      ))}
+    </div>
+  );
+}
+
+/* ── Elektron-komponent (statisk, stor, tryckbar) ──────────── */
+function Electron({ size=72, color="#ffd700", label="e⁻", glowing, onClick, hint }) {
+  return (
+    <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8}}>
+      <div
+        onClick={onClick}
+        style={{
+          width:size, height:size, borderRadius:"50%",
+          background:`radial-gradient(circle at 35% 35%, ${color}dd, ${color}88)`,
+          animation: glowing ? "glow 1.6s ease-in-out infinite" : "none",
+          display:"flex",alignItems:"center",justifyContent:"center",
+          fontSize:size*0.2, fontWeight:900, color:"#000",
+          cursor:onClick?"pointer":"default",
+          userSelect:"none",
+          boxShadow:`0 0 16px ${color}66`,
+        }}
+      >{label}</div>
+      {hint && (
+        <p style={{fontSize:13,color:"rgba(255,255,255,0.45)",margin:0,animation:"pulse 1.6s ease infinite"}}>
+          {hint}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/* ── AtomDiagram (statisk) ─────────────────────────────────── */
+function AtomDiagram({ electrons=1, loose=false, label, dim }) {
+  const positions = [
+    {x:72,y:0}, {x:-72,y:0}, {x:0,y:72}, {x:0,y:-72}
+  ];
+  return (
+    <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:10}}>
+      <div style={{
+        position:"relative",
+        width:160, height:160,
+        opacity: dim ? 0.5 : 1,
+        transition:"opacity 0.4s",
+      }}>
+        {/* Ring */}
+        <div style={{
+          position:"absolute",top:"50%",left:"50%",
+          transform:"translate(-50%,-50%)",
+          width:150,height:150,borderRadius:"50%",
+          border:"1px solid rgba(255,255,255,0.14)",
+        }}/>
+        {/* Nucleus */}
+        <div style={{
+          position:"absolute",top:"50%",left:"50%",
+          transform:"translate(-50%,-50%)",
+          width:56,height:56,borderRadius:"50%",
+          background:"radial-gradient(circle at 35% 35%,#ff9500,#cc4400)",
+          boxShadow:"0 0 18px rgba(255,149,0,0.45)",
+          display:"flex",alignItems:"center",justifyContent:"center",
+          fontSize:10,fontWeight:700,
+        }}>Kärna</div>
+        {/* Electrons */}
+        {Array.from({length:electrons}).map((_,i)=>{
+          const p = positions[i];
+          return (
+            <div key={i} style={{
+              position:"absolute",
+              top:"50%",left:"50%",
+              transform:`translate(calc(-50% + ${p.x}px), calc(-50% + ${p.y}px))`,
+              width:32,height:32,borderRadius:"50%",
+              background: loose ? "rgba(255,215,0,0.72)" : "#ffd700",
+              border: loose ? "2px dashed rgba(255,215,0,0.6)" : "2px solid #ffd700",
+              boxShadow: loose ? "0 0 8px rgba(255,215,0,0.3)" : "0 0 12px #ffd700aa",
+              display:"flex",alignItems:"center",justifyContent:"center",
+              fontSize:9,fontWeight:900,color:"#000",
+            }}>e⁻</div>
+          );
+        })}
+      </div>
+      {label && (
+        <div style={{fontSize:14,fontWeight:700,color:"rgba(255,255,255,0.7)"}}>{label}</div>
+      )}
+    </div>
+  );
+}
+
+/* ── Main App ───────────────────────────────────────────────── */
+function App1() {
+  const [step, setStep] = useState(0);
+  const next = () => setStep(s=>s+1);
+
+  /* S0 */
+  const [metEl,    setMetEl]    = useState(false);
+  const [tapCount, setTapCount] = useState(0);
+
+  /* S1 */
+  const [s1phase,  setS1phase]  = useState(0); // 0=intro,1=loose,2=tight,3=done
+
+  /* S2 */
+  const [testMat,  setTestMat]  = useState(null); // null|"copper"|"rubber"
+  const [elState,  setElState]  = useState("idle"); // idle|moving|pass|block
+  const [tested,   setTested]   = useState({copper:false,rubber:false});
+
+  /* S3 */
+  const [labelPick, setLabelPick] = useState({copper:null,rubber:null});
+  const [labelDone, setLabelDone] = useState(false);
+
+  /* S4 */
+  const allMats = [
+    {id:"silver", em:"🥈", lbl:"Silver",    leads:true },
+    {id:"järn",   em:"⚙️", lbl:"Järn",      leads:true },
+    {id:"trä",    em:"🪵", lbl:"Trä",       leads:false},
+    {id:"plast",  em:"🟫", lbl:"Plast",     leads:false},
+  ];
+  const [predictions, setPredictions] = useState({});
+  const [revealed,    setRevealed]    = useState({});
+
+  /* ── S0: Möt elektronen ──────────────────────────────────── */
+  function S0() {
+    return (
+      <div style={{animation:"fadeUp 0.4s ease"}}>
+        <Progress step={0} total={5}/>
+        <h2 style={{fontSize:28,fontWeight:800,margin:"0 0 10px"}}>Möt elektronen! ⚡</h2>
+        <p style={{fontSize:17,color:"rgba(255,255,255,0.7)",margin:"0 0 28px",lineHeight:1.7}}>
+          Inuti varje liten del av en metallsked, ett gummiband, och allt annat — sitter det ännu mindre saker. Tryck på bollen för att träffa en!
+        </p>
+
+        <div style={{
+          display:"flex",
+          flexDirection: metEl ? "row" : "column",
+          alignItems:"center",
+          gap:32,
+          justifyContent:"center",
+          marginBottom:28,
+          transition:"all 0.4s",
+        }}>
+          <Electron
+            size={metEl ? 80 : 110}
+            glowing={!metEl}
+            hint={!metEl?"👆 Tryck på bollen!":undefined}
+            onClick={()=>{
+              if (!metEl) { setMetEl(true); snd("pop"); }
+              setTapCount(c=>c+1);
+            }}
+          />
+
+          {metEl && (
+            <div style={{animation:"fadeUp 0.4s ease",flex:1}}>
+              <div style={{
+                background:"rgba(255,215,0,0.09)",
+                border:"2px solid rgba(255,215,0,0.28)",
+                borderRadius:20,padding:"20px 22px",
+              }}>
+                <p style={{fontSize:17,lineHeight:1.75,margin:0}}>
+                  Det här är en <strong style={{color:"#ffd700"}}>elektron</strong>.<br/><br/>
+                  Den är <em>jätteliten</em> — miljoner gånger mindre än ett hårstrå.<br/><br/>
+                  Elektroner sitter utanpå atomernas kärna — som en sky runt en liten boll.
+                </p>
+              </div>
+              {tapCount >= 2 && (
+                <div style={{marginTop:14,animation:"fadeUp 0.35s"}}>
+                  <Fox msg="Du träffade elektronen! Nu ska vi se vad den kan göra." green/>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {metEl && (
+          <div style={{animation:"fadeUp 0.4s ease"}}>
+            <AtomDiagram electrons={1} label="En atom med sin elektron"/>
+            <p style={{
+              textAlign:"center",fontSize:15,
+              color:"rgba(255,255,255,0.55)",margin:"10px 0 24px",lineHeight:1.6,
+            }}>
+              Den gula bollen utanpå är elektronen. Kärnan i mitten håller i den.
+            </p>
+            <div style={{textAlign:"center"}}>
+              <Btn label="Vad kan elektronen göra? →" onClick={next}/>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  /* ── S1: Elektroner sitter olika hårt ───────────────────── */
+  function S1() {
+    return (
+      <div style={{animation:"fadeUp 0.4s ease"}}>
+        <Progress step={1} total={5}/>
+        <h2 style={{fontSize:28,fontWeight:800,margin:"0 0 10px"}}>Elektroner sitter olika hårt 🤜</h2>
+        <p style={{fontSize:17,color:"rgba(255,255,255,0.7)",margin:"0 0 24px",lineHeight:1.7}}>
+          I vissa material sitter elektronen <em>löst</em> — nästan som att den väntar på att hoppa iväg. I andra material sitter den <em>hårt</em> fast och vägrar röra sig.
+        </p>
+
+        {/* Progression: visa kontrasten steg för steg */}
+        <div style={{display:"flex",gap:20,justifyContent:"center",flexWrap:"wrap",marginBottom:24}}>
+
+          {/* Koppar */}
+          <div
+            onClick={()=>{ if(s1phase<1){setS1phase(1); snd("pop");}}}
+            style={{
+              background:"rgba(245,158,11,0.1)",
+              border:`3px solid ${s1phase>=1?"#f59e0b":"rgba(245,158,11,0.3)"}`,
+              borderRadius:24,padding:"24px 20px",
+              cursor:s1phase<1?"pointer":"default",
+              minWidth:200,textAlign:"center",
+              transition:"all 0.3s",
+              opacity:s1phase<1?0.7:1,
+            }}
+          >
+            <div style={{fontSize:36,marginBottom:10}}>🔶</div>
+            <div style={{fontWeight:800,fontSize:17,marginBottom:14}}>Koppar</div>
+            <AtomDiagram electrons={1} loose={true}/>
+            {s1phase>=1 && (
+              <div style={{animation:"fadeUp 0.35s",marginTop:12}}>
+                <p style={{
+                  fontSize:14,lineHeight:1.65,
+                  color:"rgba(255,255,255,0.78)",margin:0,
+                  background:"rgba(245,158,11,0.12)",
+                  borderRadius:12,padding:"10px 12px",
+                }}>
+                  Elektronen sitter <strong>löst</strong>.<br/>
+                  Den kan hoppa till nästa atom!
+                </p>
+              </div>
+            )}
+            {s1phase<1 && (
+              <p style={{fontSize:13,color:"rgba(255,255,255,0.4)",marginTop:12,animation:"pulse 1.6s infinite"}}>
+                👆 Tryck för att se
+              </p>
+            )}
+          </div>
+
+          {/* Gummi */}
+          <div
+            onClick={()=>{ if(s1phase===1){setS1phase(2); snd("pop");}}}
+            style={{
+              background:"rgba(107,114,128,0.1)",
+              border:`3px solid ${s1phase>=2?"#6b7280":"rgba(107,114,128,0.3)"}`,
+              borderRadius:24,padding:"24px 20px",
+              cursor:s1phase===1?"pointer":"default",
+              minWidth:200,textAlign:"center",
+              transition:"all 0.3s",
+              opacity:s1phase<1?0.35:s1phase===1?0.78:1,
+            }}
+          >
+            <div style={{fontSize:36,marginBottom:10}}>⚫</div>
+            <div style={{fontWeight:800,fontSize:17,marginBottom:14}}>Gummi</div>
+            <AtomDiagram electrons={1} loose={false} dim={s1phase<1}/>
+            {s1phase>=2 && (
+              <div style={{animation:"fadeUp 0.35s",marginTop:12}}>
+                <p style={{
+                  fontSize:14,lineHeight:1.65,
+                  color:"rgba(255,255,255,0.78)",margin:0,
+                  background:"rgba(107,114,128,0.12)",
+                  borderRadius:12,padding:"10px 12px",
+                }}>
+                  Elektronen sitter <strong>hårt fast</strong>.<br/>
+                  Den kan inte hoppa någonstans.
+                </p>
+              </div>
+            )}
+            {s1phase===1 && (
+              <p style={{fontSize:13,color:"rgba(255,255,255,0.4)",marginTop:12,animation:"pulse 1.6s infinite"}}>
+                👆 Tryck för att se
+              </p>
+            )}
+          </div>
+        </div>
+
+        {s1phase>=2 && (
+          <div style={{display:"flex",flexDirection:"column",gap:14,animation:"fadeUp 0.4s"}}>
+            <Fox
+              msg="I koppar hoppar elektronen gärna vidare. I gummi vägrar den röra sig. Det är det som gör dem olika!"
+              green
+            />
+            <div style={{textAlign:"center"}}>
+              <Btn label="Nu provar vi själva! →" onClick={next}/>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  /* ── S2: Testa — knuffa elektronen ──────────────────────── */
+  function S2() {
+    const bothTested = tested.copper && tested.rubber;
+
+    const runTest = mat => {
+      if (elState !== "idle" || tested[mat]) return;
+      setTestMat(mat);
+      setElState("moving");
+      snd("whoosh");
+      setTimeout(()=>{
+        setElState(mat==="copper" ? "pass" : "block");
+        snd(mat==="copper" ? "cascade" : "thud");
+        setTested(t=>({...t,[mat]:true}));
+      }, 800);
+      setTimeout(()=> setElState("idle"), mat==="copper" ? 2200 : 2000);
+    };
+
+    const passAnim  = elState==="pass"  ? "slideR 0.9s ease forwards"  : "none";
+    const blockAnim = elState==="block" ? "bounceL 0.85s ease forwards" : "none";
+    const elColor   = elState==="pass"  ? "#4ade80" : "#ffd700";
+    const elGlow    = elState==="pass"  ? "glowG 1s infinite" : "glow 1s infinite";
+
+    return (
+      <div style={{animation:"fadeUp 0.4s ease"}}>
+        <Progress step={2} total={5}/>
+        <h2 style={{fontSize:28,fontWeight:800,margin:"0 0 10px"}}>Testa det själv! 🧪</h2>
+        <p style={{fontSize:17,color:"rgba(255,255,255,0.7)",margin:"0 0 24px",lineHeight:1.7}}>
+          Välj ett material — se om elektronen kan ta sig igenom!
+        </p>
+
+        {/* Experiment area */}
+        <div style={{
+          background:"rgba(0,0,0,0.35)",borderRadius:24,
+          padding:"28px 24px",marginBottom:22,
+          minHeight:130,
+        }}>
+          <div style={{
+            display:"flex",alignItems:"center",gap:0,
+            position:"relative",overflow:"hidden",
+          }}>
+            {/* Electron */}
+            <div style={{
+              width:60,height:60,borderRadius:"50%",flexShrink:0,
+              background:`radial-gradient(circle at 35% 35%, ${elColor}dd, ${elColor}66)`,
+              display:"flex",alignItems:"center",justifyContent:"center",
+              fontSize:13,fontWeight:900,color:"#000",
+              animation: elState==="pass"  ? `${passAnim}, ${elGlow}`
+                        : elState==="block" ? `${blockAnim}, ${elGlow}`
+                        : "glow 2s infinite",
+              zIndex:2,
+            }}>e⁻</div>
+
+            {/* Track */}
+            <div style={{flex:1,height:6,
+              background: elState==="pass"
+                ? "linear-gradient(90deg,#4ade8066,#4ade80)"
+                : "rgba(255,255,255,0.1)",
+              transition:"background 0.4s",
+              position:"relative",
+            }}>
+              {elState==="moving" && (
+                <div style={{
+                  position:"absolute",top:"50%",left:"50%",
+                  transform:"translate(-50%,-50%)",
+                  fontSize:13,color:"rgba(255,255,255,0.5)",whiteSpace:"nowrap",
+                }}>→ → →</div>
+              )}
+            </div>
+
+            {/* Material block */}
+            <div style={{
+              width:110,height:88,borderRadius:18,flexShrink:0,
+              background: testMat==="copper"
+                ? "rgba(245,158,11,0.18)"
+                : testMat==="rubber"
+                ? "rgba(107,114,128,0.18)"
+                : "rgba(255,255,255,0.06)",
+              border:`3px solid ${
+                testMat==="copper"?"#f59e0b":
+                testMat==="rubber"?"#6b7280":
+                "rgba(255,255,255,0.14)"}`,
+              display:"flex",flexDirection:"column",alignItems:"center",
+              justifyContent:"center",gap:4,fontSize:13,fontWeight:700,
+              transition:"all 0.3s",
+            }}>
+              {testMat==="copper" && <><span style={{fontSize:22}}>🔶</span>Koppar</>}
+              {testMat==="rubber" && <><span style={{fontSize:22}}>⚫</span>Gummi</>}
+              {!testMat && <span style={{fontSize:12,color:"rgba(255,255,255,0.3)",textAlign:"center"}}>Välj<br/>nedan</span>}
+            </div>
+          </div>
+
+          {/* Result label */}
+          <div style={{minHeight:36,marginTop:16,textAlign:"center"}}>
+            {elState==="pass"  && <p style={{fontSize:17,color:"#4ade80",fontWeight:700,animation:"fadeUp 0.3s",margin:0}}>✨ Elektronen kom igenom!</p>}
+            {elState==="block" && <p style={{fontSize:17,color:"#f87171",fontWeight:700,animation:"fadeUp 0.3s",margin:0}}>🚫 Elektronen studsade tillbaka!</p>}
+            {elState==="idle" && !testMat && <p style={{fontSize:14,color:"rgba(255,255,255,0.3)",margin:0}}>Välj ett material nedan</p>}
+          </div>
+        </div>
+
+        {/* Material buttons */}
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:18,marginBottom:22}}>
+          {[
+            {id:"copper",em:"🔶",lbl:"Koppar",c:"#f59e0b"},
+            {id:"rubber",em:"⚫",lbl:"Gummi", c:"#6b7280"},
+          ].map(m=>(
+            <button key={m.id} onClick={()=>runTest(m.id)} style={{
+              padding:"24px 16px",borderRadius:24,minHeight:96,
+              cursor: tested[m.id]||elState!=="idle" ? "default" : "pointer",
+              border:`3px solid ${
+                tested[m.id]
+                  ? (m.id==="copper"?"#4ade80":"#f87171")
+                  : "rgba(255,255,255,0.2)"}`,
+              background: tested[m.id]
+                ? (m.id==="copper"?"rgba(74,222,128,0.1)":"rgba(248,113,113,0.07)")
+                : "rgba(255,255,255,0.05)",
+              color:"#fff",fontSize:18,fontWeight:800,
+              display:"flex",flexDirection:"column",alignItems:"center",gap:8,
+              opacity: elState!=="idle"&&!tested[m.id] ? 0.45 : 1,
+              transition:"all 0.25s",
+            }}>
+              <span style={{fontSize:30}}>{m.em}</span>
+              {m.lbl}
+              {tested[m.id] && (
+                <span style={{
+                  fontSize:13,fontWeight:600,
+                  color:m.id==="copper"?"#4ade80":"#f87171",
+                }}>
+                  {m.id==="copper"?"✓ Kom igenom":"✗ Studsade"}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Summary after both tested */}
+        {bothTested && (
+          <div style={{display:"flex",flexDirection:"column",gap:14,animation:"fadeUp 0.4s"}}>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+              <div style={{
+                background:"rgba(74,222,128,0.09)",
+                border:"2px solid rgba(74,222,128,0.25)",
+                borderRadius:16,padding:"16px",textAlign:"center",fontSize:15,lineHeight:1.65,
+              }}>
+                🔶 <strong>Koppar</strong><br/>
+                Elektronen hoppade igenom
+              </div>
+              <div style={{
+                background:"rgba(248,113,113,0.07)",
+                border:"2px solid rgba(248,113,113,0.22)",
+                borderRadius:16,padding:"16px",textAlign:"center",fontSize:15,lineHeight:1.65,
+              }}>
+                ⚫ <strong>Gummi</strong><br/>
+                Elektronen studsade tillbaka
+              </div>
+            </div>
+            <Fox
+              msg="Precis vad vi förväntade oss! Koppars elektroner sitter löst — de kan hoppa vidare. Gummis sitter fast."
+              green
+            />
+            <div style={{textAlign:"center"}}>
+              <Btn label="Vad heter det? →" onClick={next}/>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  /* ── S3: Ledare och Isolator — etiketten efter upplevelsen ─ */
+  function S3() {
+    const copperCorrect = labelPick.copper === "ledare";
+    const rubberCorrect = labelPick.rubber === "isolator";
+    const bothCorrect   = copperCorrect && rubberCorrect;
+
+    const pick = (mat, val) => {
+      setLabelPick(p=>({...p,[mat]:val}));
+      if (
+        (mat==="copper" && val==="ledare" && labelPick.rubber==="isolator") ||
+        (mat==="rubber" && val==="isolator" && labelPick.copper==="ledare")
+      ) {
+        snd("ding"); setLabelDone(true);
+      } else {
+        snd("pop");
+      }
+    };
+
+    return (
+      <div style={{animation:"fadeUp 0.4s ease"}}>
+        <Progress step={3} total={5}/>
+        <h2 style={{fontSize:28,fontWeight:800,margin:"0 0 10px"}}>Vad heter det? 🏷️</h2>
+        <p style={{fontSize:17,color:"rgba(255,255,255,0.7)",margin:"0 0 8px",lineHeight:1.7}}>
+          Du såg vad som hände. Nu finns det fina ord för det!
+        </p>
+        <div style={{
+          display:"grid",gridTemplateColumns:"1fr 1fr",
+          gap:12,marginBottom:12,
+          background:"rgba(255,255,255,0.05)",
+          borderRadius:18,padding:"14px 16px",
+        }}>
+          <div style={{textAlign:"center",padding:"6px 0"}}>
+            <span style={{fontSize:22,fontWeight:800,color:"#4ade80"}}>Ledare</span>
+            <p style={{fontSize:14,color:"rgba(255,255,255,0.6)",margin:"4px 0 0",lineHeight:1.5}}>
+              Elektroner kan röra sig igenom
+            </p>
+          </div>
+          <div style={{textAlign:"center",padding:"6px 0"}}>
+            <span style={{fontSize:22,fontWeight:800,color:"#f87171"}}>Isolator</span>
+            <p style={{fontSize:14,color:"rgba(255,255,255,0.6)",margin:"4px 0 0",lineHeight:1.5}}>
+              Elektroner kan inte röra sig
+            </p>
+          </div>
+        </div>
+
+        <p style={{fontSize:16,margin:"20px 0 14px",fontWeight:600}}>
+          Vilket ord passar vilket material?
+        </p>
+
+        {/* Koppar */}
+        <div style={{marginBottom:16}}>
+          <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:8}}>
+            <span style={{fontSize:24}}>🔶</span>
+            <span style={{fontSize:17,fontWeight:700}}>Koppar är en…</span>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+            {["ledare","isolator"].map(v=>(
+              <button key={v} onClick={()=>pick("copper",v)} style={{
+                padding:"18px",borderRadius:18,minHeight:72,cursor:"pointer",
+                border:`3px solid ${
+                  labelPick.copper===v
+                    ? (v==="ledare"?"#4ade80":"#f87171")
+                    : "rgba(255,255,255,0.18)"}`,
+                background: labelPick.copper===v
+                  ? (v==="ledare"?"rgba(74,222,128,0.12)":"rgba(248,113,113,0.08)")
+                  : "rgba(255,255,255,0.04)",
+                color:"#fff",fontSize:16,fontWeight:800,
+                transition:"all 0.2s",
+              }}>
+                {v.charAt(0).toUpperCase()+v.slice(1)}
+                {labelPick.copper===v && (v==="ledare"?" ✓":" ✗")}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Gummi */}
+        <div style={{marginBottom:22}}>
+          <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:8}}>
+            <span style={{fontSize:24}}>⚫</span>
+            <span style={{fontSize:17,fontWeight:700}}>Gummi är en…</span>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+            {["ledare","isolator"].map(v=>(
+              <button key={v} onClick={()=>pick("rubber",v)} style={{
+                padding:"18px",borderRadius:18,minHeight:72,cursor:"pointer",
+                border:`3px solid ${
+                  labelPick.rubber===v
+                    ? (v==="isolator"?"#4ade80":"#f87171")
+                    : "rgba(255,255,255,0.18)"}`,
+                background: labelPick.rubber===v
+                  ? (v==="isolator"?"rgba(74,222,128,0.12)":"rgba(248,113,113,0.08)")
+                  : "rgba(255,255,255,0.04)",
+                color:"#fff",fontSize:16,fontWeight:800,
+                transition:"all 0.2s",
+              }}>
+                {v.charAt(0).toUpperCase()+v.slice(1)}
+                {labelPick.rubber===v && (v==="isolator"?" ✓":" ✗")}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Feedback */}
+        {labelPick.copper && labelPick.copper!=="ledare" && (
+          <div style={{marginBottom:10}}>
+            <Fox msg="Tänk på vad elektronen gjorde i koppar — den kom igenom! Det kallas att leda." />
+          </div>
+        )}
+        {labelPick.rubber && labelPick.rubber!=="isolator" && (
+          <div style={{marginBottom:10}}>
+            <Fox msg="Elektronen studsade tillbaka i gummi — den var isolerad, stängd inne. Det kallas isolator." />
+          </div>
+        )}
+
+        {bothCorrect && (
+          <div style={{display:"flex",flexDirection:"column",gap:14,animation:"fadeUp 0.4s"}}>
+            <Fox
+              msg="Perfekt! Ledare låter elektroner flöda. Isolatorer stoppar dem. Nu ska vi testa fler material!"
+              green
+            />
+            <div style={{textAlign:"center"}}>
+              <Btn label="Testa fler material →" onClick={next}/>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  /* ── S4: Utforska fler material ──────────────────────────── */
+  function S4() {
+    const allRevealed = allMats.every(m=>revealed[m.id]);
+
+    const reveal = id => {
+      if (revealed[id]) return;
+      const mat = allMats.find(m=>m.id===id);
+      snd(mat.leads ? "cascade" : "thud");
+      setRevealed(r=>({...r,[id]:true}));
+    };
+
+    return (
+      <div style={{animation:"fadeUp 0.4s ease"}}>
+        <Progress step={4} total={5}/>
+        <h2 style={{fontSize:28,fontWeight:800,margin:"0 0 10px"}}>Fler material! Vad tror du? 🔍</h2>
+        <p style={{fontSize:17,color:"rgba(255,255,255,0.7)",margin:"0 0 22px",lineHeight:1.7}}>
+          Gissa först — är det en ledare eller isolator? Tryck sedan för att se!
+        </p>
+
+        <div style={{display:"flex",flexDirection:"column",gap:16,marginBottom:24}}>
+          {allMats.map(m=>{
+            const pred   = predictions[m.id];
+            const done   = revealed[m.id];
+            const correct = pred===undefined ? null : (pred==="ledare")===m.leads;
+
+            return (
+              <div key={m.id} style={{
+                background:"rgba(255,255,255,0.05)",
+                border:`2px solid ${
+                  done
+                    ? (m.leads?"rgba(74,222,128,0.35)":"rgba(248,113,113,0.3)")
+                    : "rgba(255,255,255,0.14)"}`,
+                borderRadius:22,padding:"18px 20px",
+                transition:"border 0.3s",
+              }}>
+                {/* Top row: material + result */}
+                <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:pred||done?14:0}}>
+                  <span style={{fontSize:30,flexShrink:0}}>{m.em}</span>
+                  <span style={{fontSize:18,fontWeight:800,flex:1}}>{m.lbl}</span>
+                  {done && (
+                    <div style={{
+                      padding:"8px 14px",borderRadius:12,
+                      background: m.leads?"rgba(74,222,128,0.12)":"rgba(248,113,113,0.09)",
+                      fontSize:14,fontWeight:700,
+                      color: m.leads?"#4ade80":"#f87171",
+                      animation:"fadeUp 0.3s",
+                    }}>
+                      {m.leads?"✓ Ledare":"✗ Isolator"}
+                    </div>
+                  )}
+                </div>
+
+                {/* Guess buttons */}
+                {!done && (
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
+                    {["ledare","isolator"].map(v=>(
+                      <button key={v} onClick={()=>setPredictions(p=>({...p,[m.id]:v}))} style={{
+                        padding:"14px",borderRadius:16,minHeight:62,cursor:"pointer",
+                        border:`2px solid ${
+                          pred===v
+                            ? (v==="ledare"?"rgba(74,222,128,0.6)":"rgba(248,113,113,0.6)")
+                            : "rgba(255,255,255,0.16)"}`,
+                        background: pred===v
+                          ? (v==="ledare"?"rgba(74,222,128,0.1)":"rgba(248,113,113,0.07)")
+                          : "rgba(255,255,255,0.04)",
+                        color:"#fff",fontSize:15,fontWeight:700,
+                        transition:"all 0.2s",
+                      }}>
+                        {v==="ledare"?"⚡ Ledare":"🚫 Isolator"}
+                        {pred===v?" ✓":""}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Reveal button */}
+                {pred && !done && (
+                  <button onClick={()=>reveal(m.id)} style={{
+                    width:"100%",padding:"14px",borderRadius:16,
+                    border:"2px solid #ffd700",
+                    background:"rgba(255,215,0,0.12)",
+                    color:"#ffd700",fontSize:15,fontWeight:800,
+                    cursor:"pointer",minHeight:54,
+                    animation:"pulse 1.4s ease infinite",
+                  }}>
+                    👆 Se svaret!
+                  </button>
+                )}
+
+                {/* Explanation after reveal */}
+                {done && (
+                  <p style={{
+                    fontSize:14,lineHeight:1.65,
+                    color:"rgba(255,255,255,0.65)",
+                    margin:0,
+                    animation:"fadeUp 0.35s",
+                  }}>
+                    {m.leads
+                      ? `${m.em} ${m.lbl} är ett metall — elektroner sitter löst och kan hoppa vidare.`
+                      : `${m.em} ${m.lbl} håller elektroner hårt fast — de kan inte röra sig.`
+                    }
+                    {pred!==undefined && (
+                      <span style={{
+                        marginLeft:8,
+                        color: correct?"#4ade80":"rgba(255,255,255,0.42)",
+                        fontWeight:700,
+                      }}>
+                        {correct ? "(Du gissade rätt! 🎉)" : "(Kul att testa!)"}
+                      </span>
+                    )}
+                  </p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {allRevealed && (
+          <div style={{display:"flex",flexDirection:"column",gap:14,animation:"fadeUp 0.4s"}}>
+            <Fox
+              msg="Bra utforskat! Metaller (koppar, järn, silver) är oftast ledare. Plast, gummi och trä är isolatorer."
+              green
+            />
+            <Adult msg="Fråga gärna: Varför tror du att elsladdar är gjorda av koppar på insidan men plast på utsidan? Det är precis ledare + isolator i praktiken!" />
+            <div style={{textAlign:"center"}}>
+              <Btn label="Se vad du lärde dig →" onClick={next}/>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  /* ── S5: Summering ───────────────────────────────────────── */
+  function S5() {
+    return (
+      <div style={{animation:"fadeUp 0.4s ease",textAlign:"center"}}>
+        <Progress step={5} total={5}/>
+        <div style={{fontSize:64,marginBottom:12}}>⚡</div>
+        <h2 style={{fontSize:28,fontWeight:800,margin:"0 0 8px"}}>Du vet nu vad en ledare är!</h2>
+        <p style={{fontSize:16,color:"rgba(255,255,255,0.6)",marginBottom:28}}>
+          Tre saker du utforskade idag:
+        </p>
+
+        <div style={{display:"flex",flexDirection:"column",gap:14,marginBottom:28,textAlign:"left"}}>
+          {[
+            {em:"⚡",h:"Elektronen",         b:"En liten sak som sitter utanpå atomens kärna."},
+            {em:"🔶",h:"Ledare",             b:"I koppar och metaller sitter elektronen löst — den kan hoppa vidare."},
+            {em:"⚫",h:"Isolator",           b:"I gummi och plast sitter elektronen fast — den kan inte röra sig."},
+          ].map((c,i)=>(
+            <div key={i} style={{
+              background:"rgba(255,255,255,0.05)",
+              border:"2px solid rgba(255,215,0,0.2)",
+              borderRadius:18,padding:"16px 18px",
+              display:"flex",gap:14,alignItems:"flex-start",
+            }}>
+              <div style={{fontSize:30,flexShrink:0}}>{c.em}</div>
+              <div>
+                <div style={{fontWeight:800,fontSize:16,marginBottom:3}}>{c.h}</div>
+                <div style={{fontSize:14,color:"rgba(255,255,255,0.62)",lineHeight:1.6}}>{c.b}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{marginBottom:24}}>
+          <Adult msg="Nästa gång: Om elektroner kan hoppa i koppar — vad får dem att börja röra sig? Det handlar om App 2: Batteriet som backe." />
+        </div>
+
+        <Btn label="Börja om 🔄" onClick={()=>{
+          setStep(0);
+          setMetEl(false); setTapCount(0);
+          setS1phase(0);
+          setTestMat(null); setElState("idle"); setTested({copper:false,rubber:false});
+          setLabelPick({copper:null,rubber:null}); setLabelDone(false);
+          setPredictions({}); setRevealed({});
+        }} muted/>
+      </div>
+    );
+  }
+
+  /* ── Render ──────────────────────────────────────────────── */
+  const screens = [S0, S1, S2, S3, S4, S5];
+  const Screen  = screens[step];
+
+  return (
+    <>
+      <style>{STYLE}</style>
+      <div style={{
+        minHeight:"100vh",
+        background:"linear-gradient(145deg,#0f0c29,#1a1a2e,#16213e)",
+        display:"flex",alignItems:"flex-start",justifyContent:"center",
+        padding:"32px 24px",
+        fontFamily:"'Segoe UI',system-ui,sans-serif",
+        color:"#fff",
+      }}>
+        <div style={{width:"100%",maxWidth:640}}>
+          {/* Header */}
+          <div style={{
+            display:"flex",alignItems:"center",gap:10,
+            marginBottom:24,paddingBottom:16,
+            borderBottom:"1px solid rgba(255,255,255,0.1)",
+          }}>
+            <span style={{fontSize:26}}>⚡</span>
+            <div>
+              <div style={{fontSize:13,fontWeight:800,letterSpacing:1,color:"#ffd700",textTransform:"uppercase"}}>
+                App 1 — Kan elektronen hoppa?
+              </div>
+              <div style={{fontSize:12,color:"rgba(255,255,255,0.36)"}}>
+                Ledare och isolatorer
+              </div>
+            </div>
+          </div>
+
+          <Screen/>
+        </div>
+      </div>
+    </>
+  );
+}
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App1 />);
+  </script>
+</body>
+</html>
