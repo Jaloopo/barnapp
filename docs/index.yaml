@@ -28,6 +28,21 @@ appar:
       - el-1-ledare
     status: klar
 
+  - id: kemi-2-molekyler
+    ämne: kemi
+    titel: Molekyler — atomer som sätter ihop sig
+    ålder: 8-9
+    koncept:
+      - molekyler
+      - atomer binder ihop sig
+      - nya egenskaper
+    prerequisites:
+      - kemi-1-atomer
+    unlocks:
+      - astro-1-fusion
+      - kemi-3-blandningar
+    status: design
+
   - id: el-1-ledare
     ämne: el
     titel: Ledare och isolatorer
