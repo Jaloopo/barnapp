@@ -21,6 +21,8 @@ Trigger: användaren ger en idé, t.ex. "barnet vill lära sig om stjärnor"
 6. Läs `docs/principer.md` + designmallen i `docs/design-prompt.md`
 7. Skriv `design.md` i rätt mapp (`docs/[ämne]/[ämne]-[nr]-[slug]/design.md`)
 8. Uppdatera `docs/index.yaml` med ny entry (status: design)
+9. Commit + push
+10. Avsluta med copy-paste-instruktion till användaren: `Skicka detta i en ny session (Sonnet räcker): "bygg docs/[ämne]/[ämne]-[nr]-[slug]"`
 
 ### 2. Design → Bygg (Sonnet räcker)
 Trigger: användaren säger "bygg [mapp]" eller pekar på en design.md
