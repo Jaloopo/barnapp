@@ -3,6 +3,15 @@
 ## Vad detta repo är
 Interaktiva läroappar för barn 6–12, servade via GitHub Pages. Varje app är en enskild HTML-fil med inline CSS och JS.
 
+## AI-ekosystem
+Flera AI-verktyg används i olika roller:
+- **Claude Opus (Claude.ai)** — pedagogisk designer, genererar design.md och granskar upplägg
+- **Claude Sonnet (Claude Code)** — kodare, bygger index.html utifrån design.md
+- **NotebookLM** — RAG med källor om pedagogik, UX och matematik. Används av människan för att undersöka forskningsunderlag eller ämnesinnehåll innan/under design
+- **Perplexity** — websökning för aktuell fakta om ämnen i apparna
+
+Du (Sonnet) behöver inte känna till de andra verktygen — de används av människan utanför din session.
+
 ## Arbetsflöde
 1. Användaren lägger en `design.md` i rätt ämnesmapp (skapad i Claude.ai)
 2. Du läser `design.md` — den innehåller bindande beslut som inte får ändras
