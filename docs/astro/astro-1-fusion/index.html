@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stjärnköket — fusion i stjärnor</title>
+<style>
+:root {
+  --c-bg: #0a0a1a;
+  --c-text: #f0f0ff;
+  --c-sun: #ffcc00;
+  --c-hot: #ff4400;
+  --c-h: #66aaff;
+  --c-he: #ffd700;
+  --c-zone: rgba(255,100,0,0.25);
+  --c-correct: #44dd88;
+  --c-hint: #ffaa44;
+  --radius: 12px;
+  --touch: 80px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--c-bg);
+  color: var(--c-text);
+  font-family: system-ui, sans-serif;
+  font-size: 1.1rem;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  user-select: none;
+  overflow-x: hidden;
+}
+#app { width: 100%; max-width: 900px; padding: 16px; }
+#progress-bar {
+  display: flex; gap: 8px; justify-content: center;
+  margin-bottom: 20px;
+}
+.prog-dot {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: #333; border: 2px solid #555;
+  transition: background 0.3s, border-color 0.3s;
+}
+.prog-dot.done { background: var(--c-sun); border-color: var(--c-sun); }
+.prog-dot.active { background: var(--c-h); border-color: var(--c-h); }
+.step { display: none; flex-direction: column; align-items: center; gap: 20px; }
+.step.active { display: flex; }
+.step-text {
+  text-align: center; max-width: 600px;
+  font-size: 1.15rem; line-height: 1.5;
+}
+.btn {
+  background: #1e2a4a; color: var(--c-text);
+  border: 2px solid #445; border-radius: var(--radius);
+  padding: 0 20px; height: var(--touch); min-width: var(--touch);
+  font-size: 1.05rem; cursor: pointer; touch-action: manipulation;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+}
+.btn:active { transform: scale(0.96); }
+.btn.correct { background: #1a4a2e; border-color: var(--c-correct); }
+.btn.wrong  { background: #4a1a1a; border-color: var(--c-hint); }
+.btn-next {
+  background: var(--c-sun); color: #111;
+  border: none; border-radius: var(--radius);
+  padding: 14px 40px; font-size: 1.1rem; font-weight: bold;
+  cursor: pointer; touch-action: manipulation;
+  transition: opacity 0.2s, transform 0.1s;
+}
+.btn-next:active { transform: scale(0.97); }
+.feedback-msg {
+  text-align: center; max-width: 540px;
+  font-size: 1.05rem; min-height: 2em;
+  transition: opacity 0.3s;
+}
+.feedback-msg.hidden { opacity: 0; pointer-events: none; }
+.h-atom {
+  width: var(--touch); height: var(--touch); border-radius: 50%;
+  background: radial-gradient(circle, #99ccff, #3377cc);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: bold; font-size: 1.2rem; color: #fff;
+  cursor: grab; touch-action: none;
+  box-shadow: 0 0 12px #3377cc88;
+  transition: box-shadow 0.2s;
+}
+.h-atom.arrived { background: radial-gradient(circle,#ffe066,#ff8800); box-shadow: 0 0 20px #ffaa0088; }
+.h-atom.scaffold { animation: pulse-glow 1s infinite alternate; }
+@keyframes pulse-glow { from{box-shadow:0 0 8px #3377cc88} to{box-shadow:0 0 24px #66aaff} }
+.compare-card {
+  background: #1a2a3a; border-radius: var(--radius);
+  padding: 20px; min-width: 180px; max-width: 240px;
+  border: 2px solid #334;
+}
+.card-fb { margin-top: 8px; font-size: 0.9rem; text-align: center; min-height: 1.4em; }
+.flash-overlay {
+  position: fixed; inset: 0; background: #fff;
+  pointer-events: none; opacity: 0;
+  transition: opacity 0.1s;
+  z-index: 100;
+}
+@keyframes ripple {
+  from { transform: translate(-50%,-50%) scale(0); opacity: 0.7; }
+  to   { transform: translate(-50%,-50%) scale(4); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+@media (max-width: 600px) {
+  .step-text { font-size: 1rem; }
+  :root { --touch: 64px; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="progress-bar">
+    <div class="prog-dot active" id="dot-0"></div>
+    <div class="prog-dot" id="dot-1"></div>
+    <div class="prog-dot" id="dot-2"></div>
+    <div class="prog-dot" id="dot-3"></div>
+    <div class="prog-dot" id="dot-4"></div>
+    <div class="prog-dot" id="dot-5"></div>
+  </div>
+  <div id="step0" class="step active">
+    <div class="sun-wrap">
+      <svg id="sun-svg" width="160" height="160" viewBox="0 0 160 160" aria-label="Solen">
+        <circle cx="80" cy="80" r="60" fill="#ffcc00" filter="url(#glow)"/>
+        <defs>
+          <filter id="glow"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        </defs>
+      </svg>
+    </div>
+    <p class="step-text">Solen är vår närmaste stjärna. Den är otroligt het. Vad tror du gör den så het?</p>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center">
+      <button class="btn choice-btn" data-val="eld" style="font-size:1.3rem">Eld 🔥</button>
+      <button class="btn choice-btn" data-val="el" style="font-size:1.3rem">Elektricitet ⚡</button>
+      <button class="btn choice-btn" data-val="annat" style="font-size:1.3rem">Något annat 🤔</button>
+    </div>
+    <div class="feedback-msg hidden" id="s0-fb"></div>
+  </div>
+  <div id="step1" class="step">
+    <p class="step-text" id="s1-txt">Det här är solen. Tryck på förstoringsglaset!</p>
+    <div style="position:relative;width:260px;height:260px">
+      <svg id="sun2-svg" width="260" height="260" viewBox="0 0 260 260" style="transition:all 0.4s ease">
+        <defs>
+          <radialGradient id="sg0" cx="50%" cy="50%"><stop offset="0%" stop-color="#ffe066"/><stop offset="100%" stop-color="#ff8800"/></radialGradient>
+          <radialGradient id="sg1" cx="50%" cy="50%"><stop offset="0%" stop-color="#ff9900"/><stop offset="100%" stop-color="#cc3300"/></radialGradient>
+          <radialGradient id="sg2" cx="50%" cy="50%"><stop offset="0%" stop-color="#ff3300"/><stop offset="100%" stop-color="#880000"/></radialGradient>
+          <filter id="glow2"><feGaussianBlur stdDeviation="10" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        </defs>
+        <circle id="sun2-circle" cx="130" cy="130" r="100" fill="url(#sg0)" filter="url(#glow2)"/>
+        <g id="h-particles" style="display:none">
+          <!-- vätekärnor visas i zoom 3 -->
+        </g>
+      </svg>
+      <button id="zoom-btn" aria-label="Zooma in" style="position:absolute;bottom:8px;right:8px;width:52px;height:52px;border-radius:50%;border:none;background:#1e2a4a;font-size:1.6rem;cursor:pointer;touch-action:manipulation">🔍</button>
+      <div id="temp-bar" style="position:absolute;top:8px;left:8px;width:18px;background:#222;border-radius:9px;overflow:hidden;height:120px">
+        <div id="temp-fill" style="position:absolute;bottom:0;width:100%;height:30%;background:#ffcc00;transition:height 0.5s,background 0.5s;border-radius:9px"></div>
+      </div>
+    </div>
+    <div class="feedback-msg hidden" id="s1-fb"></div>
+    <button class="btn-next hidden" id="s1-next" onclick="goToStep(2)">Vidare →</button>
+  </div>
+  <div id="step2" class="step">
+    <p class="step-text">Hettan inne i stjärnan pressar ihop vätekärnorna. Dra dem till mitten!</p>
+    <div id="fusion-arena" style="position:relative;width:320px;height:320px;touch-action:none">
+      <div id="press-zone" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:100px;height:100px;border-radius:50%;background:var(--c-zone);border:3px solid rgba(255,100,0,0.5)"></div>
+      <div class="h-atom" id="h0" data-id="0" style="position:absolute;left:20px;top:20px"></div>
+      <div class="h-atom" id="h1" data-id="1" style="position:absolute;right:20px;top:20px"></div>
+      <div class="h-atom" id="h2" data-id="2" style="position:absolute;left:20px;bottom:20px"></div>
+      <div class="h-atom" id="h3" data-id="3" style="position:absolute;right:20px;bottom:20px"></div>
+      <div id="he-result" style="display:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:90px;height:90px;border-radius:50%;background:radial-gradient(circle,#fff8b0,#ffd700);display:flex;align-items:center;justify-content:center;flex-direction:column;font-weight:bold;font-size:1.1rem;color:#333;box-shadow:0 0 30px 10px #ffd70088"></div>
+    </div>
+    <div class="feedback-msg hidden" id="s2-fb"></div>
+    <p style="font-size:0.9rem;opacity:0.7;text-align:center;max-width:400px">Kommer du ihåg? Väte har 1 proton. Helium har 2. Du ändrar antalet protoner — och skapar ett nytt ämne!</p>
+    <button class="btn-next hidden" id="s2-next" onclick="goToStep(3)">Vidare →</button>
+  </div>
+  <div id="step3" class="step">
+    <p class="step-text">Eld behöver syre för att brinna. Behöver solen syre?</p>
+    <div style="display:flex;gap:24px;flex-wrap:wrap;justify-content:center">
+      <div class="compare-card" id="card-fire">
+        <div style="font-size:3rem;text-align:center">🔥</div>
+        <p style="text-align:center;font-weight:bold">Eld i en brasa</p>
+        <div style="display:flex;gap:12px;justify-content:center;margin-top:8px">
+          <button class="btn" data-card="fire" data-ans="ja" onclick="answerFire(this)">Ja</button>
+          <button class="btn" data-card="fire" data-ans="nej" onclick="answerFire(this)">Nej</button>
+        </div>
+        <div class="card-fb hidden" id="fb-fire"></div>
+      </div>
+      <div class="compare-card" id="card-sun">
+        <div style="font-size:3rem;text-align:center">☀️</div>
+        <p style="text-align:center;font-weight:bold">Solen</p>
+        <div style="display:flex;gap:12px;justify-content:center;margin-top:8px">
+          <button class="btn" data-card="sun" data-ans="ja" onclick="answerSun(this)">Ja</button>
+          <button class="btn" data-card="sun" data-ans="nej" onclick="answerSun(this)">Nej</button>
+        </div>
+        <div class="card-fb hidden" id="fb-sun"></div>
+      </div>
+    </div>
+    <button class="btn-next hidden" id="s3-next" onclick="goToStep(4)">Vidare →</button>
+  </div>
+  <div id="step4" class="step">
+    <p class="step-text">Stjärnan gör detta miljontals miljarder gånger! Pressa ihop fler vätekärnor och se stjärnan lysa.</p>
+    <div style="display:flex;gap:32px;align-items:flex-start;flex-wrap:wrap;justify-content:center">
+      <div>
+        <p style="text-align:center;margin-bottom:8px;opacity:0.8">Vätekärnor</p>
+        <div id="s4-pool" style="display:flex;flex-wrap:wrap;gap:8px;width:200px;justify-content:center"></div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+        <div id="s4-zone" style="width:120px;height:120px;border-radius:50%;background:var(--c-zone);border:3px solid rgba(255,100,0,0.6);display:flex;align-items:center;justify-content:center;font-size:0.9rem;opacity:0.8;touch-action:none">Presszon</div>
+        <div id="s4-zone-count" style="font-size:0.85rem;opacity:0.7">0 / 4</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+        <svg id="star-svg" width="100" height="100" viewBox="0 0 100 100">
+          <defs><filter id="starglow"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+          <circle id="star-circle" cx="50" cy="50" r="30" fill="#ffcc00" filter="url(#starglow)" opacity="0.3"/>
+        </svg>
+        <p style="font-size:0.85rem;text-align:center">Energi</p>
+        <div style="width:24px;height:100px;background:#222;border-radius:12px;overflow:hidden;position:relative">
+          <div id="energy-bar" style="position:absolute;bottom:0;width:100%;height:0%;background:var(--c-sun);transition:height 0.4s;border-radius:12px"></div>
+        </div>
+      </div>
+    </div>
+    <div class="feedback-msg hidden" id="s4-fb"></div>
+    <button class="btn-next hidden" id="s4-next" onclick="goToStep(5)">Vidare →</button>
+  </div>
+  <div id="step5" class="step">
+    <div id="s5-recall" style="background:#1a2a3a;border-radius:var(--radius);padding:16px 24px;text-align:center;max-width:480px"></div>
+    <p class="step-text">Nu vet du mer! Vad gör solen het?</p>
+    <div style="display:flex;flex-direction:column;gap:12px;width:100%;max-width:480px">
+      <button class="btn choice6-btn" data-val="eld" style="font-size:1.1rem;text-align:left;padding-left:20px">Eld 🔥</button>
+      <button class="btn choice6-btn" data-val="fusion" style="font-size:1.1rem;text-align:left;padding-left:20px">Fusion — väte pressas ihop till helium ⚛️</button>
+      <button class="btn choice6-btn" data-val="el" style="font-size:1.1rem;text-align:left;padding-left:20px">Elektricitet ⚡</button>
+    </div>
+    <div class="feedback-msg hidden" id="s5-fb"></div>
+    <div id="s5-end" style="display:none;text-align:center;max-width:520px;font-size:1rem;line-height:1.6;padding:16px;background:#112211;border-radius:var(--radius)"></div>
+    <canvas id="confetti-canvas" width="320" height="200" style="display:none;pointer-events:none"></canvas>
+  </div>
+</div>
+<script>
+const audioCtx = (() => { try { return new (window.AudioContext || window.webkitAudioContext)(); } catch(e){return null;} })();
+function playTone(freq, type, dur, vol=0.3, delay=0) {
+  if (!audioCtx) return;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.type = type; o.frequency.value = freq;
+  const t = audioCtx.currentTime + delay;
+  g.gain.setValueAtTime(vol, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  o.start(t); o.stop(t + dur);
+}
+function sfxWhoosh() { playTone(800,'sine',0.3,0.2); playTone(400,'sine',0.3,0.15,0.05); }
+function sfxTick()   { playTone(1200,'square',0.08,0.25); }
+function sfxBoom()   { playTone(80,'sawtooth',0.4,0.4); playTone(1400,'sine',0.25,0.3,0.1); }
+function sfxPling()  { playTone(880,'sine',0.2,0.3); playTone(1100,'sine',0.15,0.2,0.07); }
+function sfxBonk()   { playTone(180,'square',0.15,0.2); }
+function sfxPop()    { playTone(600,'sine',0.12,0.2); }
+let state = { step1Answer: null, currentStep: 0, zoomLevel: 0, fusionCount: 0, starEnergy: 0, s3Dragging: null, s3Arrived: 0, s3ScaffoldTimer: null, s3Errors: 0, s4Answers: {}, s5Pool: 8, s5Fusions: 0 };
+
+// flash overlay
+const flashEl = document.createElement('div'); flashEl.className = 'flash-overlay'; document.body.appendChild(flashEl);
+function flashScreen() { flashEl.style.opacity='0.9'; setTimeout(()=>flashEl.style.opacity='0',80); }
+
+// ---- STEG 1 ----
+document.querySelectorAll('.choice-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (state.step1Answer) return;
+    state.step1Answer = btn.dataset.val;
+    document.querySelectorAll('.choice-btn').forEach(b => b.style.opacity = b === btn ? '1' : '0.4');
+    const fb = document.getElementById('s0-fb');
+    fb.textContent = 'Spännande tanke! Låt oss ta reda på det.';
+    fb.classList.remove('hidden');
+    sfxPling();
+    setTimeout(() => goToStep(1), 1200);
+  });
+});
+
+// ---- STEG 2 ----
+const zoomTexts = [
+  'Det här är solen. Tryck på förstoringsglaset!',
+  'Solens yta. Hett! Men vi måste längre in.',
+  'Solens kärna! Här inne är det 15 miljoner grader. Vätekärnorna rusar runt jättesnabbt.'
+];
+const zoomGrads = ['url(#sg0)', 'url(#sg1)', 'url(#sg2)'];
+const zoomTemps = ['30%', '60%', '100%'];
+const zoomTempColors = ['#ffcc00', '#ff6600', '#cc0000'];
+document.getElementById('zoom-btn').addEventListener('click', () => {
+  if (state.zoomLevel >= 2) return;
+  state.zoomLevel++;
+  sfxWhoosh();
+  const circle = document.getElementById('sun2-circle');
+  const txt = document.getElementById('s1-txt');
+  const fill = document.getElementById('temp-fill');
+  circle.setAttribute('fill', zoomGrads[state.zoomLevel]);
+  txt.textContent = zoomTexts[state.zoomLevel];
+  fill.style.height = zoomTemps[state.zoomLevel];
+  fill.style.background = zoomTempColors[state.zoomLevel];
+  if (state.zoomLevel === 2) {
+    drawHParticles();
+    document.getElementById('zoom-btn').style.display = 'none';
+    const fb = document.getElementById('s1-fb');
+    fb.textContent = 'Vätekärnorna rusar runt och studsar mot varandra!';
+    fb.classList.remove('hidden');
+    document.getElementById('s1-next').classList.remove('hidden');
+  }
+});
+// ---- STEG 3 — FUSION DRAG ----
+function initFusionArena() {
+  const atoms = document.querySelectorAll('.h-atom');
+  atoms.forEach(atom => {
+    atom.textContent = 'H';
+    atom.addEventListener('pointerdown', startDrag);
+  });
+  startScaffoldTimer();
+}
+function startScaffoldTimer() {
+  clearTimeout(state.s3ScaffoldTimer);
+  if (state.s3Arrived >= 4) return;
+  state.s3ScaffoldTimer = setTimeout(() => applyScaffold(), 5000);
+}
+function applyScaffold() {
+  if (state.s3Arrived >= 4) return;
+  state.s3Errors++;
+  const waiting = document.querySelectorAll('.h-atom:not(.arrived)');
+  if (state.s3Errors === 1) {
+    waiting.forEach(a => a.classList.add('scaffold'));
+  } else if (state.s3Errors === 2) {
+    waiting.forEach(a => a.classList.add('scaffold'));
+  } else {
+    // move first non-arrived atom halfway
+    const first = document.querySelector('.h-atom:not(.arrived)');
+    if (first) moveAtomHalf(first);
+  }
+  state.s3ScaffoldTimer = setTimeout(() => applyScaffold(), 5000);
+}
+function moveAtomHalf(atom) {
+  const arena = document.getElementById('fusion-arena');
+  const ar = arena.getBoundingClientRect();
+  const at = atom.getBoundingClientRect();
+  const cx = ar.left + ar.width/2 - at.width/2;
+  const cy = ar.top + ar.height/2 - at.height/2;
+  const ax = at.left + (cx - at.left)*0.5;
+  const ay = at.top + (cy - at.top)*0.5;
+  atom.style.left = (ax - ar.left) + 'px';
+  atom.style.top = (ay - ar.top) + 'px';
+  atom.style.right = atom.style.bottom = '';
+}
+function startDrag(e) {
+  e.preventDefault();
+  const atom = e.currentTarget;
+  if (atom.classList.contains('arrived')) return;
+  clearTimeout(state.s3ScaffoldTimer);
+  atom.classList.remove('scaffold');
+  const arena = document.getElementById('fusion-arena');
+  const ar = arena.getBoundingClientRect();
+  const at = atom.getBoundingClientRect();
+  let offsetX = e.clientX - at.left;
+  let offsetY = e.clientY - at.top;
+  function onMove(ev) {
+    const raw = ev.touches ? ev.touches[0] : ev;
+    const cx = ar.width/2 - atom.offsetWidth/2;
+    const cy = ar.height/2 - atom.offsetHeight/2;
+    let tx = raw.clientX - ar.left - offsetX;
+    let ty = raw.clientY - ar.top - offsetY;
+    // resistance: pull toward center is harder near center
+    const dx = cx - tx, dy = cy - ty;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    const resistance = dist < 80 ? 0.6 : 0.85;
+    tx = tx + dx*(1-resistance)*0.2;
+    ty = ty + dy*(1-resistance)*0.2;
+    atom.style.left = tx + 'px'; atom.style.top = ty + 'px';
+    atom.style.right = atom.style.bottom = '';
+    // check if in zone
+    const finalDist = Math.sqrt((tx-cx)*(tx-cx) + (ty-cy)*(ty-cy));
+    if (finalDist < 60 && !atom.classList.contains('arrived')) {
+      atom.classList.add('arrived');
+      atom.style.left = (cx + (Math.random()-0.5)*20) + 'px';
+      atom.style.top = (cy + (Math.random()-0.5)*20) + 'px';
+      state.s3Arrived++;
+      sfxTick();
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+      if (state.s3Arrived === 4) completeFusion3();
+      else startScaffoldTimer();
+    }
+  }
+  function onUp() {
+    document.removeEventListener('pointermove', onMove);
+    document.removeEventListener('pointerup', onUp);
+    startScaffoldTimer();
+  }
+  document.addEventListener('pointermove', onMove);
+  document.addEventListener('pointerup', onUp);
+}
+function completeFusion3() {
+  clearTimeout(state.s3ScaffoldTimer);
+  document.querySelectorAll('.h-atom').forEach(a => { a.style.display='none'; });
+  flashScreen(); sfxBoom();
+  const zone = document.getElementById('press-zone');
+  zone.style.display = 'none';
+  const he = document.getElementById('he-result');
+  he.style.display = 'flex';
+  he.innerHTML = '<span style="font-size:1.3rem">He</span><span style="font-size:0.75rem;opacity:0.8">2 protoner</span>';
+  // ripple
+  const arena = document.getElementById('fusion-arena');
+  const rip = document.createElement('div');
+  rip.style.cssText = 'position:absolute;left:50%;top:50%;width:80px;height:80px;border-radius:50%;border:4px solid #ffd700;animation:ripple 0.8s ease-out forwards;pointer-events:none';
+  arena.appendChild(rip); setTimeout(()=>rip.remove(),900);
+  const fb = document.getElementById('s2-fb');
+  fb.textContent = 'Fyra vätekärnor blev en heliumkärna! Energi frigjordes — ljus och värme!';
+  fb.classList.remove('hidden');
+  document.getElementById('s2-next').classList.remove('hidden');
+}
+
+// ---- STEG 4 — ELD vs SOL ----
+function answerFire(btn) {
+  if (state.s4Answers.fire) return;
+  if (btn.dataset.ans === 'ja') {
+    state.s4Answers.fire = true; sfxPling();
+    btn.classList.add('correct');
+    const fb = document.getElementById('fb-fire');
+    fb.textContent = 'Rätt! Eld behöver syre.'; fb.classList.remove('hidden');
+    checkStep4Done();
+  } else {
+    sfxBonk(); btn.classList.add('wrong');
+    const fb = document.getElementById('fb-fire'); fb.textContent = 'Hmm, tänk efter... prova Ja.'; fb.classList.remove('hidden');
+  }
+}
+function answerSun(btn) {
+  if (state.s4Answers.sun) return;
+  if (btn.dataset.ans === 'nej') {
+    state.s4Answers.sun = true; sfxPling(); flashScreen();
+    btn.classList.add('correct');
+    const fb = document.getElementById('fb-sun');
+    fb.textContent = 'Rätt! Solen har inget syre. Den lyser av fusion!'; fb.classList.remove('hidden');
+    checkStep4Done();
+  } else {
+    sfxBonk(); btn.classList.add('wrong');
+    const fb = document.getElementById('fb-sun'); fb.textContent = 'Det finns nästan inget syre i rymden. Tryck på Nej.'; fb.classList.remove('hidden');
+  }
+}
+function checkStep4Done() {
+  if (state.s4Answers.fire && state.s4Answers.sun) {
+    setTimeout(() => document.getElementById('s3-next').classList.remove('hidden'), 600);
+  }
+}
+
+// ---- STEG 5 — STJÄRNFABRIKEN ----
+function initFactory() {
+  const pool = document.getElementById('s4-pool');
+  pool.innerHTML = '';
+  state.s5Pool = 8; state.s5Fusions = 0;
+  for (let i = 0; i < 8; i++) {
+    const a = document.createElement('div');
+    a.className = 'h-atom'; a.textContent = 'H'; a.style.width = '64px'; a.style.height = '64px';
+    a.style.fontSize = '1rem'; a.style.position = 'relative'; a.style.cursor = 'grab';
+    a.setAttribute('data-pool-idx', i); a.style.touchAction = 'none';
+    a.addEventListener('pointerdown', startFactoryDrag);
+    pool.appendChild(a);
+  }
+  updateFactoryZoneCount(0);
+}
+let factoryZoneCount = 0;
+function startFactoryDrag(e) {
+  e.preventDefault();
+  const atom = e.currentTarget;
+  if (atom.dataset.used) return;
+  const zone = document.getElementById('s4-zone');
+  const zr = zone.getBoundingClientRect();
+  const at = atom.getBoundingClientRect();
+  const clone = atom.cloneNode(true);
+  clone.style.cssText = `position:fixed;left:${at.left}px;top:${at.top}px;width:64px;height:64px;font-size:1rem;z-index:200;pointer-events:none;border-radius:50%;background:radial-gradient(circle,#99ccff,#3377cc);display:flex;align-items:center;justify-content:center;font-weight:bold;color:#fff`;
+  clone.textContent = 'H';
+  document.body.appendChild(clone);
+  function onMove(ev) {
+    const raw = ev.touches ? ev.touches[0] : ev;
+    clone.style.left = (raw.clientX - 26) + 'px';
+    clone.style.top = (raw.clientY - 26) + 'px';
+  }
+  function onUp(ev) {
+    document.removeEventListener('pointermove', onMove);
+    document.removeEventListener('pointerup', onUp);
+    clone.remove();
+    const raw = ev.touches ? ev.changedTouches[0] : ev;
+    const zr2 = zone.getBoundingClientRect();
+    if (raw.clientX > zr2.left && raw.clientX < zr2.right && raw.clientY > zr2.top && raw.clientY < zr2.bottom) {
+      atom.dataset.used = '1'; atom.style.opacity='0.3'; atom.style.cursor='default';
+      factoryZoneCount++;
+      updateFactoryZoneCount(factoryZoneCount);
+      if (factoryZoneCount >= 4) doFactoryFusion();
+    }
+  }
+  document.addEventListener('pointermove', onMove);
+  document.addEventListener('pointerup', onUp);
+}
+function updateFactoryZoneCount(n) {
+  document.getElementById('s4-zone-count').textContent = n + ' / 4';
+  factoryZoneCount = n;
+}
+function doFactoryFusion() {
+  factoryZoneCount = 0;
+  state.s5Fusions++;
+  sfxBoom(); flashScreen();
+  // clear used atoms
+  document.querySelectorAll('[data-pool-idx]').forEach(a => { if(a.dataset.used) { a.remove(); } });
+  // update star
+  const energy = Math.min(state.s5Fusions / 3, 1);
+  document.getElementById('star-circle').setAttribute('opacity', 0.3 + energy*0.7);
+  document.getElementById('energy-bar').style.height = (energy*100) + '%';
+  updateFactoryZoneCount(0);
+  const fb = document.getElementById('s4-fb');
+  if (state.s5Fusions >= 3) {
+    fb.textContent = 'Stjärnan lyser för fullt!'; fb.classList.remove('hidden');
+    document.getElementById('s4-next').classList.remove('hidden');
+  } else {
+    fb.textContent = 'Stjärnan lyser starkare!'; fb.classList.remove('hidden');
+    setTimeout(() => { fb.classList.add('hidden'); }, 1500);
+  }
+}
+
+// ---- STEG 6 — KONSOLIDERING ----
+const answerLabels = { eld:'Eld 🔥', el:'Elektricitet ⚡', annat:'Något annat 🤔' };
+function initStep6() {
+  const recall = document.getElementById('s5-recall');
+  recall.textContent = 'Du gissade: ' + (answerLabels[state.step1Answer] || '?');
+}
+document.querySelectorAll('.choice6-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (btn.dataset.tried === 'locked') return;
+    if (btn.dataset.val === 'fusion') {
+      document.querySelectorAll('.choice6-btn').forEach(b => b.disabled = true);
+      btn.classList.add('correct'); sfxBoom(); flashScreen();
+      const fb = document.getElementById('s5-fb');
+      fb.textContent = 'Precis! Hettan inne i stjärnan pressar ihop vätekärnor till heliumkärnor. Det frigör energi — ljus och värme. Det kallas fusion!';
+      fb.classList.remove('hidden');
+      launchConfetti();
+      setTimeout(() => {
+        const end = document.getElementById('s5-end');
+        end.innerHTML = 'Solen är vår närmaste stjärna. Den har gjort fusion i 4,5 miljarder år!<br><br><strong>Fråga en vuxen: Vad tror du händer när vätet tar slut?</strong>';
+        end.style.display = 'block';
+      }, 1800);
+    } else {
+      btn.classList.add('wrong'); sfxBonk();
+      const fb = document.getElementById('s5-fb');
+      fb.textContent = 'Kommer du ihåg vad du gjorde i steg 3? Du pressade ihop vätekärnor...';
+      fb.classList.remove('hidden');
+      btn.dataset.tried = 'locked'; btn.disabled = true;
+    }
+  });
+});
+function launchConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  canvas.style.display = 'block';
+  const ctx = canvas.getContext('2d');
+  const pieces = Array.from({length:40}, () => ({
+    x: Math.random()*320, y: Math.random()*-50,
+    vx: (Math.random()-0.5)*3, vy: Math.random()*2+1,
+    color: ['#ffd700','#ff6600','#66aaff','#44dd88','#ff99cc'][Math.floor(Math.random()*5)],
+    size: Math.random()*6+4
+  }));
+  let frame = 0;
+  function draw() {
+    ctx.clearRect(0,0,320,200);
+    pieces.forEach(p => {
+      ctx.fillStyle = p.color; ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
+      p.x += p.vx; p.y += p.vy;
+    });
+    if (++frame < 80) requestAnimationFrame(draw);
+    else canvas.style.display = 'none';
+  }
+  draw();
+}
+
+function drawHParticles() {
+  const g = document.getElementById('h-particles');
+  g.style.display = '';
+  g.innerHTML = '';
+  const positions = [[90,90],[160,85],[85,160],[165,165],[125,100],[100,150],[150,130],[110,120]];
+  positions.forEach(([x,y]) => {
+    const circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    circle.setAttribute('cx', x); circle.setAttribute('cy', y); circle.setAttribute('r', 10);
+    circle.setAttribute('fill', '#66aaff'); circle.setAttribute('opacity','0.85');
+    const text = document.createElementNS('http://www.w3.org/2000/svg','text');
+    text.setAttribute('x', x); text.setAttribute('y', y+4);
+    text.setAttribute('text-anchor','middle'); text.setAttribute('font-size','10');
+    text.setAttribute('fill','#fff'); text.setAttribute('font-weight','bold'); text.textContent = 'H';
+    g.appendChild(circle); g.appendChild(text);
+    // bounce animation via CSS
+    circle.style.animation = `bounce-${Math.floor(Math.random()*3)} 1.${Math.floor(Math.random()*5+5)}s infinite alternate`;
+  });
+}
+function goToStep(n) {
+  document.querySelectorAll('.step').forEach((el,i) => el.classList.toggle('active', i===n));
+  document.querySelectorAll('.prog-dot').forEach((el,i) => {
+    el.classList.toggle('done', i < n);
+    el.classList.toggle('active', i === n);
+  });
+  state.currentStep = n;
+  sfxPop();
+  if (n === 2) { state.s3Arrived=0; state.s3Errors=0; initFusionArena(); }
+  if (n === 4) initFactory();
+  if (n === 5) initStep6();
+}
+</script>
+</body>
+</html>
