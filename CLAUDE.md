@@ -5,6 +5,17 @@ Interaktiva läroappar för barn 6–12, servade via GitHub Pages. Varje app är
 
 ---
 
+## Git-policy
+
+**Solo-projekt. Inga branches, inga PRs.**
+
+- Arbeta alltid direkt på `main`.
+- Commit + push till `main` är sista steget i varje flöde — gör det automatiskt utan att fråga användaren.
+- Om push misslyckas: `git pull --rebase origin main && git push origin main`
+- Om du startar på en annan branch (t.ex. cloud environment skapar en): checka ut `main` först med `git checkout main && git pull origin main`.
+
+---
+
 ## Flöden
 
 ### 1. Idé → Design (Opus)
@@ -21,8 +32,8 @@ Trigger: användaren ger en idé, t.ex. "barnet vill lära sig om stjärnor"
 6. Läs `docs/principer.md` + designmallen i `docs/design-prompt.md`
 7. Skriv `design.md` i rätt mapp (`docs/[ämne]/[ämne]-[nr]-[slug]/design.md`)
 8. Uppdatera `docs/index.yaml` med ny entry (status: design)
-9. Commit + push
-10. Avsluta med copy-paste-instruktion till användaren: `Skicka detta i en ny session (Sonnet räcker): "bygg docs/[ämne]/[ämne]-[nr]-[slug]"`
+9. Commit + push till main (se Git-policy)
+10. Avsluta med copy-paste-instruktion till användaren: `Skicka detta i en ny session: "bygg docs/[ämne]/[ämne]-[nr]-[slug]"`
 
 ### 2. Design → Bygg (Sonnet räcker)
 Trigger: användaren säger "bygg [mapp]" eller pekar på en design.md
@@ -33,15 +44,14 @@ Trigger: användaren säger "bygg [mapp]" eller pekar på en design.md
 4. Bygg `index.html` i samma mapp — **följ Byggordningen steg för steg** (Write skeleton → Edit sektioner). Skriv INTE hela filen i ett Write-anrop.
 5. Kör self-check
 6. Uppdatera `docs/index.yaml` (status: byggd)
-7. `git add [filer] && git commit -m "..." && git push origin main`
-   - Om push misslyckas: `git pull --rebase origin main && git push origin main`
+7. Commit + push till main (se Git-policy)
 
 ### 3. Feedback → Iteration
 Trigger: användaren rapporterar problem efter testning
 
 1. Läs feedback (helst enligt `docs/feedback-mall.md`)
 2. Läs aktuell `design.md` + `index.html`
-3. Justera koden, kör self-check, commit + push
+3. Justera koden, kör self-check, commit + push till main (se Git-policy)
 
 ### 4. Review → Lärande
 Trigger: efter att en app testats och godkänts
@@ -51,6 +61,7 @@ Trigger: efter att en app testats och godkänts
    - Problem och lösningar
    - Ny princip? (signal att uppdatera principer.md)
 2. Uppdatera `docs/index.yaml` (status: klar)
+3. Commit + push till main (se Git-policy)
 
 ---
 
