@@ -34,6 +34,12 @@ Läs dessa i ordning:
 
 ## Frågor att besvara
 
+### 0. Din övergripande bedömning av upplägget
+Du är själv en del av detta system (som Opus-designern). Ge din ärliga syn:
+- Är detta ett vettigt sätt att arbeta — eller finns ett bättre upplägg?
+- Vad är den svagaste länken i kedjan människa → Opus → Sonnet → GitHub Pages?
+- Är rollfördelningen mellan Opus och Sonnet rätt, eller bör något göras annorlunda?
+
 ### 1. Är arbetsdelningen rätt?
 - Är det rätt att Opus designar och Sonnet kodar, eller bör något göras annorlunda?
 - Vad riskerar falla mellan stolarna i överlämningen Opus → Sonnet?
