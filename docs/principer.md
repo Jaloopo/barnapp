@@ -181,3 +181,14 @@ Variera knappposition mellan steg (holdover-effekt).
 - Textfält för barns reflektion
 - Bakgrundsmusik
 - Animationer som blockerar input
+
+---
+
+## FAKTAGRANSKNING — Naturvetenskap
+
+**Naturvetenskap-regel:** För appar med faktainnehåll (kemi, fysik, biologi) — Perplexity-research är inte valfritt. Verifiera alltid:
+1. Är det vetenskapligt korrekt på rätt abstraktionsnivå?
+2. Finns det en vanlig felintuition hos barn som appen riskerar förstärka?
+3. Vilka förenklingar görs medvetet — och varför är de försvarbara för åldersgruppen?
+
+Dokumentera förenklingar explicit i design.md under "Vad appen INTE gör".

@@ -89,3 +89,4 @@ Lista ljud-händelser och karaktär (kort/mjukt/skarpt):
 
 ### Vad appen INTE gör
 Lista 3–5 saker som medvetet utelämnats och varför.
+Inkludera alltid: "Vilket nästa steg i ämnet utelämnas medvetet, och varför är det lämpligt för denna åldersgrupp?"
