@@ -30,7 +30,7 @@ Trigger: användaren säger "bygg [mapp]" eller pekar på en design.md
 1. Läs `design.md` i angiven mapp — bindande beslut som inte får ändras
 2. Läs `docs/principer.md` för pedagogiska riktlinjer
 3. **Om design.md strider mot principer.md → flagga till användaren, bygg inte vidare**
-4. Bygg `index.html` i samma mapp (se Tekniska regler + Byggordning nedan)
+4. Bygg `index.html` i samma mapp — **följ Byggordningen steg för steg** (Write skeleton → Edit sektioner). Skriv INTE hela filen i ett Write-anrop.
 5. Kör self-check
 6. Uppdatera `docs/index.yaml` (status: byggd)
 7. `git add [filer] && git commit -m "..." && git push origin main`
@@ -95,13 +95,20 @@ GitHub Pages serverar från `docs/`. App-URL: `https://[user].github.io/barnapp/
 - Respektera `prefers-reduced-motion`
 - localStorage tillåtet — wrappa i try/catch (privat surfning kan blocka)
 
-**Byggordning — iterativt:**
-1. Skriv skeleton: steg-navigation + layout, inga detaljer
-2. Implementera interaktionslogik per steg
-3. Lägg till visuell feedback + animationer
-4. Lägg till scaffolding-nivåer
-5. Lägg till ljud
-6. Self-check mot design.md
+**Byggordning — iterativt (viktigt för att undvika timeout):**
+
+> **Teknisk regel:** Skriv ALDRIG hela index.html i ett enda Write-anrop.
+> Filer över ~200 rader riskerar timeout. Bygg istället inkrementellt:
+
+1. **Write** — Skriv skeleton (~100–150 rader): `<!DOCTYPE html>`, grundläggande CSS-variabler, steg-navigation, tomma steg-containers, och en minimal JS-struktur med event listeners men utan logik. Inga detaljer.
+2. **Edit** — Implementera interaktionslogik för steg 1–3 (lägg till JS-funktioner och HTML-innehåll i respektive steg-containers)
+3. **Edit** — Implementera interaktionslogik för steg 4–6 (eller resterande steg)
+4. **Edit** — Lägg till visuell feedback + CSS-animationer
+5. **Edit** — Lägg till scaffolding-nivåer
+6. **Edit** — Lägg till ljud (Web Audio API)
+7. Self-check mot design.md
+
+Varje Edit-anrop ändrar bara en del av filen (~50–150 rader åt gången) och riskerar inte timeout.
 
 ---
 
