@@ -9,6 +9,7 @@ Interaktiva läroappar för barn 6–12, servade via GitHub Pages. Varje app är
 3. Du läser `docs/principer.md` för pedagogiska riktlinjer
 4. Du bygger `index.html` i samma mapp
 5. Du kör self-check mot design.md:s beslut
+6. Du committar och pushar direkt till `main` — inga feature branches, inga PRs
 
 ## Mappstruktur
 ```
