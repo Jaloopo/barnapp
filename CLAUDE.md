@@ -3,37 +3,71 @@
 ## Vad detta repo är
 Interaktiva läroappar för barn 6–12, servade via GitHub Pages. Varje app är en enskild HTML-fil med inline CSS och JS.
 
-## AI-ekosystem
-Flera AI-verktyg används i olika roller:
-- **Claude Opus (Claude.ai)** — pedagogisk designer, genererar design.md och granskar upplägg
-- **Claude Sonnet (Claude Code)** — kodare, bygger index.html utifrån design.md
-- **NotebookLM** — RAG med källor om pedagogik, UX och matematik. Används av människan för att undersöka forskningsunderlag eller ämnesinnehåll innan/under design
-- **Perplexity** — websökning för aktuell fakta om ämnen i apparna
+---
 
-Du (Sonnet) behöver inte känna till de andra verktygen — de används av människan utanför din session.
+## Flöden
 
-## Arbetsflöde
-1. Användaren lägger en `design.md` i rätt ämnesmapp (skapad i Claude.ai)
-2. Du läser `design.md` — den innehåller bindande beslut som inte får ändras
-3. Du läser `docs/principer.md` för pedagogiska riktlinjer
-4. Du bygger `index.html` i samma mapp
-5. Du kör self-check mot design.md:s beslut
-6. Du committar och pushar direkt till `main` — inga feature branches, inga PRs
-   - Kör alltid: `git add [filer] && git commit -m "..." && git push origin main`
+### 1. Idé → Design (Opus)
+Trigger: användaren ger en idé, t.ex. "barnet vill lära sig om stjärnor"
+
+1. Läs `docs/index.yaml` — vad har barnet gjort? Vilka koncept är upplåsta?
+2. Föreslå 2–3 vägar med bryggor från tidigare appar
+3. Användaren väljer väg
+4. Bedöm research-behov:
+   - 🟢 **Klarar mig** — principer.md + index + tidigare reviews räcker
+   - 🟡 **Perplexity rekommenderas** — sakfakta jag är osäker på → ge färdig prompt
+   - 🔴 **NotebookLM rekommenderas** — pedagogisk fråga utan stöd i principer.md → ge färdig prompt
+5. Om research: användaren klistrar svar, annars gå vidare
+6. Läs `docs/principer.md` + designmallen i `docs/design-prompt.md`
+7. Skriv `design.md` i rätt mapp (`docs/[ämne]/[ämne]-[nr]-[slug]/design.md`)
+8. Uppdatera `docs/index.yaml` med ny entry (status: design)
+
+### 2. Design → Bygg (Sonnet räcker)
+Trigger: användaren säger "bygg [mapp]" eller pekar på en design.md
+
+1. Läs `design.md` i angiven mapp — bindande beslut som inte får ändras
+2. Läs `docs/principer.md` för pedagogiska riktlinjer
+3. **Om design.md strider mot principer.md → flagga till användaren, bygg inte vidare**
+4. Bygg `index.html` i samma mapp (se Tekniska regler + Byggordning nedan)
+5. Kör self-check
+6. Uppdatera `docs/index.yaml` (status: byggd)
+7. `git add [filer] && git commit -m "..." && git push origin main`
    - Om push misslyckas: `git pull --rebase origin main && git push origin main`
+
+### 3. Feedback → Iteration
+Trigger: användaren rapporterar problem efter testning
+
+1. Läs feedback (helst enligt `docs/feedback-mall.md`)
+2. Läs aktuell `design.md` + `index.html`
+3. Justera koden, kör self-check, commit + push
+
+### 4. Review → Lärande
+Trigger: efter att en app testats och godkänts
+
+1. Skriv `review.md` i appens mapp:
+   - Vad fungerade
+   - Problem och lösningar
+   - Ny princip? (signal att uppdatera principer.md)
+2. Uppdatera `docs/index.yaml` (status: klar)
+
+---
 
 ## Mappstruktur
 ```
 docs/
-  principer.md
+  principer.md          ← pedagogiska riktlinjer
+  design-prompt.md      ← mall för design.md
+  index.yaml            ← övningsindex med koncept/prerequisites/unlocks
+  feedback-mall.md      ← mall för testfeedback
   [ämne]/
     [ämne]-[nr]-[slug]/
-      design.md      ← från Claude.ai
-      index.html     ← du bygger denna
+      design.md         ← skrivs i flöde 1
+      index.html        ← byggs i flöde 2
+      review.md         ← skrivs i flöde 4
 ```
-Exempel: `docs/el/el-1-ledare/index.html`
+GitHub Pages serverar från `docs/`. App-URL: `https://[user].github.io/barnapp/[ämne]/[ämne]-[nr]-[slug]/`
 
-GitHub Pages serverar från `docs/`. Appen nås på: `https://[user].github.io/barnapp/el/el-1-ledare/`
+---
 
 ## Tekniska regler
 
@@ -57,7 +91,7 @@ GitHub Pages serverar från `docs/`. Appen nås på: `https://[user].github.io/b
 - Inga element blinkar > 3 ggr/sek
 - Animationer avbrytbara — blockera inte input under animation
 - Respektera `prefers-reduced-motion`
-- localStorage tillåtet (apparna körs som vanliga webbsidor)
+- localStorage tillåtet — wrappa i try/catch (privat surfning kan blocka)
 
 **Byggordning — iterativt:**
 1. Skriv skeleton: steg-navigation + layout, inga detaljer
@@ -66,6 +100,8 @@ GitHub Pages serverar från `docs/`. Appen nås på: `https://[user].github.io/b
 4. Lägg till scaffolding-nivåer
 5. Lägg till ljud
 6. Self-check mot design.md
+
+---
 
 ## Self-check
 Innan du rapporterar klart, verifiera mot design.md:
@@ -77,9 +113,29 @@ Innan du rapporterar klart, verifiera mot design.md:
 - [ ] Börjar appen med guided challenge, inte förklaring?
 - [ ] Vardagsförankring i steg 1?
 
+Verifiera även mot `docs/principer.md`:
+- [ ] Språknivå och max ord/skärm stämmer med åldersgruppen?
+- [ ] `prefers-reduced-motion` hanteras?
+- [ ] Inga tidsgränser?
+- [ ] Fail states är uppmuntrande, inte straffande?
+- [ ] Touch: Pointer Events, inte mouse events?
+
+---
+
 ## Vanliga misstag att undvika
 - Rörliga touch targets (pulsera/glöd istället för rotera)
 - Poetiska metaforer i text (test: kan en 7-åring rita det?)
 - Facktermer utan trestegsbrygga: upplevelse → vardag → etikett
 - Fler än ett lärandemål (flagga om design.md verkar täcka flera)
 - Text som inte sitter intill det den beskriver
+- Auto-progression (eleven styr takten, alltid)
+- Textfält för barns reflektion (använd flerval/visuellt val)
+- Poängsystem/stjärnor som primär motivator
+
+---
+
+## Framtida utveckling (v0.2)
+- **Skills:** Opus-design och Sonnet-bygg som separata skills, triggas automatiskt
+- **Hooks:** Post-push hook som påminner om review.md
+- **Automatisk research:** WebSearch-integration istället för manuell Perplexity
+- **CI:** Validera index.yaml + self-check som GitHub Action

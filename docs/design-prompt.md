@@ -1,22 +1,34 @@
 # Mall: Generera design.md för en barnlärapp
 
-Använd denna prompt i Claude.ai (Opus) för att ta en idé/brief till en komplett design.md.
-Klistra in mallen nedan och fyll i [BRIEF] och [ÅLDER].
+Använd denna mall när du (Opus) skriver en design.md. Läs alltid `docs/principer.md` först — designen måste följa principerna.
 
 ---
 
-## PROMPT ATT KLISTRA IN I CLAUDE.AI
-
-Du är pedagogisk designer för interaktiva läroappar för barn. Din uppgift är att producera en `design.md` — ett bindande beslutsdokument som en kodande AI senare ska följa exakt.
+## INPUT
 
 **Appen ska handla om:**
 [BRIEF — beskriv konceptet, lärandemålet, ev. interaktionsidé]
 
 **Målgrupp:** [ÅLDER, t.ex. "8–9 år"]
 
+**Research-underlag (om det finns):**
+[Klistra in ev. svar från NotebookLM/Perplexity, annars skriv "inget"]
+
 ---
 
-Producera en `design.md` med exakt dessa sektioner och beslut. Inga vaga formuleringar — varje beslut ska vara så konkret att en kodare kan implementera utan att fråga.
+## INSTRUKTIONER
+
+Producera en `design.md` med exakt dessa sektioner. Inga vaga formuleringar — varje beslut ska vara så konkret att en kodare kan implementera utan att fråga.
+
+Referera till `docs/principer.md` för:
+- Språknivå/LIX per ålder (princip C)
+- Touch target-storlekar per ålder (princip G)
+- CRA-progression (princip F)
+- Scaffolding-regler (princip E)
+
+---
+
+## SEKTIONER I design.md
 
 ### Lärandemål
 Ett enda, mätbart lärandemål. Formulera som: "Eleven ska förstå att X, inte Y."
@@ -31,7 +43,8 @@ Lista varje skärm/steg i ordning. För varje steg:
 - **Steg N — [namn]**
   - Do-komponent (vad gör eleven aktivt?):
   - CRA-nivå (Konkret / Representationell / Abstrakt):
-  - Text på skärmen (skriv ut exakt, max enligt ålderstabellen):
+  - Layout (beskriv i ord var elementen ligger, t.ex. "tre bollar i rad, drag-zone under"):
+  - Text på skärmen (skriv ut exakt, max enligt ålderstabellen i principer.md):
   - Interaktionstyp (tap / drag / slider / etc.):
   - Visuell feedback vid rätt svar:
   - Visuell feedback vid fel svar:
@@ -48,6 +61,20 @@ Beskriv vad som händer vid:
 
 ### Gate-keeping
 Vilka steg kräver rätt svar innan eleven går vidare? (Inte steg 1.)
+
+### Konsolidering (sista steget)
+- Hur sammanfattas det barnet lärt sig?
+- Återkoppling till guided challenge i steg 1?
+- Reflektionsfråga (flerval/visuellt val, aldrig textfält):
+
+### Metakognition
+- Hur visas framsteg? (Karta/stegindikator, inte poäng)
+- Lärandemål: visas riktning i början, full återkoppling i slutet
+
+### Responsivt beteende
+- Mobilvy (8"): vad ändras jämfört med baslayout?
+- Surfplatta (13"): baslayout
+- Laptop (16"): vad kan läggas till?
 
 ### Auditory icons
 Lista ljud-händelser och karaktär (kort/mjukt/skarpt):

@@ -1,0 +1,26 @@
+# Övningsindex — Barnapp
+# Varje entry representerar en app. Opus läser detta för att föreslå vägar.
+#
+# Fält:
+#   id:            unik identifierare (mappar till docs/[ämne]/[id]/)
+#   ämne:          ämneskategori
+#   titel:         kort beskrivning
+#   ålder:         målgrupp
+#   koncept:       vad appen lär ut (lista)
+#   prerequisites: vilka andra appar som bör göras först (lista av id)
+#   unlocks:       vilka appar som blir möjliga efter denna (lista av id)
+#   status:        design | byggd | testad | klar
+
+appar:
+  - id: el-1-ledare
+    ämne: el
+    titel: Ledare och isolatorer
+    ålder: 8-9
+    koncept:
+      - elektrisk ström
+      - ledare
+      - isolator
+    prerequisites: []
+    unlocks:
+      - el-2-kretsar
+    status: design
