@@ -12,6 +12,18 @@ Detta är ett system för att bygga interaktiva läroappar för barn 6–12. Upp
 4. **Människa** testar på GitHub Pages och ger feedback
 5. Iteration: feedback → Sonnet justerar koden
 
+## Tillgängliga AI-verktyg i ekosystemet
+
+Utöver Claude Code (Sonnet) och Claude.ai (Opus) finns:
+
+- **NotebookLM (RAG)** — laddad med källor om pedagogik, UX och matematik. Används för att undersöka forskningsunderlag, kolla om en designbeslut stöds av evidens, eller fördjupa sig i ett ämnesområde.
+- **Perplexity** — websökning. Används för aktuell fakta om ämnen barnet möter i apparna, eller för att hitta extern information som inte finns i NotebookLM.
+
+Dessa används av människan, inte av den kodande AI:n. Typiska användningsfall:
+- Innan design.md: "Vad säger forskningen om X?" → NotebookLM
+- Vid oklart designbeslut: "Finns det evidens för Y?" → NotebookLM
+- Ämnesinnehåll till en app (t.ex. fakta om elektroner): → NotebookLM eller Perplexity
+
 ## Dokument att läsa
 
 Läs dessa i ordning:
