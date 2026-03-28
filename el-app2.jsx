@@ -1,0 +1,521 @@
+// EL-SERIEN APP 2 — Spänning | 8 år | iPad 13-14"
+// Touch: 88px | CRA: konkret steg 1-2, simultan steg 3-5 | Scaffolding: 3 nivåer
+// Gate: steg 1 (koppar), steg 3 (quiz) | Prereq-fail ≥3 → vuxen-varning
+
+import { useState } from "react";
+
+// ── Reduced motion ─────────────────────────────────────────────────────────
+const RM = typeof window !== "undefined" &&
+  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// ── Web Audio ──────────────────────────────────────────────────────────────
+let _ac = null;
+const getAC = () => {
+  if (!_ac) _ac = new (window.AudioContext || window.webkitAudioContext)();
+  return _ac;
+};
+const tone = (freq, type = "sine", dur = 0.3) => {
+  try {
+    const ac = getAC(), o = ac.createOscillator(), g = ac.createGain();
+    o.type = type; o.connect(g); g.connect(ac.destination);
+    o.frequency.value = freq;
+    g.gain.setValueAtTime(0.18, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + dur);
+    o.start(); o.stop(ac.currentTime + dur);
+  } catch (_) {}
+};
+const pling = () => { tone(523); setTimeout(() => tone(1047, "sine", 0.2), 100); };
+const bonk  = () => tone(150, "triangle", 0.28);
+const tick  = () => tone(820, "sine", 0.05);
+
+// ── Palette ────────────────────────────────────────────────────────────────
+const P = {
+  bg: "#0d1117", card: "#161b22", border: "#30363d",
+  accent: "#f59e0b", blue: "#3b82f6", green: "#22c55e",
+  red: "#ef4444", text: "#e6edf3", muted: "#8b949e", wire: "#4a5568",
+};
+
+// ── Circuit SVG ────────────────────────────────────────────────────────────
+// Path: battery (left) → top-left → gap (top-centre) → top-right → bulb (right) → back
+const WIRE = "M 44,148 L 44,38 L 136,38 L 136,38";       // left half top
+const WIRE2 = "M 164,38 L 256,38 L 256,148 L 44,148";   // right half + bottom
+const E_PATH = "M 44,148 L 44,38 L 136,38 M 164,38 L 256,38 L 256,148 L 44,148";
+
+function CircuitSVG({ voltage = 4.5, gapMaterial = null }) {
+  const on      = voltage > 0 && gapMaterial === "copper";
+  const spd     = on ? Math.max(0.9, 3.6 - (voltage / 9) * 2.7) : 0;
+  const bright  = voltage / 9;
+  const bulbClr = on
+    ? `rgba(253,224,71,${0.25 + bright * 0.75})`
+    : "#1c2128";
+
+  return (
+    <svg viewBox="0 0 300 200" style={{ width: "100%", maxWidth: 300 }}>
+      {/* Wires */}
+      <path d={WIRE}  fill="none" stroke={P.wire} strokeWidth="8" strokeLinecap="round" />
+      <path d={WIRE2} fill="none" stroke={P.wire} strokeWidth="8" strokeLinecap="round" />
+
+      {/* Gap / material */}
+      {!gapMaterial && (
+        <>
+          <rect x="134" y="30" width="32" height="16" rx="4"
+                fill={P.bg} stroke={P.blue} strokeWidth="2" strokeDasharray="4,3" />
+          <text x="150" y="23" textAnchor="middle" fontSize="10" fill={P.blue}>?</text>
+        </>
+      )}
+      {gapMaterial && (
+        <rect x="134" y="30" width="32" height="16" rx="4"
+              fill={gapMaterial === "copper" ? "#f59e0b" : "#64748b"} />
+      )}
+
+      {/* Battery */}
+      <rect x="14" y="110" width="60" height="60" rx="10" fill="#ca8a04" />
+      <text x="44" y="138" textAnchor="middle" fontSize="18" fontWeight="bold" fill="#1e293b">+</text>
+      <text x="44" y="162" textAnchor="middle" fontSize="18" fill="#1e293b">–</text>
+
+      {/* Bulb glow */}
+      {on && !RM && (
+        <circle cx="220" cy="148" r="34"
+                fill={`rgba(253,224,71,${bright * 0.18})`} />
+      )}
+      {/* Bulb */}
+      <circle cx="220" cy="148" r="26" fill={bulbClr} stroke={P.wire} strokeWidth="3" />
+      <text x="220" y="156" textAnchor="middle" fontSize="22">{on ? "💡" : "⚫"}</text>
+
+      {/* Electrons */}
+      {on && !RM && [0, 1, 2].map(i => (
+        <circle key={i} r="5" fill={P.blue} opacity="0.9">
+          <animateMotion dur={`${spd}s`} repeatCount="indefinite"
+            begin={`${(i * spd) / 3}s`}
+            path={E_PATH} />
+        </circle>
+      ))}
+      {on && RM && (
+        <circle cx="44" cy="90" r="7" fill={P.blue} opacity="0.9" />
+      )}
+    </svg>
+  );
+}
+
+// ── Hill / slope SVG ──────────────────────────────────────────────────────
+function HillSVG({ voltage = 4.5 }) {
+  const h   = Math.round((voltage / 9) * 82);
+  const on  = voltage > 0;
+  const spd = on ? Math.max(0.7, 2.2 - (voltage / 9) * 1.5) : 0;
+
+  return (
+    <svg viewBox="0 0 200 148" style={{ width: "100%", maxWidth: 200 }}>
+      <line x1="10" y1="128" x2="190" y2="128" stroke={P.muted} strokeWidth="2" />
+      <polygon points={`26,128 26,${128 - h} 174,128`}
+               fill="#1e3a5f" stroke={P.blue} strokeWidth="2" />
+      <text x="20" y={128 - h / 2} textAnchor="end" fontSize="11"
+            fill={P.muted}>{voltage}V</text>
+      {on && !RM && (
+        <circle r="9" fill={P.blue}>
+          <animateMotion dur={`${spd}s`} repeatCount="indefinite"
+            path={`M 26,${128 - h} L 174,128`} />
+        </circle>
+      )}
+      {(!on || RM) && (
+        <circle cx={on ? 100 : 100} cy={on ? 128 - h / 2 : 128}
+                r="9" fill={on ? P.blue : P.muted} />
+      )}
+      <text x="26"  y="143" textAnchor="middle" fontSize="11" fill={P.muted}>+</text>
+      <text x="174" y="143" textAnchor="middle" fontSize="11" fill={P.muted}>–</text>
+    </svg>
+  );
+}
+
+// ── Materials ──────────────────────────────────────────────────────────────
+const MATS = [
+  { id: "copper", label: "Koppar", emoji: "🟡", ok: true },
+  { id: "rubber", label: "Gummi",  emoji: "⚫", ok: false },
+  { id: "wood",   label: "Trä",    emoji: "🟫", ok: false },
+];
+
+// ── Main App ───────────────────────────────────────────────────────────────
+export default function App() {
+  const [step,       setStep]       = useState(1);
+  const [mascot,     setMascot]     = useState("Hej! Jag är Volt. Vi ska ta reda på vad som knuffar elektroner!");
+
+  // Step 1
+  const [s1sel,      setS1sel]      = useState(null);
+  const [s1tries,    setS1tries]    = useState(0);
+  const [s1pass,     setS1pass]     = useState(false);
+  const [prereqFail, setPrereqFail] = useState(false);
+
+  // Step 2
+  const [batIn,      setBatIn]      = useState(false);
+
+  // Step 3
+  const [voltage,    setVoltage]    = useState(4.5);
+  const [s3pick,     setS3pick]     = useState(null);
+  const [s3pass,     setS3pass]     = useState(false);
+
+  // Step 4
+  const [zeroSeen,   setZeroSeen]   = useState(false);
+
+  // Step 5
+  const [extraLamp,  setExtraLamp]  = useState(false);
+  const [reflect,    setReflect]    = useState(null);
+
+  const say = setMascot;
+
+  // ── Handlers ─────────────────────────────────────────────
+  const pickMat = (mat) => {
+    setS1sel(mat.id);
+    if (mat.ok) {
+      pling();
+      say("Du minns det! Koppar låter elektroner hoppa — lampan lyser!");
+      setTimeout(() => setS1pass(true), 700);
+    } else {
+      bonk();
+      const t = s1tries + 1;
+      setS1tries(t);
+      if (t === 1) say("Hmm… Titta på lampan. Lyser den? Prova ett annat material!");
+      if (t === 2) say("Tips: Vilket material använde vi i förra appen för att leda elektroner?");
+      if (t >= 3)  { setPrereqFail(true); say("Det här verkar svårt just nu."); }
+    }
+  };
+
+  const handleVolt = (v) => {
+    const n = Number(v);
+    setVoltage(n);
+    tick();
+    if (step === 4 && n === 0 && !zeroSeen) {
+      bonk();
+      setZeroSeen(true);
+      say("Utan knuff rör sig ingenting alls! Batteriets knuff kallas SPÄNNING.");
+    }
+  };
+
+  const answerS3 = (i) => {
+    setS3pick(i);
+    if (i === 0) {
+      pling();
+      setS3pass(true);
+      say("Exakt! Mer spänning → elektroner rör sig snabbare → starkare ljus!");
+    } else {
+      bonk();
+      say("Titta på backen — vad händer med lutningen när du drar slidern?");
+    }
+  };
+
+  const goNext = () => {
+    const n = step + 1;
+    setStep(n);
+    if (n === 2) say("Batteriet fick elektronerna att röra sig — men hur? Det ska vi ta reda på!");
+    if (n === 3) say("Prova slidern! Titta vad som händer i kretsen och på backen samtidigt.");
+    if (n === 4) say("Bra! Nu — dra slidern hela vägen till noll. Vad tror du händer?");
+    if (n === 5) say("Nu kan du leka fritt! Prova att lägga till en extra lampa.");
+  };
+
+  // ── Shared styles ─────────────────────────────────────────
+  const card = {
+    background: P.card, border: `1px solid ${P.border}`,
+    borderRadius: 20, padding: "24px 28px",
+    width: "100%", maxWidth: 780, boxSizing: "border-box", marginBottom: 14,
+  };
+  const h2 = { fontSize: 22, fontWeight: 800, color: P.text, margin: "0 0 8px" };
+  const p  = { fontSize: 16, lineHeight: 1.55, color: P.muted, margin: "6px 0" };
+  const row = { display: "flex", gap: 16, flexWrap: "wrap", justifyContent: "center", margin: "18px 0" };
+  const btn = (active, col = P.accent) => ({
+    background: active ? col : "#21262d",
+    color: active ? "#1e293b" : P.text,
+    border: `2px solid ${active ? col : P.border}`,
+    borderRadius: 14, padding: "14px 22px",
+    fontSize: 17, fontWeight: 700, cursor: "pointer",
+    minWidth: 88, minHeight: 88, touchAction: "manipulation",
+    transition: "background 0.15s, border 0.15s",
+  });
+  const nextBtn = {
+    background: P.accent, color: "#1e293b", border: "none",
+    borderRadius: 14, padding: "16px 44px", fontSize: 19, fontWeight: 800,
+    cursor: "pointer", marginTop: 14, minHeight: 56, display: "block",
+  };
+  const twoCol = { display: "flex", gap: 20, flexWrap: "wrap", justifyContent: "center", margin: "16px 0" };
+  const col    = { flex: "1 1 220px", minWidth: 200, textAlign: "center" };
+  const lbl    = { fontSize: 13, color: P.muted, marginBottom: 4 };
+  const sliderWrap = { textAlign: "center", margin: "10px 0" };
+  const vLabel = (v) => ({
+    fontSize: 15, color: P.muted, marginBottom: 6,
+  });
+
+  // ── Steps ─────────────────────────────────────────────────
+
+  // Step 1 — Prerequisite
+  const S1 = (
+    <div>
+      <h2 style={h2}>Vilken passar i luckan?</h2>
+      <p style={p}>Lampan behöver en hel slinga. Vilket material ska fylla luckan — och låta elektroner passera?</p>
+      {prereqFail ? (
+        <div style={{ background:"#1c1010", border:`2px solid ${P.red}`, borderRadius:14, padding:"16px 20px", marginTop:16 }}>
+          <p style={{ ...p, color:"#fca5a5", fontWeight:700, margin:0 }}>
+            Det verkar som vi behöver repetera ledare och isolatorer lite till.
+          </p>
+          <p style={{ ...p, margin:"8px 0 0", color: P.muted }}>
+            Gå tillbaka till App 1 och prova material-steget igen — sedan är den här appen lättare!
+          </p>
+        </div>
+      ) : (
+        <>
+          <div style={twoCol}>
+            <div style={col}>
+              <CircuitSVG gapMaterial={s1sel} voltage={s1sel === "copper" ? 4.5 : 0} />
+            </div>
+            <div style={{ display:"flex", flexDirection:"column", gap:12, justifyContent:"center" }}>
+              {MATS.map(m => (
+                <button key={m.id} style={{
+                  ...btn(s1sel === m.id, m.ok ? P.green : P.red),
+                  minWidth: 130, minHeight: 88, fontSize: 17,
+                }} onClick={() => pickMat(m)}>
+                  {m.emoji} {m.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          {s1sel && !s1pass && !MATS.find(m => m.id === s1sel)?.ok && (
+            <p style={{ ...p, color: P.red }}>⚠ Elektroner kan inte ta sig igenom. Lampan lyser inte.</p>
+          )}
+          {s1pass && (
+            <>
+              <p style={{ ...p, color: P.green, fontWeight: 700 }}>✓ Koppar låter elektroner hoppa — lampan lyser!</p>
+              <button style={nextBtn} onClick={goNext}>Fortsätt →</button>
+            </>
+          )}
+        </>
+      )}
+    </div>
+  );
+
+  // Step 2 — Vardagsförankring
+  const S2 = (
+    <div>
+      <h2 style={h2}>Ficklampan är släckt!</h2>
+      <p style={p}>Sladden är hel. Allt ser rätt ut. Men lampan lyser inte. Vad saknas?</p>
+      <div style={twoCol}>
+        <div style={col}>
+          <CircuitSVG gapMaterial="copper" voltage={batIn ? 4.5 : 0} />
+        </div>
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"center" }}>
+          {!batIn ? (
+            <button style={{ ...btn(false, P.accent), minWidth: 140, minHeight: 100, fontSize: 17 }}
+              onClick={() => { setBatIn(true); pling(); say("Ja! Batteriet startade rörelsen. Men vad gör det egentligen?"); }}>
+              🔋 Sätt i batteriet!
+            </button>
+          ) : (
+            <div style={{ background:"#14291e", border:`2px solid ${P.green}`, borderRadius:14, padding:"14px 18px", color:"#86efac", fontWeight:700 }}>
+              ✓ Batteriet sitter i!<br/>Elektronerna rör sig!
+            </div>
+          )}
+        </div>
+      </div>
+      {batIn && <button style={nextBtn} onClick={goNext}>Fortsätt →</button>}
+    </div>
+  );
+
+  // Step 3 — Simultan CRA + gate
+  const S3 = (
+    <div>
+      <h2 style={h2}>Hur hårt knuffar batteriet?</h2>
+      <p style={p}>Dra slidern. Titta på kretsen och backen <em>på samma gång</em>!</p>
+      <div style={twoCol}>
+        <div style={col}>
+          <div style={lbl}>Kretsen</div>
+          <CircuitSVG gapMaterial="copper" voltage={voltage} />
+        </div>
+        <div style={col}>
+          <div style={lbl}>Batteriets knuff</div>
+          <HillSVG voltage={voltage} />
+        </div>
+      </div>
+      <div style={sliderWrap}>
+        <div style={vLabel()}>
+          Batteriets knuff: <strong style={{ color: P.accent }}>{voltage} V</strong>
+        </div>
+        <input type="range" min="0" max="9" step="1.5" value={voltage}
+          style={{ width: "78%", height: 14, cursor: "pointer" }}
+          onChange={e => handleVolt(e.target.value)} />
+        <div style={{ display:"flex", justifyContent:"space-between", width:"78%", margin:"4px auto 0", fontSize:12, color:P.muted }}>
+          <span>Svag</span><span>Stark</span>
+        </div>
+      </div>
+      <p style={{ ...p, color: P.text, fontWeight: 600, marginTop: 16 }}>
+        Vad händer med elektronerna om batteriet knuffar hårdare?
+      </p>
+      <div style={row}>
+        {["De rör sig snabbare", "De stannar", "Ingenting händer"].map((t, i) => (
+          <button key={i} style={{
+            ...btn(s3pick === i, i === 0 ? P.green : P.red),
+            minWidth: 160, fontSize: 15,
+            opacity: s3pass && i !== 0 ? 0.45 : 1,
+          }} onClick={() => !s3pass && answerS3(i)}>{t}</button>
+        ))}
+      </div>
+      {s3pass && <button style={nextBtn} onClick={goNext}>Fortsätt →</button>}
+    </div>
+  );
+
+  // Step 4 — Discovery: slider till 0 → term "spänning"
+  const S4 = (
+    <div>
+      <h2 style={h2}>Vad händer utan knuff?</h2>
+      <p style={p}>Dra slidern hela vägen till vänster — ner till noll. Vad tror du händer?</p>
+      <div style={twoCol}>
+        <div style={col}>
+          <div style={lbl}>Kretsen</div>
+          <CircuitSVG gapMaterial="copper" voltage={voltage} />
+        </div>
+        <div style={col}>
+          <div style={lbl}>Batteriets knuff</div>
+          <HillSVG voltage={voltage} />
+        </div>
+      </div>
+      <div style={sliderWrap}>
+        <div style={vLabel()}>
+          Batteriets knuff: <strong style={{ color: voltage === 0 ? P.red : P.accent }}>{voltage} V</strong>
+        </div>
+        <input type="range" min="0" max="9" step="1.5" value={voltage}
+          style={{ width: "78%", height: 14, cursor: "pointer" }}
+          onChange={e => handleVolt(e.target.value)} />
+      </div>
+      {zeroSeen && (
+        <div style={{ background:"#0d1f3c", border:`2px solid ${P.blue}`, borderRadius:16, padding:"18px 22px", marginTop:16 }}>
+          <p style={{ margin:0, color:"#bfdbfe", fontSize:18, fontWeight:800 }}>
+            Batteriets knuff kallas <span style={{ color: P.accent, fontSize: 22 }}>SPÄNNING</span>!
+          </p>
+          <p style={{ margin:"8px 0 0", color: P.muted, fontSize:15 }}>
+            Mer spänning → elektroner rör sig snabbare → starkare ljus.
+          </p>
+          <button style={nextBtn} onClick={goNext}>Leka fritt! →</button>
+        </div>
+      )}
+    </div>
+  );
+
+  // Step 5 — Fri utforskning + reflect
+  const S5 = (
+    <div>
+      <h2 style={h2}>Din tur att leka!</h2>
+      <div style={twoCol}>
+        <div style={col}>
+          <div style={lbl}>Kretsen</div>
+          <CircuitSVG gapMaterial="copper" voltage={voltage} />
+          {extraLamp && (
+            <div style={{ fontSize: 13, color:"#93c5fd", marginTop: 4 }}>
+              💡💡 Två lampor — elektronerna delar på sig!
+            </div>
+          )}
+        </div>
+        <div style={col}>
+          <div style={lbl}>Batteriets knuff</div>
+          <HillSVG voltage={voltage} />
+        </div>
+      </div>
+      <div style={sliderWrap}>
+        <div style={vLabel()}>
+          Spänning: <strong style={{ color: P.accent }}>{voltage} V</strong>
+        </div>
+        <input type="range" min="0" max="9" step="1.5" value={voltage}
+          style={{ width: "78%", height: 14, cursor: "pointer" }}
+          onChange={e => handleVolt(e.target.value)} />
+      </div>
+      <div style={{ textAlign:"center", marginTop:12 }}>
+        <button style={btn(extraLamp, P.blue)}
+          onClick={() => { setExtraLamp(!extraLamp); tick(); }}>
+          {extraLamp ? "💡💡 Två lampor" : "➕ Lägg till en lampa till"}
+        </button>
+      </div>
+
+      {/* Reflect */}
+      <div style={{ background:"#0d1f17", border:`2px solid ${P.green}`, borderRadius:16, padding:"18px 22px", marginTop:20 }}>
+        <p style={{ ...p, color:"#86efac", fontWeight:700, margin:"0 0 12px" }}>Vad gör batteriet?</p>
+        {[
+          "Det lagrar ljus",
+          "Det knuffar elektroner — det är spänning!",
+          "Det gör sladden varm",
+        ].map((t, i) => (
+          <button key={i} style={{
+            display:"block", width:"100%", textAlign:"left",
+            background: reflect === i ? (i === 1 ? "#14401e" : "#3b0f0f") : "#0f1f13",
+            border: `2px solid ${reflect === i ? (i === 1 ? P.green : P.red) : "#1f3a24"}`,
+            borderRadius: 10, padding: "13px 16px", marginBottom: 8,
+            color: P.text, fontSize: 16, cursor: "pointer",
+            fontWeight: reflect === i ? 700 : 400,
+            touchAction: "manipulation", minHeight: 52,
+          }} onClick={() => {
+            setReflect(i);
+            i === 1 ? pling() : bonk();
+            i === 1
+              ? say("Precis! Batteriet knuffar elektroner. Det är spänning. Du klarade det!")
+              : say("Titta på backen igen — vad gör batteriet med elektronernas rörelse?");
+          }}>{t}</button>
+        ))}
+      </div>
+
+      {reflect === 1 && (
+        <div style={{ background:"#1a1508", border:`2px solid ${P.accent}`, borderRadius:14, padding:"16px 20px", marginTop:12 }}>
+          <p style={{ margin:0, color:"#fde68a", fontWeight:800, fontSize:17 }}>🎉 Bra jobbat!</p>
+          <p style={{ margin:"8px 0 0", color: P.muted, fontSize:15 }}>
+            <strong style={{color:P.text}}>Fråga en vuxen:</strong> Kan ni hitta en sak hemma som har batteri?
+            Vad tror ni batteriet gör just i den saken?
+          </p>
+        </div>
+      )}
+    </div>
+  );
+
+  const STEPS_MAP = [null, S1, S2, S3, S4, S5];
+  const STEP_LABELS = ["", "Ledare?", "Batteri!", "Knuffen", "Noll?", "Lek fritt"];
+
+  return (
+    <>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet" />
+      <div style={{
+        minHeight: "100dvh", background: P.bg, color: P.text,
+        fontFamily: "'Nunito', sans-serif",
+        display: "flex", flexDirection: "column", alignItems: "center",
+        padding: "16px 12px", boxSizing: "border-box",
+      }}>
+
+        {/* Header */}
+        <div style={{ width:"100%", maxWidth:780, marginBottom: 12 }}>
+          <h1 style={{ textAlign:"center", fontSize: 21, fontWeight:800, color: P.accent, margin:"0 0 10px" }}>
+            ⚡ Vad knuffar elektroner?
+          </h1>
+          {/* Progress */}
+          <div style={{ display:"flex", gap:6, justifyContent:"center", alignItems:"center" }}>
+            {[1,2,3,4,5].map(i => (
+              <div key={i} style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:3 }}>
+                <div style={{
+                  width: 14, height: 14, borderRadius:"50%",
+                  background: i < step ? P.accent : i === step ? P.blue : "#30363d",
+                  transition: "background 0.3s",
+                }} />
+                <span style={{ fontSize:10, color: i === step ? P.blue : P.muted }}>
+                  {STEP_LABELS[i]}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Step card */}
+        <div style={card}>{STEPS_MAP[step]}</div>
+
+        {/* Mascot */}
+        <div style={{
+          background:"#0d1f3c", border:`1px solid ${P.blue}`,
+          borderRadius:16, padding:"12px 18px",
+          width:"100%", maxWidth:780, boxSizing:"border-box",
+          display:"flex", gap:12, alignItems:"flex-start",
+        }}>
+          <span style={{ fontSize:30, lineHeight:1 }}>🤖</span>
+          <p style={{ margin:0, color:"#bfdbfe", fontSize:16, lineHeight:1.5 }}>{mascot}</p>
+        </div>
+
+      </div>
+    </>
+  );
+}

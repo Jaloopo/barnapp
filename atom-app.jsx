@@ -1,0 +1,691 @@
+import { useState, useEffect, useCallback } from "react";
+
+const ELEMENTS = [
+  null,
+  { name: "Väte", symbol: "H", color: "#FFD700", neutrons: 0, fact: "Det lättaste ämnet!", emoji: "✨" },
+  { name: "Helium", symbol: "He", color: "#FF69B4", neutrons: 2, fact: "Gör ballonger svävande!", emoji: "🎈" },
+  { name: "Litium", symbol: "Li", color: "#FF4444", neutrons: 4, fact: "Finns i batterier!", emoji: "🔋" },
+  { name: "Beryllium", symbol: "Be", color: "#44DD88", neutrons: 5, fact: "Superstarkt och lätt!", emoji: "💪" },
+  { name: "Bor", symbol: "B", color: "#22CCBB", neutrons: 6, fact: "Finns i slime!", emoji: "🧪" },
+  { name: "Kol", symbol: "C", color: "#AABBCC", neutrons: 6, fact: "Du är gjord av kol!", emoji: "💎" },
+  { name: "Kväve", symbol: "N", color: "#4488FF", neutrons: 7, fact: "78% av luften!", emoji: "🌬️" },
+  { name: "Syre", symbol: "O", color: "#44BBFF", neutrons: 8, fact: "Du andas mig!", emoji: "🫁" },
+  { name: "Fluor", symbol: "F", color: "#88FF44", neutrons: 10, fact: "Finns i tandkräm!", emoji: "🪥" },
+  { name: "Neon", symbol: "Ne", color: "#FF6622", neutrons: 10, fact: "Lyser i skyltar!", emoji: "💡" },
+];
+
+const STEP_LABELS = ["🔍", "⚛️", "🤔", "🔬", "🏗️", "⭐"];
+const PROTON_COLOR = "#FF6B4A";
+const NEUTRON_COLOR = "#8899AA";
+const ELECTRON_COLOR = "#44AAFF";
+
+function getNucleusPositions(count) {
+  if (count === 0) return [];
+  const positions = [{ x: 0, y: 0 }];
+  if (count === 1) return positions;
+  const rings = [
+    { radius: 22, max: 6 },
+    { radius: 44, max: 12 },
+  ];
+  let placed = 1;
+  for (const ring of rings) {
+    if (placed >= count) break;
+    const inRing = Math.min(ring.max, count - placed);
+    for (let i = 0; i < inRing; i++) {
+      const angle = (2 * Math.PI * i) / inRing - Math.PI / 2;
+      positions.push({ x: Math.cos(angle) * ring.radius, y: Math.sin(angle) * ring.radius });
+      placed++;
+    }
+  }
+  return positions.slice(0, count);
+}
+
+function getElectronShells(electronCount) {
+  const shells = [];
+  let remaining = electronCount;
+  const shell1 = Math.min(2, remaining);
+  if (shell1 > 0) shells.push({ radius: 75, count: shell1 });
+  remaining -= shell1;
+  if (remaining > 0) shells.push({ radius: 125, count: Math.min(8, remaining) });
+  return shells;
+}
+
+function AtomView({ protons = 0, neutrons = 0, electrons = 0, color = "#FFD700", size = 300, animate = true, showLabels = false, minimal = false }) {
+  const cx = size / 2;
+  const cy = size / 2;
+  const scale = size / 300;
+  const pPositions = getNucleusPositions(protons);
+  const nPositions = getNucleusPositions(neutrons);
+  const shells = getElectronShells(electrons);
+
+  const nOffset = protons > 0 ? 11 : 0;
+
+  return (
+    <div style={{ width: size, height: size, position: "relative" }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        <defs>
+          <radialGradient id="protonGrad"><stop offset="30%" stopColor="#FF9B7A" /><stop offset="100%" stopColor={PROTON_COLOR} /></radialGradient>
+          <radialGradient id="neutronGrad"><stop offset="30%" stopColor="#AABBCC" /><stop offset="100%" stopColor={NEUTRON_COLOR} /></radialGradient>
+          <radialGradient id="electronGrad"><stop offset="20%" stopColor="#88DDFF" /><stop offset="100%" stopColor={ELECTRON_COLOR} /></radialGradient>
+          <filter id="glow"><feGaussianBlur stdDeviation="4" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+          <filter id="nucleusGlow"><feGaussianBlur stdDeviation="8" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+        </defs>
+
+        {!minimal && shells.map((shell, si) => (
+          <circle key={si} cx={cx} cy={cy} r={shell.radius * scale} fill="none" stroke={color} strokeWidth={1} strokeDasharray="4 6" opacity={0.3} />
+        ))}
+
+        {!minimal && <circle cx={cx} cy={cy} r={(protons + neutrons > 6 ? 55 : 35) * scale} fill={color} opacity={0.08} filter="url(#nucleusGlow)" />}
+
+        {nPositions.map((pos, i) => (
+          <circle key={`n${i}`} cx={cx + (pos.x + nOffset) * scale} cy={cy + (pos.y + nOffset) * scale} r={10 * scale} fill="url(#neutronGrad)" opacity={0.85}>
+            {animate && <animate attributeName="r" values={`${10 * scale};${11 * scale};${10 * scale}`} dur={`${2 + i * 0.3}s`} repeatCount="indefinite" />}
+          </circle>
+        ))}
+        {pPositions.map((pos, i) => (
+          <circle key={`p${i}`} cx={cx + (pos.x - nOffset * 0.3) * scale} cy={cy + (pos.y - nOffset * 0.3) * scale} r={10 * scale} fill="url(#protonGrad)" filter="url(#glow)">
+            {animate && <animate attributeName="r" values={`${10 * scale};${11.5 * scale};${10 * scale}`} dur={`${1.8 + i * 0.2}s`} repeatCount="indefinite" />}
+          </circle>
+        ))}
+
+        {!minimal && shells.map((shell, si) =>
+          Array.from({ length: shell.count }).map((_, ei) => {
+            const totalInShell = shell.count;
+            const startAngle = (360 / totalInShell) * ei;
+            const dur = si === 0 ? 3 : 5;
+            return (
+              <g key={`e${si}-${ei}`}>
+                <animateTransform attributeName="transform" type="rotate" from={`${startAngle} ${cx} ${cy}`} to={`${startAngle + 360} ${cx} ${cy}`} dur={`${dur}s`} repeatCount="indefinite" />
+                <circle cx={cx + shell.radius * scale} cy={cy} r={7 * scale} fill="url(#electronGrad)" filter="url(#glow)" />
+              </g>
+            );
+          })
+        )}
+      </svg>
+
+      {showLabels && protons > 0 && (
+        <div style={{ position: "absolute", bottom: 4, left: 0, right: 0, textAlign: "center", fontSize: 11 * scale, color: "rgba(255,255,255,0.5)", fontFamily: "Nunito" }}>
+          <span style={{ color: PROTON_COLOR }}>●</span> proton &nbsp;
+          <span style={{ color: NEUTRON_COLOR }}>●</span> neutron &nbsp;
+          <span style={{ color: ELECTRON_COLOR }}>●</span> elektron
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Mascot({ message, subMessage }) {
+  return (
+    <div className="mascot-bubble" style={{ display: "flex", alignItems: "flex-start", gap: 12, background: "rgba(255,255,255,0.06)", borderRadius: 20, padding: "14px 18px", border: "1px solid rgba(255,255,255,0.1)", maxWidth: 360 }}>
+      <div style={{ fontSize: 36, lineHeight: 1, flexShrink: 0, animation: "mascotBounce 2s ease-in-out infinite" }}>⭐</div>
+      <div>
+        <div style={{ fontSize: 16, color: "#FFE4AA", fontWeight: 600, lineHeight: 1.4 }}>{message}</div>
+        {subMessage && <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginTop: 4, lineHeight: 1.4 }}>{subMessage}</div>}
+      </div>
+    </div>
+  );
+}
+
+function ProgressMap({ currentStep, totalSteps }) {
+  return (
+    <div style={{ display: "flex", gap: 6, justifyContent: "center", padding: "12px 0" }}>
+      {Array.from({ length: totalSteps }).map((_, i) => (
+        <div key={i} style={{
+          width: 36, height: 36, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: 16, background: i === currentStep ? "rgba(255,255,255,0.15)" : i < currentStep ? "rgba(255,215,0,0.15)" : "rgba(255,255,255,0.04)",
+          border: i === currentStep ? "2px solid rgba(255,255,255,0.3)" : i < currentStep ? "2px solid rgba(255,215,0,0.3)" : "2px solid rgba(255,255,255,0.08)",
+          transition: "all 0.4s ease",
+        }}>
+          {i < currentStep ? "✓" : STEP_LABELS[i]}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function BigButton({ onClick, children, color = "#FFD700", disabled = false, style = {} }) {
+  return (
+    <button onClick={onClick} disabled={disabled} style={{
+      padding: "16px 36px", borderRadius: 50, border: "none", fontSize: 18, fontWeight: 700,
+      fontFamily: "Nunito", cursor: disabled ? "default" : "pointer",
+      background: disabled ? "rgba(255,255,255,0.08)" : color,
+      color: disabled ? "rgba(255,255,255,0.3)" : "#1a1a2e",
+      transform: disabled ? "none" : "scale(1)",
+      transition: "all 0.2s ease",
+      minWidth: 48, minHeight: 48,
+      boxShadow: disabled ? "none" : `0 4px 20px ${color}44`,
+      ...style,
+    }}>
+      {children}
+    </button>
+  );
+}
+
+function ParticleButton({ label, color, emoji, onClick, disabled, added }) {
+  return (
+    <button onClick={onClick} disabled={disabled || added} style={{
+      display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
+      padding: "16px 20px", borderRadius: 20, border: `2px solid ${added ? "rgba(100,255,100,0.4)" : `${color}66`}`,
+      background: added ? "rgba(100,255,100,0.08)" : `${color}15`,
+      cursor: disabled || added ? "default" : "pointer",
+      opacity: added ? 0.5 : 1, transition: "all 0.3s ease",
+      minWidth: 90, minHeight: 80, fontFamily: "Nunito",
+    }}>
+      <div style={{ width: 32, height: 32, borderRadius: "50%", background: added ? "#66BB6A" : color, transition: "all 0.3s" }}>
+        {added && <span style={{ fontSize: 20, lineHeight: "32px" }}>✓</span>}
+      </div>
+      <div style={{ fontSize: 14, color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>{label}</div>
+    </button>
+  );
+}
+
+// Step 0: Mystery Atom
+function Step0({ onComplete }) {
+  const [cracked, setCracked] = useState(false);
+  const [showParts, setShowParts] = useState(false);
+  const [ready, setReady] = useState(false);
+
+  const handleCrack = () => {
+    if (cracked) return;
+    setCracked(true);
+    setTimeout(() => setShowParts(true), 600);
+    setTimeout(() => setReady(true), 2000);
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20, padding: "10px 20px" }}>
+      <div style={{ fontSize: 22, color: "#FFE4AA", fontWeight: 700, textAlign: "center" }}>
+        Vad finns inuti en atom? 🔍
+      </div>
+      <div style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", textAlign: "center" }}>
+        Tryck på atomen!
+      </div>
+
+      <div onClick={handleCrack} style={{
+        width: 200, height: 200, borderRadius: "50%", cursor: cracked ? "default" : "pointer",
+        background: cracked ? "transparent" : "radial-gradient(circle, #FFD70033, #FFD70011)",
+        border: cracked ? "none" : "3px solid #FFD70055",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        fontSize: cracked ? 0 : 64, transition: "all 0.6s ease",
+        animation: cracked ? "none" : "mysteryPulse 2s ease-in-out infinite",
+        position: "relative",
+      }}>
+        {!cracked && "?"}
+
+        {showParts && (
+          <>
+            <div className="particle-reveal" style={{ position: "absolute", top: 20, left: "50%", transform: "translateX(-50%)", animation: "flyUp 0.8s ease-out forwards" }}>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                <div style={{ width: 40, height: 40, borderRadius: "50%", background: PROTON_COLOR, boxShadow: `0 0 15px ${PROTON_COLOR}88` }} />
+                <span style={{ fontSize: 13, color: PROTON_COLOR, fontWeight: 700 }}>Proton</span>
+              </div>
+            </div>
+            <div className="particle-reveal" style={{ position: "absolute", bottom: 20, left: 20, animation: "flyLeft 0.8s ease-out 0.2s forwards", opacity: 0 }}>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                <div style={{ width: 40, height: 40, borderRadius: "50%", background: NEUTRON_COLOR, boxShadow: `0 0 15px ${NEUTRON_COLOR}88` }} />
+                <span style={{ fontSize: 13, color: NEUTRON_COLOR, fontWeight: 700 }}>Neutron</span>
+              </div>
+            </div>
+            <div className="particle-reveal" style={{ position: "absolute", bottom: 20, right: 20, animation: "flyRight 0.8s ease-out 0.4s forwards", opacity: 0 }}>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                <div style={{ width: 28, height: 28, borderRadius: "50%", background: ELECTRON_COLOR, boxShadow: `0 0 15px ${ELECTRON_COLOR}88` }} />
+                <span style={{ fontSize: 13, color: ELECTRON_COLOR, fontWeight: 700 }}>Elektron</span>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      {ready && (
+        <div style={{ animation: "fadeIn 0.5s ease", display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+          <Mascot message="Varje atom har tre delar! Protoner, neutroner och elektroner." subMessage="👆 Fråga en vuxen: vilken del tror ni är störst?" />
+          <BigButton onClick={onComplete}>Nästa →</BigButton>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Step 1: Build Hydrogen
+function Step1({ onComplete }) {
+  const [added, setAdded] = useState({ proton: false, neutron: false, electron: false });
+  const [showComplete, setShowComplete] = useState(false);
+  const allAdded = added.proton && added.electron;
+
+  const addPart = (part) => {
+    const newAdded = { ...added, [part]: true };
+    setAdded(newAdded);
+    if (newAdded.proton && newAdded.electron) {
+      setTimeout(() => setShowComplete(true), 800);
+    }
+  };
+
+  const protonCount = added.proton ? 1 : 0;
+  const neutronCount = 0;
+  const electronCount = added.electron ? 1 : 0;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16, padding: "10px 20px" }}>
+      <div style={{ fontSize: 20, color: "#FFE4AA", fontWeight: 700, textAlign: "center" }}>
+        Bygg din första atom!
+      </div>
+      <div style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", textAlign: "center" }}>
+        Tryck på delarna för att bygga
+      </div>
+
+      <div style={{ position: "relative" }}>
+        <AtomView protons={protonCount} neutrons={neutronCount} electrons={electronCount} color="#FFD700" size={220} showLabels={protonCount > 0} />
+        {allAdded && (
+          <div style={{ position: "absolute", bottom: -8, left: 0, right: 0, textAlign: "center", animation: "fadeIn 0.6s ease" }}>
+            <span style={{ fontSize: 28, fontWeight: 800, color: "#FFD700", textShadow: "0 0 20px #FFD70066" }}>VÄTE (H)</span>
+          </div>
+        )}
+      </div>
+
+      <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+        <ParticleButton label="Proton" color={PROTON_COLOR} onClick={() => addPart("proton")} added={added.proton} />
+        <ParticleButton label="Elektron" color={ELECTRON_COLOR} onClick={() => addPart("electron")} added={added.electron} />
+      </div>
+
+      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", textAlign: "center" }}>
+        Väte är det enklaste ämnet — en proton och en elektron!
+      </div>
+
+      {showComplete && (
+        <div style={{ animation: "fadeIn 0.5s ease", display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+          <Mascot message="Du byggde väte! Det enklaste ämnet i universum. ✨" subMessage="Solen är full av väte!" />
+          <BigButton onClick={onComplete}>Nästa →</BigButton>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Step 2: Prediction — Add a proton
+function Step2({ onComplete }) {
+  const [prediction, setPrediction] = useState(null);
+  const [added, setAdded] = useState(false);
+  const [showResult, setShowResult] = useState(false);
+
+  const handleAdd = () => {
+    setAdded(true);
+    setTimeout(() => setShowResult(true), 1200);
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16, padding: "10px 20px" }}>
+      <div style={{ fontSize: 20, color: "#FFE4AA", fontWeight: 700, textAlign: "center" }}>
+        Vad händer om vi lägger till en proton?
+      </div>
+
+      {!prediction && (
+        <div style={{ display: "flex", gap: 12, animation: "fadeIn 0.4s ease" }}>
+          <button onClick={() => setPrediction("same")} style={{
+            padding: "14px 20px", borderRadius: 16, border: "2px solid rgba(255,255,255,0.15)",
+            background: "rgba(255,255,255,0.05)", color: "#fff", fontSize: 15, fontFamily: "Nunito",
+            cursor: "pointer", fontWeight: 600, minHeight: 48,
+          }}>
+            🤔 Samma ämne
+          </button>
+          <button onClick={() => setPrediction("new")} style={{
+            padding: "14px 20px", borderRadius: 16, border: "2px solid rgba(255,255,255,0.15)",
+            background: "rgba(255,255,255,0.05)", color: "#fff", fontSize: 15, fontFamily: "Nunito",
+            cursor: "pointer", fontWeight: 600, minHeight: 48,
+          }}>
+            ✨ Nytt ämne
+          </button>
+        </div>
+      )}
+
+      {prediction && !added && (
+        <div style={{ animation: "fadeIn 0.4s ease", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+          <div style={{ fontSize: 14, color: "rgba(255,255,255,0.5)" }}>
+            Du gissade: {prediction === "same" ? "samma ämne" : "nytt ämne"}
+          </div>
+          <AtomView protons={1} neutrons={0} electrons={1} color="#FFD700" size={180} />
+          <BigButton onClick={handleAdd} color={PROTON_COLOR}>
+            + Lägg till proton!
+          </BigButton>
+        </div>
+      )}
+
+      {added && !showResult && (
+        <div style={{ animation: "atomTransform 1.2s ease", display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <AtomView protons={2} neutrons={2} electrons={2} color="#FF69B4" size={220} />
+          <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", marginTop: 8, animation: "pulse 1s ease-in-out infinite" }}>
+            Förvandlas...
+          </div>
+        </div>
+      )}
+
+      {showResult && (
+        <div style={{ animation: "fadeIn 0.5s ease", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+          <AtomView protons={2} neutrons={2} electrons={2} color="#FF69B4" size={220} />
+          <div style={{ fontSize: 28, fontWeight: 800, color: "#FF69B4", textShadow: "0 0 20px #FF69B466" }}>
+            HELIUM (He) 🎈
+          </div>
+
+          <Mascot
+            message={prediction === "new"
+              ? "Du gissade rätt! En extra proton → helt nytt ämne!"
+              : "Spännande! Bara en proton till och det blev helium!"}
+            subMessage="Protoner bestämmer vilket ämne det är. Det är atomernas hemlighet!"
+          />
+          <BigButton onClick={onComplete}>Nästa →</BigButton>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Step 3: Element Explorer
+function Step3({ onComplete }) {
+  const [protons, setProtons] = useState(1);
+  const [explored, setExplored] = useState(new Set([1]));
+  const [showContinue, setShowContinue] = useState(false);
+  const el = ELEMENTS[protons];
+
+  useEffect(() => {
+    setExplored(prev => {
+      const next = new Set(prev);
+      next.add(protons);
+      if (next.size >= 4) setTimeout(() => setShowContinue(true), 500);
+      return next;
+    });
+  }, [protons]);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, padding: "10px 20px" }}>
+      <div style={{ fontSize: 20, color: "#FFE4AA", fontWeight: 700, textAlign: "center" }}>
+        Elementutforskaren 🔬
+      </div>
+      <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", textAlign: "center" }}>
+        Ändra antal protoner — se vad som händer!
+      </div>
+
+      <div style={{ position: "relative" }}>
+        <AtomView protons={protons} neutrons={el.neutrons} electrons={protons} color={el.color} size={200} />
+      </div>
+
+      <div style={{
+        display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+        background: `${el.color}15`, border: `2px solid ${el.color}44`, borderRadius: 20,
+        padding: "10px 28px", transition: "all 0.4s ease",
+      }}>
+        <div style={{ fontSize: 32, fontWeight: 800, color: el.color, transition: "color 0.4s" }}>
+          {el.name} ({el.symbol})
+        </div>
+        <div style={{ fontSize: 15, color: "rgba(255,255,255,0.6)" }}>
+          {el.emoji} {el.fact}
+        </div>
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>
+          {protons} {protons === 1 ? "proton" : "protoner"} · {el.neutrons} neutroner · {protons} {protons === 1 ? "elektron" : "elektroner"}
+        </div>
+      </div>
+
+      <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+        <button onClick={() => setProtons(Math.max(1, protons - 1))} disabled={protons <= 1} style={{
+          width: 56, height: 56, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.2)",
+          background: protons <= 1 ? "rgba(255,255,255,0.03)" : "rgba(255,100,74,0.15)",
+          color: protons <= 1 ? "rgba(255,255,255,0.2)" : PROTON_COLOR,
+          fontSize: 28, fontWeight: 700, cursor: protons <= 1 ? "default" : "pointer",
+          fontFamily: "Nunito", transition: "all 0.2s",
+        }}>−</button>
+        <div style={{ fontSize: 18, color: "rgba(255,255,255,0.6)", fontWeight: 700, minWidth: 80, textAlign: "center" }}>
+          {protons} {protons === 1 ? "proton" : "protoner"}
+        </div>
+        <button onClick={() => setProtons(Math.min(10, protons + 1))} disabled={protons >= 10} style={{
+          width: 56, height: 56, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.2)",
+          background: protons >= 10 ? "rgba(255,255,255,0.03)" : "rgba(255,100,74,0.15)",
+          color: protons >= 10 ? "rgba(255,255,255,0.2)" : PROTON_COLOR,
+          fontSize: 28, fontWeight: 700, cursor: protons >= 10 ? "default" : "pointer",
+          fontFamily: "Nunito", transition: "all 0.2s",
+        }}>+</button>
+      </div>
+
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center" }}>
+        {ELEMENTS.slice(1).map((el, i) => (
+          <div key={i} style={{
+            width: 30, height: 30, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 11, fontWeight: 700, fontFamily: "Nunito",
+            background: protons === i + 1 ? el.color : explored.has(i + 1) ? `${el.color}33` : "rgba(255,255,255,0.05)",
+            color: protons === i + 1 ? "#1a1a2e" : explored.has(i + 1) ? el.color : "rgba(255,255,255,0.2)",
+            border: protons === i + 1 ? "none" : explored.has(i + 1) ? `1px solid ${el.color}55` : "1px solid rgba(255,255,255,0.1)",
+            transition: "all 0.3s",
+          }}>
+            {el.symbol}
+          </div>
+        ))}
+      </div>
+
+      {!showContinue && (
+        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.3)" }}>
+          Utforska minst 4 ämnen för att gå vidare...
+        </div>
+      )}
+
+      {showContinue && (
+        <div style={{ animation: "fadeIn 0.5s ease", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+          <Mascot message="Fler protoner → nytt ämne. Varje gång!" subMessage="👆 Fråga en vuxen: vad har mest protoner — guld eller järn?" />
+          <BigButton onClick={onComplete}>Nästa →</BigButton>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Step 4: Challenge — Build Carbon
+function Step4({ onComplete }) {
+  const [protons, setProtons] = useState(1);
+  const [solved, setSolved] = useState(false);
+  const [attempts, setAttempts] = useState(0);
+  const el = ELEMENTS[protons];
+
+  const handleCheck = () => {
+    if (protons === 6) {
+      setSolved(true);
+    } else {
+      setAttempts(a => a + 1);
+    }
+  };
+
+  const hintText = attempts >= 2
+    ? "Ledtråd: kol har 6 protoner!"
+    : attempts >= 1
+    ? "Inte riktigt... Kol har symbolen C. Prova igen!"
+    : null;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14, padding: "10px 20px" }}>
+      <div style={{ fontSize: 20, color: "#FFE4AA", fontWeight: 700, textAlign: "center" }}>
+        Kan du bygga KOL? 💎
+      </div>
+      <div style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", textAlign: "center" }}>
+        Kol finns i dig, i diamanter, i blyertspennor!
+      </div>
+
+      <AtomView protons={protons} neutrons={el.neutrons} electrons={protons} color={el.color} size={180} />
+
+      <div style={{
+        fontSize: 24, fontWeight: 800, color: el.color, transition: "color 0.4s",
+        padding: "4px 16px", borderRadius: 12,
+        background: solved ? "rgba(100,255,100,0.1)" : "transparent",
+      }}>
+        {el.name} ({el.symbol})
+      </div>
+
+      {!solved && (
+        <>
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <button onClick={() => setProtons(Math.max(1, protons - 1))} style={{
+              width: 56, height: 56, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.2)",
+              background: "rgba(255,100,74,0.15)", color: PROTON_COLOR, fontSize: 28, fontWeight: 700,
+              cursor: "pointer", fontFamily: "Nunito",
+            }}>−</button>
+            <div style={{ fontSize: 18, color: "rgba(255,255,255,0.6)", fontWeight: 700, minWidth: 80, textAlign: "center" }}>
+              {protons} {protons === 1 ? "proton" : "protoner"}
+            </div>
+            <button onClick={() => setProtons(Math.min(10, protons + 1))} style={{
+              width: 56, height: 56, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.2)",
+              background: "rgba(255,100,74,0.15)", color: PROTON_COLOR, fontSize: 28, fontWeight: 700,
+              cursor: "pointer", fontFamily: "Nunito",
+            }}>+</button>
+          </div>
+
+          <BigButton onClick={handleCheck} color="#44DD88">
+            Kolla! ✓
+          </BigButton>
+
+          {hintText && (
+            <div style={{ animation: "fadeIn 0.3s ease", fontSize: 14, color: "#FFE4AA", textAlign: "center", padding: "8px 16px", background: "rgba(255,228,170,0.08)", borderRadius: 12 }}>
+              {hintText}
+            </div>
+          )}
+        </>
+      )}
+
+      {solved && (
+        <div style={{ animation: "fadeIn 0.5s ease", display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
+          <div style={{ fontSize: 48, animation: "celebrateSpin 1s ease" }}>💎🎉</div>
+          <Mascot message="Du byggde kol! 6 protoner = kol. Alltid!" subMessage="Allt levande innehåller kol — du, träd, till och med bakterier." />
+          <BigButton onClick={onComplete}>Nästa →</BigButton>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Step 5: Reflection
+function Step5() {
+  const [choice, setChoice] = useState(null);
+
+  const options = [
+    { id: "parts", icon: "⚛️", text: "Atomer har protoner, neutroner och elektroner" },
+    { id: "protons", icon: "🔑", text: "Protoner bestämmer ämnet" },
+    { id: "elements", icon: "🌈", text: "Det finns massor av olika ämnen" },
+  ];
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16, padding: "10px 20px" }}>
+      <div style={{ fontSize: 22, color: "#FFE4AA", fontWeight: 700, textAlign: "center" }}>
+        Vad tyckte du var mest spännande? ⭐
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", maxWidth: 340 }}>
+        {options.map(opt => (
+          <button key={opt.id} onClick={() => setChoice(opt.id)} style={{
+            display: "flex", alignItems: "center", gap: 12, padding: "16px 18px", borderRadius: 16,
+            border: choice === opt.id ? "2px solid #FFD700" : "2px solid rgba(255,255,255,0.1)",
+            background: choice === opt.id ? "rgba(255,215,0,0.1)" : "rgba(255,255,255,0.04)",
+            cursor: "pointer", textAlign: "left", fontFamily: "Nunito", transition: "all 0.3s",
+            minHeight: 56,
+          }}>
+            <span style={{ fontSize: 28, flexShrink: 0 }}>{opt.icon}</span>
+            <span style={{ fontSize: 15, color: choice === opt.id ? "#FFE4AA" : "rgba(255,255,255,0.7)", fontWeight: choice === opt.id ? 700 : 500 }}>
+              {opt.text}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {choice && (
+        <div style={{ animation: "fadeIn 0.5s ease", display: "flex", flexDirection: "column", alignItems: "center", gap: 14, marginTop: 8 }}>
+          <Mascot
+            message="Fantastiskt! Du har lärt dig atomernas hemlighet! 🌟"
+            subMessage="Nu vet du mer om atomer än de flesta vuxna visste som barn."
+          />
+          <div style={{
+            background: "rgba(255,255,255,0.04)", borderRadius: 16, padding: "14px 18px",
+            border: "1px solid rgba(255,255,255,0.08)", maxWidth: 340,
+          }}>
+            <div style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.5 }}>
+              👨‍👩‍👧 <strong style={{ color: "#FFE4AA" }}>Fråga en vuxen:</strong> Allt runt er — bordet, luften, era händer — är gjort av atomer. Vilka ämnen tror ni finns i saker hemma hos er?
+            </div>
+          </div>
+          <div style={{ fontSize: 48, animation: "celebrateSpin 2s ease infinite" }}>⭐</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function AtomApp() {
+  const [step, setStep] = useState(0);
+
+  return (
+    <div style={{
+      minHeight: "100vh", background: "linear-gradient(160deg, #0a0e27 0%, #151835 40%, #1a1040 100%)",
+      color: "#fff", fontFamily: "'Nunito', sans-serif", overflowX: "hidden",
+    }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        @keyframes mysteryPulse {
+          0%, 100% { transform: scale(1); box-shadow: 0 0 30px #FFD70033; }
+          50% { transform: scale(1.05); box-shadow: 0 0 50px #FFD70055; }
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes flyUp {
+          from { transform: translateX(-50%) translateY(0) scale(0.3); opacity: 0; }
+          to { transform: translateX(-50%) translateY(-60px) scale(1); opacity: 1; }
+        }
+
+        @keyframes flyLeft {
+          from { transform: translateX(0) translateY(0) scale(0.3); opacity: 0; }
+          to { transform: translateX(-40px) translateY(30px) scale(1); opacity: 1; }
+        }
+
+        @keyframes flyRight {
+          from { transform: translateX(0) translateY(0) scale(0.3); opacity: 0; }
+          to { transform: translateX(40px) translateY(30px) scale(1); opacity: 1; }
+        }
+
+        @keyframes atomTransform {
+          0% { transform: scale(1); filter: brightness(1); }
+          50% { transform: scale(1.2); filter: brightness(1.5) hue-rotate(30deg); }
+          100% { transform: scale(1); filter: brightness(1); }
+        }
+
+        @keyframes pulse {
+          0%, 100% { opacity: 0.4; }
+          50% { opacity: 1; }
+        }
+
+        @keyframes celebrateSpin {
+          0% { transform: scale(0) rotate(0deg); }
+          50% { transform: scale(1.3) rotate(180deg); }
+          100% { transform: scale(1) rotate(360deg); }
+        }
+
+        @keyframes mascotBounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-4px); }
+        }
+
+        button:active {
+          transform: scale(0.95) !important;
+        }
+      `}</style>
+
+      <div style={{ maxWidth: 480, margin: "0 auto", padding: "8px 0 40px" }}>
+        <ProgressMap currentStep={step} totalSteps={6} />
+
+        <div key={step} style={{ animation: "fadeIn 0.5s ease" }}>
+          {step === 0 && <Step0 onComplete={() => setStep(1)} />}
+          {step === 1 && <Step1 onComplete={() => setStep(2)} />}
+          {step === 2 && <Step2 onComplete={() => setStep(3)} />}
+          {step === 3 && <Step3 onComplete={() => setStep(4)} />}
+          {step === 4 && <Step4 onComplete={() => setStep(5)} />}
+          {step === 5 && <Step5 />}
+        </div>
+      </div>
+    </div>
+  );
+}
