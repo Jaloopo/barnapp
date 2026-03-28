@@ -22,6 +22,15 @@
 
 **Ett lärandemål per session. 5–15 minuter total längd.**
 
+### Faktagranskning för naturvetenskap (obligatorisk)
+
+För appar med ämnesinnehåll (kemi, fysik, biologi, astronomi): Perplexity-research i design-fasen är **inte valfritt**. Verifiera alltid:
+1. Är det vetenskapligt korrekt på rätt abstraktionsnivå?
+2. Finns det en vanlig felintuition hos barn som appen riskerar förstärka?
+3. Vilket nästa steg i ämnet utelämnas medvetet — och dokumentera det i design.md under "Vad appen INTE gör".
+
+*Lärdomen: "väte och syre reagerar kemiskt" ≠ "de blandas". Appen kan vara åldersmässigt förenklad, men förenklingen ska vara ett aktivt val, inte en miss.*
+
 ---
 
 ## B. INTERAKTIVITETSDESIGN

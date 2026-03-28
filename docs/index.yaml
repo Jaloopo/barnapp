@@ -41,7 +41,7 @@ appar:
     unlocks:
       - astro-1-fusion
       - kemi-3-blandningar
-    status: byggd
+    status: klar
 
   - id: el-1-ledare
     ämne: el
