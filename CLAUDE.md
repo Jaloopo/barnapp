@@ -19,6 +19,8 @@ Du (Sonnet) behöver inte känna till de andra verktygen — de används av män
 4. Du bygger `index.html` i samma mapp
 5. Du kör self-check mot design.md:s beslut
 6. Du committar och pushar direkt till `main` — inga feature branches, inga PRs
+   - Kör alltid: `git add [filer] && git commit -m "..." && git push origin main`
+   - Om push misslyckas: `git pull --rebase origin main && git push origin main`
 
 ## Mappstruktur
 ```
