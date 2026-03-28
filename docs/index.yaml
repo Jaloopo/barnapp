@@ -12,6 +12,22 @@
 #   status:        design | byggd | testad | klar
 
 appar:
+  - id: kemi-1-atomer
+    ämne: kemi
+    titel: Atomer och grundämnen — protoner bestämmer ämnet
+    ålder: 8-9
+    koncept:
+      - atomer
+      - protoner
+      - grundämnen
+      - periodiska systemet (intro)
+    prerequisites: []
+    unlocks:
+      - kemi-2-molekyler
+      - astro-1-fusion
+      - el-1-ledare
+    status: klar
+
   - id: el-1-ledare
     ämne: el
     titel: Ledare och isolatorer
@@ -20,7 +36,8 @@ appar:
       - elektrisk ström
       - ledare
       - isolator
-    prerequisites: []
+    prerequisites:
+      - kemi-1-atomer
     unlocks:
       - el-2-kretsar
     status: design
