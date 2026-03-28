@@ -83,4 +83,4 @@ appar:
       - kemi-1-atomer
     unlocks:
       - astro-2-livscykel
-    status: design
+    status: byggd
