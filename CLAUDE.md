@@ -9,10 +9,10 @@ Interaktiva läroappar för barn 6–12, servade via GitHub Pages. Varje app är
 
 **Solo-projekt. Inga branches, inga PRs.**
 
+- **FÖRSTA KOMMANDOT i varje session:** `git checkout main && git pull origin main` — oavsett vilken branch miljön startar på. Cloud-miljöer skapar ofta feature-branches automatiskt; ignorera dem.
 - Arbeta alltid direkt på `main`.
 - Commit + push till `main` är sista steget i varje flöde — gör det automatiskt utan att fråga användaren.
 - Om push misslyckas: `git pull --rebase origin main && git push origin main`
-- Om du startar på en annan branch (t.ex. cloud environment skapar en): checka ut `main` först med `git checkout main && git pull origin main`.
 
 ---
 
