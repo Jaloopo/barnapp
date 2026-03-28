@@ -255,7 +255,7 @@ function sfxBoom()   { playTone(80,'sawtooth',0.4,0.4); playTone(1400,'sine',0.2
 function sfxPling()  { playTone(880,'sine',0.2,0.3); playTone(1100,'sine',0.15,0.2,0.07); }
 function sfxBonk()   { playTone(180,'square',0.15,0.2); }
 function sfxPop()    { playTone(600,'sine',0.12,0.2); }
-let state = { step1Answer: null, currentStep: 0, zoomLevel: 0, fusionCount: 0, starEnergy: 0, s3Dragging: null, s3Arrived: 0, s3ScaffoldTimer: null, s3Errors: 0, s4Answers: {}, s5Pool: 8, s5Fusions: 0 };
+let state = { step1Answer: null, currentStep: 0, zoomLevel: 0, s3Arrived: 0, s3ScaffoldTimer: null, s3Errors: 0, s4Answers: {}, s5Fusions: 0 };
 
 // flash overlay
 const flashEl = document.createElement('div'); flashEl.className = 'flash-overlay'; document.body.appendChild(flashEl);
@@ -322,9 +322,7 @@ function applyScaffold() {
   if (state.s3Arrived >= 4) return;
   state.s3Errors++;
   const waiting = document.querySelectorAll('.h-atom:not(.arrived)');
-  if (state.s3Errors === 1) {
-    waiting.forEach(a => a.classList.add('scaffold'));
-  } else if (state.s3Errors === 2) {
+  if (state.s3Errors <= 2) {
     waiting.forEach(a => a.classList.add('scaffold'));
   } else {
     // move first non-arrived atom halfway
@@ -449,7 +447,7 @@ function checkStep4Done() {
 function initFactory() {
   const pool = document.getElementById('s4-pool');
   pool.innerHTML = '';
-  state.s5Pool = 8; state.s5Fusions = 0;
+  state.s5Fusions = 0; state.factoryZoneCount = 0;
   for (let i = 0; i < 8; i++) {
     const a = document.createElement('div');
     a.className = 'h-atom'; a.textContent = 'H'; a.style.width = '64px'; a.style.height = '64px';
@@ -460,7 +458,6 @@ function initFactory() {
   }
   updateFactoryZoneCount(0);
 }
-let factoryZoneCount = 0;
 function startFactoryDrag(e) {
   e.preventDefault();
   const atom = e.currentTarget;
@@ -485,9 +482,9 @@ function startFactoryDrag(e) {
     const zr2 = zone.getBoundingClientRect();
     if (raw.clientX > zr2.left && raw.clientX < zr2.right && raw.clientY > zr2.top && raw.clientY < zr2.bottom) {
       atom.dataset.used = '1'; atom.style.opacity='0.3'; atom.style.cursor='default';
-      factoryZoneCount++;
-      updateFactoryZoneCount(factoryZoneCount);
-      if (factoryZoneCount >= 4) doFactoryFusion();
+      state.factoryZoneCount++;
+      updateFactoryZoneCount(state.factoryZoneCount);
+      if (state.factoryZoneCount >= 4) doFactoryFusion();
     }
   }
   document.addEventListener('pointermove', onMove);
@@ -495,10 +492,10 @@ function startFactoryDrag(e) {
 }
 function updateFactoryZoneCount(n) {
   document.getElementById('s4-zone-count').textContent = n + ' / 4';
-  factoryZoneCount = n;
+  state.factoryZoneCount = n;
 }
 function doFactoryFusion() {
-  factoryZoneCount = 0;
+  state.factoryZoneCount = 0;
   state.s5Fusions++;
   sfxBoom(); flashScreen();
   // clear used atoms
