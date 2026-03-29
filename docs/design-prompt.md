@@ -30,6 +30,13 @@ Referera till `docs/principer.md` för:
 
 ## SEKTIONER I design.md
 
+### Prerequisite-analys
+Lista varje koncept appen förutsätter. För varje koncept:
+- **Koncept:** [vad barnet måste förstå innan]
+- **Täcks av:** [app-id från index.yaml] eller **Saknas** → [förslag på app att bygga först]
+
+Om ett prerequisite saknas: designa INTE vidare förrän prerequisite-appen finns (eller ett aktivt beslut tagits att hoppa över, med motivering).
+
 ### Lärandemål
 Ett enda, mätbart lärandemål. Formulera som: "Eleven ska förstå att X, inte Y."
 

@@ -22,6 +22,14 @@
 
 **Ett lärandemål per session. 5–15 minuter total längd.**
 
+### Prerequisite-analys (obligatorisk)
+
+Innan design påbörjas: kartlägg vilka koncept appen *förutsätter* att barnet redan förstår. Kontrollera mot `index.yaml` om det finns en app som täcker varje prerequisite-koncept.
+
+**Tumregel:** Om ett konceptsteg hoppas över (t.ex. "atomer → ström" utan att barnet förstår elektroner, eller "fusion" utan gravitation) saknas en prerequisite-app. Bygg den först.
+
+**Lärdomen:** el-1-ledare förutsatte att barnet visste vad elektroner var och att de rör sig — men kemi-1-atomer lärde bara ut protoner. astro-1-fusion sa "hettan pressar ihop" utan att förklara varifrån trycket kom (gravitation). Båda hade osynliga prerequisite-luckor som märktes först vid barntest.
+
 ### Faktagranskning för naturvetenskap (obligatorisk)
 
 För appar med ämnesinnehåll (kemi, fysik, biologi, astronomi): Perplexity-research i design-fasen är **inte valfritt**. Verifiera alltid:

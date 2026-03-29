@@ -24,16 +24,22 @@ Trigger: användaren ger en idé, t.ex. "barnet vill lära sig om stjärnor"
 1. Läs `docs/index.yaml` — vad har barnet gjort? Vilka koncept är upplåsta?
 2. Föreslå 2–3 vägar med bryggor från tidigare appar
 3. Användaren väljer väg
-4. Bedöm research-behov:
+4. **Prerequisite-analys (obligatorisk):**
+   - Vilka koncept *förutsätter* den nya appen att barnet redan förstår?
+   - Finns det en befintlig app i index.yaml som täcker varje prerequisite-koncept?
+   - Om ett prerequisite-koncept saknas → föreslå att den modulen byggs först
+   - Dokumentera analysen explicit: "Appen förutsätter X. Täcks av [app-id] / Saknas → bygga [förslag] först."
+   - **Tumregel:** Om mer än ett konceptsteg hoppas över (t.ex. "atomer → ström" utan "elektroner") saknas en prerequisite-app.
+5. Bedöm research-behov:
    - 🟢 **Klarar mig** — principer.md + index + tidigare reviews räcker
    - 🟡 **Perplexity rekommenderas** — sakfakta jag är osäker på → ge färdig prompt
    - 🔴 **NotebookLM rekommenderas** — pedagogisk fråga utan stöd i principer.md → ge färdig prompt
-5. Om research: användaren klistrar svar, annars gå vidare
-6. Läs `docs/principer.md` + designmallen i `docs/design-prompt.md`
-7. Skriv `design.md` i rätt mapp (`docs/[ämne]/[ämne]-[nr]-[slug]/design.md`)
-8. Uppdatera `docs/index.yaml` med ny entry (status: design)
-9. Commit + push till main (se Git-policy)
-10. Avsluta med copy-paste-instruktion till användaren: `Skicka detta i en ny session: "/bygg docs/[ämne]/[ämne]-[nr]-[slug]"`
+6. Om research: användaren klistrar svar, annars gå vidare
+7. Läs `docs/principer.md` + designmallen i `docs/design-prompt.md`
+8. Skriv `design.md` i rätt mapp (`docs/[ämne]/[ämne]-[nr]-[slug]/design.md`)
+9. Uppdatera `docs/index.yaml` med ny entry (status: design)
+10. Commit + push till main (se Git-policy)
+11. Avsluta med copy-paste-instruktion till användaren: `Skicka detta i en ny session: "/bygg docs/[ämne]/[ämne]-[nr]-[slug]"`
 
 ### 2. Design → Bygg
 Trigger: användaren säger `/bygg [mapp]` eller `bygg [mapp]`

@@ -24,8 +24,8 @@ appar:
     prerequisites: []
     unlocks:
       - kemi-2-molekyler
-      - astro-1-fusion
-      - el-1-ledare
+      - fysik-1-gravitation
+      - el-0-elektroner
     status: klar
 
   - id: kemi-2-molekyler
@@ -43,6 +43,20 @@ appar:
       - kemi-3-blandningar
     status: klar
 
+  - id: el-0-elektroner
+    ämne: el
+    titel: Elektronerna som rör sig — vad är ström?
+    ålder: 8-9
+    koncept:
+      - elektroner kretsar runt kärnan
+      - yttre elektroner kan hoppa mellan atomer
+      - ström är elektroner som vandrar
+    prerequisites:
+      - kemi-1-atomer
+    unlocks:
+      - el-1-ledare
+    status: planerad
+
   - id: el-1-ledare
     ämne: el
     titel: Ledare och isolatorer — kan elektronen hoppa?
@@ -52,7 +66,7 @@ appar:
       - ledare
       - isolator
     prerequisites:
-      - kemi-1-atomer
+      - el-0-elektroner
     unlocks:
       - el-2-kretsar
     status: byggd
@@ -70,6 +84,20 @@ appar:
     unlocks: []
     status: byggd
 
+  - id: fysik-1-gravitation
+    ämne: fysik
+    titel: Allt drar i allt — gravitation
+    ålder: 8-9
+    koncept:
+      - gravitation som dragningskraft
+      - mer massa ger starkare dragning
+      - gravitation formar stjärnor och planeter
+    prerequisites:
+      - kemi-1-atomer
+    unlocks:
+      - astro-1-fusion
+    status: planerad
+
   - id: astro-1-fusion
     ämne: astro
     titel: Stjärnköket — väte blir helium genom fusion
@@ -81,6 +109,7 @@ appar:
       - solen är en stjärna
     prerequisites:
       - kemi-1-atomer
+      - fysik-1-gravitation
     unlocks:
       - astro-2-livscykel
     status: byggd
