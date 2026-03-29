@@ -96,7 +96,7 @@ appar:
       - kemi-1-atomer
     unlocks:
       - astro-1-fusion
-    status: design
+    status: byggd
 
   - id: astro-1-fusion
     ämne: astro

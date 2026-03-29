@@ -1,0 +1,1624 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Allt drar i allt — Gravitation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --bg2: #111827;
+    --surface: #1a2235;
+    --surface2: #22304a;
+    --accent: #7c6bff;
+    --accent2: #b8a9ff;
+    --gold: #ffd166;
+    --green: #06d6a0;
+    --orange: #ff9f1c;
+    --red-soft: #ff6b6b;
+    --text: #e8eaf6;
+    --text-dim: #8892b0;
+    --star1: #ffffff;
+    --radius: 16px;
+    --radius-lg: 24px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+  }
+
+  /* Stars background */
+  .stars {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(1px 1px at 10% 15%, #fff 0%, transparent 100%),
+      radial-gradient(1px 1px at 25% 40%, #fff 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 40% 8%, #fff 0%, transparent 100%),
+      radial-gradient(1px 1px at 60% 25%, #fff 0%, transparent 100%),
+      radial-gradient(1px 1px at 75% 55%, #fff 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 85% 12%, #fff 0%, transparent 100%),
+      radial-gradient(1px 1px at 92% 70%, #fff 0%, transparent 100%),
+      radial-gradient(1px 1px at 50% 80%, #fff 0%, transparent 100%),
+      radial-gradient(1px 1px at 15% 75%, #fff 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 35% 60%, #fff 0%, transparent 100%);
+  }
+
+  /* Progress map */
+  #progress-map {
+    position: relative; z-index: 10;
+    display: flex; gap: 8px; align-items: center;
+    padding: 16px 24px;
+    width: 100%; max-width: 700px;
+  }
+
+  .step-dot {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--surface2);
+    border: 2px solid var(--surface2);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 0.7rem; font-weight: 800;
+    color: var(--text-dim);
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+  }
+  .step-dot.active {
+    background: var(--accent); border-color: var(--accent2);
+    color: white; box-shadow: 0 0 12px var(--accent);
+    transform: scale(1.2);
+  }
+  .step-dot.done {
+    background: var(--green); border-color: var(--green);
+    color: white;
+  }
+  .step-line {
+    flex: 1; height: 2px; background: var(--surface2);
+    transition: background 0.3s;
+  }
+  .step-line.done { background: var(--green); }
+
+  /* Main stage */
+  #stage {
+    position: relative; z-index: 10;
+    width: 100%; max-width: 700px;
+    flex: 1;
+    display: flex; flex-direction: column;
+    align-items: center;
+    padding: 0 16px 32px;
+  }
+
+  /* Step panels */
+  .step-panel {
+    display: none;
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    animation: fadeIn 0.4s ease;
+  }
+  .step-panel.active { display: flex; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Title */
+  .step-title {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 1.4rem; font-weight: 800;
+    color: var(--accent2);
+    text-align: center;
+    margin-top: 8px;
+  }
+
+  /* Instruction text */
+  .step-text {
+    font-size: 1.1rem; line-height: 1.6;
+    text-align: center; color: var(--text);
+    max-width: 560px;
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 14px 20px;
+  }
+
+  /* Arena — the interactive area */
+  .arena {
+    width: 100%; min-height: 280px;
+    background: linear-gradient(160deg, #0d1b35 0%, #0a0e1a 100%);
+    border-radius: var(--radius-lg);
+    border: 1.5px solid var(--surface2);
+    position: relative;
+    overflow: hidden;
+  }
+  .arena.sky {
+    background: linear-gradient(180deg, #1a3a6e 0%, #3d8ef8 60%, #5cb85c 80%, #3d7a3d 100%);
+  }
+  .arena.moon-bg {
+    background: linear-gradient(180deg, #06060f 0%, #1a1a2e 60%, #2a2a1a 80%, #4a4a2a 100%);
+  }
+
+  /* Feedback box */
+  .feedback-box {
+    width: 100%; max-width: 560px;
+    padding: 14px 20px;
+    border-radius: var(--radius);
+    font-size: 1.05rem; font-weight: 600;
+    text-align: center;
+    display: none;
+    transition: all 0.3s;
+  }
+  .feedback-box.correct { background: #0d3d2e; border: 2px solid var(--green); color: var(--green); display: block; }
+  .feedback-box.wrong   { background: #3d200d; border: 2px solid var(--orange); color: var(--orange); display: block; }
+  .feedback-box.info    { background: var(--surface); border: 2px solid var(--accent); color: var(--text); display: block; }
+
+  /* Answer buttons */
+  .answer-grid {
+    display: flex; flex-direction: column; gap: 10px;
+    width: 100%; max-width: 560px;
+  }
+  .answer-btn {
+    padding: 16px 20px;
+    background: var(--surface);
+    border: 2px solid var(--surface2);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: 'Nunito', sans-serif;
+    font-size: 1.05rem; font-weight: 600;
+    cursor: pointer;
+    text-align: left;
+    touch-action: manipulation;
+    transition: all 0.15s;
+    min-height: 60px;
+  }
+  .answer-btn:hover { background: var(--surface2); border-color: var(--accent); }
+  .answer-btn:active { transform: scale(0.98); }
+  .answer-btn.correct { background: #0d3d2e; border-color: var(--green); color: var(--green); }
+  .answer-btn.wrong   { background: #3d200d; border-color: var(--orange); color: var(--orange); }
+
+  /* Next button */
+  .next-btn {
+    padding: 18px 48px;
+    background: var(--accent);
+    border: none; border-radius: var(--radius);
+    color: white;
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 1.2rem; font-weight: 800;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: all 0.2s;
+    display: none;
+    margin-top: 8px;
+  }
+  .next-btn.visible { display: block; }
+  .next-btn:hover { background: var(--accent2); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(124,107,255,0.4); }
+  .next-btn:active { transform: translateY(0); }
+  .next-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  /* SVG arrows */
+  .arrow-svg { overflow: visible; }
+
+  /* Draggable objects */
+  .draggable {
+    cursor: grab; user-select: none; touch-action: none;
+    position: absolute;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    font-size: 2.5rem;
+    width: 80px; height: 80px;
+    transition: box-shadow 0.2s;
+  }
+  .draggable:active { cursor: grabbing; }
+  .draggable.grabbed { box-shadow: 0 0 24px rgba(124,107,255,0.8); }
+
+  /* Slider */
+  .big-slider {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 20px;
+    border-radius: 10px;
+    background: var(--surface2);
+    outline: none;
+    cursor: pointer;
+    touch-action: pan-y;
+  }
+  .big-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 48px; height: 48px; border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    box-shadow: 0 0 10px var(--accent);
+    border: 3px solid white;
+  }
+  .big-slider::-moz-range-thumb {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: 3px solid white;
+  }
+  .slider-wrap {
+    width: 100%; max-width: 480px;
+    padding: 12px 20px;
+    background: var(--surface);
+    border-radius: var(--radius);
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .slider-label {
+    font-size: 1rem; color: var(--text-dim); font-weight: 600; text-align: center;
+  }
+
+  /* Scale/våg */
+  .scale-obj {
+    width: 80px; height: 80px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem; cursor: grab;
+    user-select: none; touch-action: none;
+    position: absolute; border: 3px solid transparent;
+    transition: border-color 0.2s;
+  }
+
+  /* Reflection cards (step 8) */
+  .reflection-grid {
+    display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
+  }
+  .reflection-card {
+    width: 140px; height: 120px;
+    background: var(--surface);
+    border: 2px solid var(--surface2);
+    border-radius: var(--radius);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 8px; padding: 12px;
+    cursor: pointer; font-size: 0.9rem; text-align: center;
+    font-weight: 600; color: var(--text);
+    transition: all 0.2s;
+    touch-action: manipulation;
+  }
+  .reflection-card:hover { border-color: var(--accent); background: var(--surface2); }
+  .reflection-card.chosen { border-color: var(--gold); background: #2a2010; color: var(--gold); }
+  .reflection-card .card-icon { font-size: 2rem; }
+
+  /* Teaser gasmoln */
+  #gas-cloud {
+    width: 160px; height: 160px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(124,107,255,0.6) 0%, rgba(184,169,255,0.2) 50%, transparent 70%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 3rem;
+    animation: gasPulse 3s ease-in-out infinite;
+    transition: transform 1s ease;
+  }
+  /* Arrow pulse animation (steps 3-7) */
+  @keyframes arrowPulse {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+  }
+  .arrow-pulse line { animation: arrowPulse 1.8s ease-in-out infinite; }
+
+  /* Scale pan drop zone highlight */
+  #scale-pan.over { border-color: var(--gold) !important; background: rgba(255,209,102,0.15) !important; }
+
+  /* Glow on correct state */
+  .correct-glow { box-shadow: 0 0 32px rgba(6,214,160,0.6) !important; transition: box-shadow 0.4s; }
+
+  /* Fireworks canvas sizing */
+  #fireworks-canvas { width: 100%; height: 100%; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .step-panel { animation: none; }
+    #gas-cloud { animation: none; }
+    .next-btn:hover { transform: none; }
+    .arrow-pulse line { animation: none; }
+  }
+  @keyframes gasPulse {
+    0%, 100% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.08); opacity: 1; }
+  }
+
+  /* Canvas for fireworks */
+  #fireworks-canvas {
+    position: absolute; inset: 0; pointer-events: none; border-radius: var(--radius-lg);
+  }
+
+  /* Responsive */
+  @media (max-width: 480px) {
+    .step-title { font-size: 1.2rem; }
+    .step-text { font-size: 1rem; padding: 12px 14px; }
+    .answer-btn { font-size: 0.95rem; }
+    .draggable { width: 70px; height: 70px; font-size: 2.2rem; }
+    .reflection-card { width: 120px; height: 110px; }
+  }
+</style>
+</head>
+<body>
+<div class="stars"></div>
+
+<!-- Progress map -->
+<nav id="progress-map" aria-label="Framsteg"></nav>
+
+<!-- Stage -->
+<main id="stage">
+
+  <!-- Step 1: Guided challenge -->
+  <div class="step-panel" id="step-1">
+    <h1 class="step-title">Vad händer om du släpper?</h1>
+    <p class="step-text" id="s1-text">Dra äpplet uppåt och släpp. Vad händer?</p>
+    <div class="arena sky" id="s1-arena" style="height:300px;"></div>
+    <div class="answer-grid" id="s1-answers" style="display:none;"></div>
+    <div class="feedback-box" id="s1-feedback"></div>
+    <button class="next-btn" id="s1-next">Nästa →</button>
+  </div>
+
+  <!-- Step 2: Massa-intro -->
+  <div class="step-panel" id="step-2">
+    <h1 class="step-title">Mer atomer, mer massa</h1>
+    <p class="step-text">Varje prick är atomer. Vilken boll har mer massa? Dra den till vågen.</p>
+    <div class="arena" id="s2-arena" style="height:320px;"></div>
+    <div class="feedback-box" id="s2-feedback"></div>
+    <button class="next-btn" id="s2-next">Nästa →</button>
+  </div>
+
+  <!-- Step 3: Allt drar i allt -->
+  <div class="step-panel" id="step-3">
+    <h1 class="step-title">Allt drar i allt!</h1>
+    <p class="step-text">Titta! Boll A drar i boll B. Men boll B drar också i boll A. Dra isär dem — vad händer?</p>
+    <div class="arena" id="s3-arena" style="height:320px;"></div>
+    <div class="feedback-box" id="s3-feedback"></div>
+    <button class="next-btn" id="s3-next">Nästa →</button>
+  </div>
+
+  <!-- Step 4: Mer massa, starkare drag -->
+  <div class="step-panel" id="step-4">
+    <h1 class="step-title">Mer massa, starkare drag</h1>
+    <p class="step-text">Dra reglaget. Vad händer med dragningen när bollen får mer massa?</p>
+    <div class="arena" id="s4-arena" style="height:280px;"></div>
+    <div class="slider-wrap">
+      <div class="slider-label">Lägg till massa →</div>
+      <input type="range" class="big-slider" id="s4-slider" min="1" max="10" value="1">
+    </div>
+    <div class="feedback-box" id="s4-feedback"></div>
+    <button class="next-btn" id="s4-next">Nästa →</button>
+  </div>
+
+  <!-- Step 5: Jorden och äpplet -->
+  <div class="step-panel" id="step-5">
+    <h1 class="step-title">Äpplet och Jorden</h1>
+    <p class="step-text">Äpplet drar också i Jorden. Varför märker vi det inte?</p>
+    <div class="arena" id="s5-arena" style="height:280px;"></div>
+    <div class="answer-grid" id="s5-answers"></div>
+    <div class="feedback-box" id="s5-feedback"></div>
+    <button class="next-btn" id="s5-next">Nästa →</button>
+  </div>
+
+  <!-- Step 6: Månen -->
+  <div class="step-panel" id="step-6">
+    <h1 class="step-title">Gravitation på Månen</h1>
+    <p class="step-text" id="s6-text">Dra astronauten uppåt och släpp.</p>
+    <div class="arena moon-bg" id="s6-arena" style="height:300px;"></div>
+    <div class="answer-grid" id="s6-answers" style="display:none;"></div>
+    <div class="feedback-box" id="s6-feedback"></div>
+    <button class="next-btn" id="s6-next">Nästa →</button>
+  </div>
+
+  <!-- Step 7: Rymdlabbet -->
+  <div class="step-panel" id="step-7">
+    <h1 class="step-title">Rymdlabbet</h1>
+    <p class="step-text">Dra testbollen nära varje planet. Var dras den mest?</p>
+    <div class="arena" id="s7-arena" style="height:360px;"></div>
+    <div class="feedback-box" id="s7-feedback"></div>
+    <button class="next-btn" id="s7-next">Nästa →</button>
+  </div>
+
+  <!-- Step 8: Konsolidering -->
+  <div class="step-panel" id="step-8">
+    <h1 class="step-title">Vad lärde du dig?</h1>
+    <p class="step-text">Nu vet du mer. Titta på äpplet igen — varför faller det?</p>
+    <div class="arena" id="s8-arena" style="height:260px; position:relative;">
+      <canvas id="fireworks-canvas"></canvas>
+    </div>
+    <div class="answer-grid" id="s8-answers"></div>
+    <div class="feedback-box" id="s8-feedback"></div>
+    <div id="s8-reflection" style="display:none; width:100%; max-width:560px;">
+      <p class="step-text" style="margin-bottom:12px;">Vad var mest förvånande?</p>
+      <div class="reflection-grid" id="reflection-cards"></div>
+    </div>
+    <div id="s8-teaser" style="display:none; width:100%; max-width:560px; text-align:center; padding:24px; background:var(--surface); border-radius:var(--radius-lg); border:2px solid var(--accent);">
+      <div id="gas-cloud" style="margin: 0 auto 16px;">☁️</div>
+      <p style="font-size:1.05rem; font-weight:600; color:var(--accent2);">Gravitation drar ihop gasmolnet.</p>
+      <p style="font-size:1rem; color:var(--text-dim); margin-top:8px;">Vad händer när det pressas ihop tillräckligt? Det tar vi nästa gång! 🌟</p>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ─── State ───────────────────────────────────────────────────────────────────
+const state = {
+  step: 1,
+  totalSteps: 8,
+  s2Errors: 0,
+  s5Errors: 0,
+  s5Done: false,
+  s6Errors: 0,
+  s6Done: false,
+  s8Done: false,
+  s4MaxReached: false,
+};
+
+// ─── Audio ────────────────────────────────────────────────────────────────────
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx;
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new AudioCtx();
+  return audioCtx;
+}
+function playTone(freq, dur, type='sine', vol=0.3, detune=0) {
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = type; osc.frequency.value = freq;
+    if (detune) osc.detune.value = detune;
+    gain.gain.setValueAtTime(vol, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+    osc.start(); osc.stop(ctx.currentTime + dur);
+  } catch(e) {}
+}
+function soundPling() { playTone(660, 0.1); setTimeout(()=>playTone(880, 0.12), 80); }
+function soundBonk() { playTone(150, 0.15, 'sawtooth', 0.2); }
+function soundDunk() { playTone(80, 0.18, 'sine', 0.35); }
+function soundLift() { playTone(440, 0.08, 'sine', 0.2); }
+function soundSwoosh() { playTone(300, 0.15, 'sine', 0.15, 200); }
+function soundHmm() { playTone(200, 0.25, 'sine', 0.1, 0); }
+function soundPop() { playTone(500, 0.06, 'square', 0.2); }
+
+// ─── Step 1: Guided challenge ─────────────────────────────────────────────────
+function initStep1() {
+  const arena = document.getElementById('s1-arena');
+  const text = document.getElementById('s1-text');
+  const next = document.getElementById('s1-next');
+  const feedback = document.getElementById('s1-feedback');
+  const answersDiv = document.getElementById('s1-answers');
+
+  arena.innerHTML = '';
+
+  // Ground
+  const ground = document.createElement('div');
+  ground.style.cssText = 'position:absolute;bottom:0;left:0;right:0;height:60px;background:linear-gradient(#3d7a3d,#2a5a2a);border-radius:0 0 24px 24px;';
+  arena.appendChild(ground);
+
+  // Grass details
+  const grass = document.createElement('div');
+  grass.style.cssText = 'position:absolute;bottom:55px;left:0;right:0;height:12px;background:linear-gradient(#5cb85c,transparent);';
+  arena.appendChild(grass);
+
+  // Current draggable
+  let obj = null;
+  let phase = 'apple'; // apple → feather → question
+
+  function spawnObject(type) {
+    if (obj) obj.remove();
+    obj = document.createElement('div');
+    obj.className = 'draggable';
+    obj.style.left = 'calc(50% - 40px)';
+    obj.style.top = '60px';
+    obj.style.background = type === 'apple'
+      ? 'radial-gradient(circle at 35% 35%, #6abf6a, #2d7a2d)'
+      : 'radial-gradient(circle at 35% 35%, #f0e6c0, #c8b88a)';
+    obj.textContent = type === 'apple' ? '🍎' : '🪶';
+    arena.appendChild(obj);
+
+    let falling = false;
+    let startY = 60;
+
+    function fall() {
+      if (falling) return;
+      falling = true;
+      soundDunk();
+      const dur = type === 'feather' ? 900 : 500;
+      obj.style.transition = `top ${dur}ms ease-in`;
+      obj.style.top = (arena.clientHeight - 80 - 60) + 'px';
+      setTimeout(() => {
+        if (type === 'apple') {
+          // Bounce tiny
+          obj.style.transition = 'top 0.1s ease-out';
+          obj.style.top = (arena.clientHeight - 90 - 60) + 'px';
+          setTimeout(() => { obj.style.top = (arena.clientHeight - 80 - 60) + 'px'; }, 100);
+        }
+        setTimeout(() => onFell(type), 200);
+      }, dur);
+    }
+
+    // Override drag: drag up then fall on release
+    let active = false, startDragY;
+    obj.addEventListener('pointerdown', e => {
+      if (falling) return;
+      e.preventDefault(); obj.setPointerCapture(e.pointerId);
+      active = true; startDragY = e.clientY;
+      soundLift();
+      obj.style.transition = 'none';
+      obj.classList.add('grabbed');
+    });
+    obj.addEventListener('pointermove', e => {
+      if (!active || falling) return;
+      e.preventDefault();
+      const pr = arena.getBoundingClientRect();
+      let newTop = e.clientY - pr.top - 40;
+      newTop = Math.max(0, Math.min(newTop, arena.clientHeight - 80));
+      obj.style.top = newTop + 'px';
+    });
+    obj.addEventListener('pointerup', e => {
+      if (!active || falling) return;
+      active = false; obj.classList.remove('grabbed');
+      const pr = arena.getBoundingClientRect();
+      const currentTop = parseInt(obj.style.top);
+      if (currentTop < arena.clientHeight * 0.5) {
+        // Was dragged up enough — fall
+        fall();
+      } else {
+        obj.style.transition = 'top 0.3s ease';
+        obj.style.top = '60px';
+      }
+    });
+  }
+
+  function onFell(type) {
+    if (type === 'apple') {
+      text.textContent = 'Bra! Nu fjädern. Dra den uppåt och släpp.';
+      phase = 'feather';
+      setTimeout(() => spawnObject('feather'), 600);
+    } else {
+      // Show question
+      text.textContent = 'Varför föll båda ner?';
+      answersDiv.style.display = 'flex';
+      answersDiv.innerHTML = '';
+      const opts = [
+        { key: 'A', txt: 'De är tunga' },
+        { key: 'B', txt: 'Jorden drar i dem' },
+        { key: 'C', txt: 'Inget håller upp dem' },
+      ];
+      opts.forEach(o => {
+        const btn = document.createElement('button');
+        btn.className = 'answer-btn';
+        btn.textContent = o.key + ') ' + o.txt;
+        btn.addEventListener('click', () => {
+          soundPling();
+          feedback.className = 'feedback-box info';
+          feedback.textContent = 'Bra gissning! Låt oss ta reda på det.';
+          answersDiv.querySelectorAll('button').forEach(b => b.disabled = true);
+          next.classList.add('visible');
+        });
+        answersDiv.appendChild(btn);
+      });
+    }
+  }
+
+  spawnObject('apple');
+
+  next.addEventListener('click', () => goTo(2), { once: true });
+}
+
+// ─── Step 2: Massa-intro ──────────────────────────────────────────────────────
+function initStep2() {
+  const arena = document.getElementById('s2-arena');
+  const feedback = document.getElementById('s2-feedback');
+  const next = document.getElementById('s2-next');
+
+  arena.innerHTML = '';
+  state.s2Errors = 0;
+
+  // Small ball (few atoms)
+  const smallBall = document.createElement('div');
+  smallBall.style.cssText = 'position:absolute;left:15%;top:20px;width:80px;height:80px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#4a90d9,#1a5090);cursor:grab;user-select:none;touch-action:none;display:flex;align-items:center;justify-content:center;';
+  smallBall.setAttribute('data-ball', 'small');
+  // Draw 3 atom dots
+  const smallCanvas = document.createElement('canvas');
+  smallCanvas.width = 80; smallCanvas.height = 80; smallCanvas.style.cssText = 'position:absolute;inset:0;border-radius:50%;';
+  drawAtomDots(smallCanvas, 4);
+  smallBall.appendChild(smallCanvas);
+  arena.appendChild(smallBall);
+
+  const smallLabel = document.createElement('div');
+  smallLabel.style.cssText = 'position:absolute;left:calc(15% + 8px);top:105px;font-size:0.85rem;color:var(--text-dim);font-weight:600;';
+  smallLabel.textContent = 'Lite atomer';
+  arena.appendChild(smallLabel);
+
+  // Big ball (many atoms)
+  const bigBall = document.createElement('div');
+  bigBall.style.cssText = 'position:absolute;right:15%;top:10px;width:100px;height:100px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#9b59b6,#5a2080);cursor:grab;user-select:none;touch-action:none;display:flex;align-items:center;justify-content:center;';
+  bigBall.setAttribute('data-ball', 'big');
+  const bigCanvas = document.createElement('canvas');
+  bigCanvas.width = 100; bigCanvas.height = 100; bigCanvas.style.cssText = 'position:absolute;inset:0;border-radius:50%;';
+  drawAtomDots(bigCanvas, 14);
+  bigBall.appendChild(bigCanvas);
+  arena.appendChild(bigBall);
+
+  const bigLabel = document.createElement('div');
+  bigLabel.style.cssText = 'position:absolute;right:calc(15% - 10px);top:115px;font-size:0.85rem;color:var(--text-dim);font-weight:600;';
+  bigLabel.textContent = 'Många atomer';
+  arena.appendChild(bigLabel);
+
+  // Scale/Våg
+  const scaleBase = document.createElement('div');
+  scaleBase.style.cssText = 'position:absolute;bottom:20px;left:50%;transform:translateX(-50%);width:160px;text-align:center;';
+  scaleBase.innerHTML = `
+    <div id="scale-pan" style="width:120px;height:50px;margin:0 auto;background:var(--surface2);border-radius:8px 8px 0 0;border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:0.85rem;color:var(--text-dim);">Dra hit</div>
+    <div id="scale-arm" style="width:140px;height:8px;background:var(--surface2);border-radius:4px;margin:0 auto;transition:transform 0.5s ease;transform-origin:center;"></div>
+    <div style="width:10px;height:30px;background:var(--surface2);margin:0 auto;border-radius:2px;"></div>
+    <div style="width:80px;height:8px;background:var(--surface2);border-radius:4px;margin:0 auto;"></div>
+  `;
+  arena.appendChild(scaleBase);
+
+  const scalePan = document.getElementById('scale-pan');
+  const scaleArm = document.getElementById('scale-arm');
+
+  function tryDrop(ball, x, y) {
+    const panRect = scalePan.getBoundingClientRect();
+    const arenaRect = arena.getBoundingClientRect();
+    const panX = panRect.left - arenaRect.left;
+    const panY = panRect.top - arenaRect.top;
+    const inZone = x > panX - 40 && x < panX + panRect.width + 40
+                && y > panY - 40 && y < panY + panRect.height + 40;
+
+    if (inZone) {
+      const isBig = ball.getAttribute('data-ball') === 'big';
+      if (isBig) {
+        // Correct
+        soundPling();
+        scaleArm.style.transform = 'rotate(10deg)';
+        scalePan.textContent = '⬇️ Tyngre!';
+        scalePan.style.borderColor = 'var(--green)';
+        scalePan.style.background = 'rgba(6,214,160,0.1)';
+        feedback.className = 'feedback-box correct';
+        feedback.textContent = 'Fler atomer = mer massa. Tyngre!';
+        ball.style.left = (panX - 10) + 'px';
+        ball.style.top = (panY - ball.offsetHeight) + 'px';
+        ball.style.cursor = 'default';
+        next.classList.add('visible');
+      } else {
+        // Wrong — scaffolding
+        state.s2Errors++;
+        soundBonk();
+        scaleArm.style.transform = 'rotate(3deg)';
+        scalePan.textContent = 'Lite massa...';
+        scalePan.style.borderColor = 'var(--orange)';
+        if (state.s2Errors >= 3) {
+          // Full scaffold: highlight correct ball
+          feedback.className = 'feedback-box wrong';
+          feedback.textContent = 'Den lila bollen har flest atomer (vita prickar). Dra den till vågen!';
+          bigBall.style.boxShadow = '0 0 24px var(--green)';
+          bigBall.style.border = '3px solid var(--green)';
+        } else if (state.s2Errors >= 2) {
+          feedback.className = 'feedback-box wrong';
+          feedback.textContent = 'Titta på atomerna inuti. Vilken boll har flest vita prickar?';
+        } else {
+          feedback.className = 'feedback-box wrong';
+          feedback.textContent = 'Den har lite massa. Men den andra har ännu fler atomer. Prova den!';
+        }
+        setTimeout(() => {
+          scaleArm.style.transform = 'rotate(0deg)';
+          scalePan.textContent = 'Dra hit';
+          scalePan.style.borderColor = 'var(--accent)';
+          scalePan.style.background = '';
+        }, 1400);
+        // Reset ball
+        ball.style.transition = 'left 0.3s, top 0.3s';
+        ball.style.left = ball._startLeft;
+        ball.style.top = ball._startTop;
+        setTimeout(() => ball.style.transition = '', 300);
+      }
+    } else {
+      ball.style.transition = 'left 0.3s, top 0.3s';
+      ball.style.left = ball._startLeft;
+      ball.style.top = ball._startTop;
+      setTimeout(() => ball.style.transition = '', 300);
+    }
+  }
+
+  [smallBall, bigBall].forEach(ball => {
+    const style = window.getComputedStyle(ball);
+    ball._startLeft = ball.style.left;
+    ball._startTop = ball.style.top;
+    makeDraggable(ball, null, (x, y) => tryDrop(ball, x, y));
+  });
+
+  next.addEventListener('click', () => goTo(3), { once: true });
+}
+
+function drawAtomDots(canvas, count) {
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height, r = w / 2;
+  ctx.clearRect(0, 0, w, h);
+  // clip to circle
+  ctx.save(); ctx.beginPath(); ctx.arc(r, r, r - 4, 0, Math.PI * 2); ctx.clip();
+  const seed = count * 7;
+  for (let i = 0; i < count; i++) {
+    const angle = (i / count) * Math.PI * 2 + seed;
+    const dist = (i % 2 === 0 ? 0.55 : 0.3) * (r - 8);
+    const cx = r + Math.cos(angle) * dist;
+    const cy = r + Math.sin(angle) * dist;
+    ctx.beginPath(); ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.fill();
+  }
+  ctx.restore();
+}
+
+// ─── Step 3: Allt drar i allt ────────────────────────────────────────────────
+function initStep3() {
+  const arena = document.getElementById('s3-arena');
+  const feedback = document.getElementById('s3-feedback');
+  const next = document.getElementById('s3-next');
+  arena.innerHTML = '';
+  let dragged = false;
+
+  // Two balls
+  const ballA = makeBallEl('A', '70px', '120px', 'radial-gradient(circle at 35% 35%,#7c6bff,#3a2080)', '80px');
+  const ballB = makeBallEl('B', '55%', '120px', 'radial-gradient(circle at 35% 35%,#ff9f1c,#c06000)', '80px');
+  arena.appendChild(ballA); arena.appendChild(ballB);
+
+  // Label
+  const lbl = document.createElement('div');
+  lbl.style.cssText = 'position:absolute;bottom:16px;left:0;right:0;text-align:center;font-size:0.9rem;color:var(--text-dim);';
+  arena.appendChild(lbl);
+
+  // SVG for arrows
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.style.cssText = 'position:absolute;inset:0;pointer-events:none;overflow:visible;';
+  svg.setAttribute('width', '100%'); svg.setAttribute('height', '100%');
+  // Arrow markers
+  svg.innerHTML = `
+    <defs>
+      <marker id="arrowPurple" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#7c6bff"/>
+      </marker>
+      <marker id="arrowOrange" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#ff9f1c"/>
+      </marker>
+    </defs>
+    <line id="arrow-ab" stroke="#7c6bff" stroke-width="3" marker-end="url(#arrowPurple)" opacity="0.9"/>
+    <line id="arrow-ba" stroke="#ff9f1c" stroke-width="3" marker-end="url(#arrowOrange)" opacity="0.9"/>
+  `;
+  arena.appendChild(svg);
+
+  // Gravity simulation
+  let posA = { x: 80, y: 130 };
+  let posB = { x: arena.clientWidth * 0.55 || 300, y: 130 };
+  let velA = { x: 0.15, y: 0 };
+  let velB = { x: -0.15, y: 0 };
+  let animId;
+  let draggedBall = null;
+
+  function updateArrows() {
+    const cA = { x: posA.x + 40, y: posA.y + 40 };
+    const cB = { x: posB.x + 40, y: posB.y + 40 };
+    const ab = document.getElementById('arrow-ab');
+    const ba = document.getElementById('arrow-ba');
+    // Arrow from A toward B (A drar B)
+    const dx = cB.x - cA.x, dy = cB.y - cA.y;
+    const len = Math.sqrt(dx*dx+dy*dy);
+    const ux = dx/len, uy = dy/len;
+    ab.setAttribute('x1', cA.x + ux*44); ab.setAttribute('y1', cA.y + uy*44);
+    ab.setAttribute('x2', cB.x - ux*50); ab.setAttribute('y2', cB.y - uy*50);
+    // Arrow from B toward A (B drar A)
+    ba.setAttribute('x1', cB.x - ux*44); ba.setAttribute('y1', cB.y - uy*44);
+    ba.setAttribute('x2', cA.x + ux*50); ba.setAttribute('y2', cA.y + uy*50);
+  }
+
+  function applyPositions() {
+    ballA.style.left = posA.x + 'px'; ballA.style.top = posA.y + 'px';
+    ballB.style.left = posB.x + 'px'; ballB.style.top = posB.y + 'px';
+    updateArrows();
+  }
+
+  const MIN_DIST = 100;
+  function animate() {
+    if (!draggedBall) {
+      const dx = posB.x - posA.x, dy = posB.y - posA.y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist > MIN_DIST) {
+        const force = 0.04;
+        const fx = (dx / dist) * force, fy = (dy / dist) * force;
+        velA.x += fx; velA.y += fy;
+        velB.x -= fx; velB.y -= fy;
+        velA.x *= 0.97; velA.y *= 0.97;
+        velB.x *= 0.97; velB.y *= 0.97;
+        posA.x += velA.x; posA.y += velA.y;
+        posB.x += velB.x; posB.y += velB.y;
+      }
+    }
+    // Clamp to arena
+    const maxX = (arena.clientWidth || 500) - 80;
+    const maxY = (arena.clientHeight || 300) - 80;
+    posA.x = Math.max(0, Math.min(posA.x, maxX));
+    posA.y = Math.max(0, Math.min(posA.y, maxY));
+    posB.x = Math.max(0, Math.min(posB.x, maxX));
+    posB.y = Math.max(0, Math.min(posB.y, maxY));
+    applyPositions();
+    animId = requestAnimationFrame(animate);
+  }
+
+  function makeDragBall(ball, posRef, otherRef) {
+    let active = false;
+    ball.addEventListener('pointerdown', e => {
+      e.preventDefault(); ball.setPointerCapture(e.pointerId);
+      active = true; draggedBall = ball;
+      velA.x = velA.y = velB.x = velB.y = 0;
+      soundLift();
+      if (!dragged) {
+        dragged = true;
+        feedback.className = 'feedback-box info';
+        feedback.textContent = 'De drar i varandra hela tiden. Det kallas gravitation.';
+        soundHmm();
+        next.classList.add('visible');
+      }
+    });
+    ball.addEventListener('pointermove', e => {
+      if (!active) return;
+      const pr = arena.getBoundingClientRect();
+      posRef.x = e.clientX - pr.left - 40;
+      posRef.y = e.clientY - pr.top - 40;
+    });
+    ball.addEventListener('pointerup', () => { active = false; draggedBall = null; });
+  }
+
+  makeDragBall(ballA, posA, posB);
+  makeDragBall(ballB, posB, posA);
+  applyPositions();
+  animate();
+
+  next.addEventListener('click', () => { cancelAnimationFrame(animId); goTo(4); }, { once: true });
+}
+
+function makeBallEl(label, left, top, bg, size) {
+  const el = document.createElement('div');
+  el.style.cssText = `position:absolute;left:${left};top:${top};width:${size};height:${size};border-radius:50%;background:${bg};cursor:grab;user-select:none;touch-action:none;display:flex;align-items:center;justify-content:center;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:1rem;color:rgba(255,255,255,0.9);box-shadow:0 4px 16px rgba(0,0,0,0.4);`;
+  el.textContent = label;
+  return el;
+}
+
+// ─── Progress map ─────────────────────────────────────────────────────────────
+function renderProgress() {
+  const map = document.getElementById('progress-map');
+  map.innerHTML = '';
+  for (let i = 1; i <= state.totalSteps; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'step-dot' + (i === state.step ? ' active' : i < state.step ? ' done' : '');
+    dot.textContent = i;
+    dot.setAttribute('aria-label', 'Steg ' + i);
+    map.appendChild(dot);
+    if (i < state.totalSteps) {
+      const line = document.createElement('div');
+      line.className = 'step-line' + (i < state.step ? ' done' : '');
+      map.appendChild(line);
+    }
+  }
+}
+
+// ─── Navigation ──────────────────────────────────────────────────────────────
+function goTo(n) {
+  document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+  state.step = n;
+  document.getElementById('step-' + n).classList.add('active');
+  renderProgress();
+  soundSwoosh();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ─── Step 4: Mer massa, starkare drag ────────────────────────────────────────
+function initStep4() {
+  const arena = document.getElementById('s4-arena');
+  const slider = document.getElementById('s4-slider');
+  const feedback = document.getElementById('s4-feedback');
+  const next = document.getElementById('s4-next');
+  arena.innerHTML = '';
+  state.s4MaxReached = false;
+  slider.value = 1;
+
+  // SVG for arrows + balls
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('width', '100%'); svg.setAttribute('height', '100%');
+  svg.style.cssText = 'position:absolute;inset:0;overflow:visible;';
+  svg.innerHTML = `
+    <defs>
+      <marker id="arr4L" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#7c6bff"/>
+      </marker>
+      <marker id="arr4R" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#ff9f1c"/>
+      </marker>
+    </defs>
+    <line id="s4-arrow-lr" stroke="#7c6bff" stroke-width="4" marker-end="url(#arr4L)"/>
+    <line id="s4-arrow-rl" stroke="#ff9f1c" stroke-width="4" marker-end="url(#arr4R)"/>
+  `;
+  arena.appendChild(svg);
+
+  // Fixed small ball (right)
+  const ballSmall = document.createElement('div');
+  ballSmall.style.cssText = 'position:absolute;width:64px;height:64px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ff9f1c,#c06000);display:flex;align-items:center;justify-content:center;font-family:"Baloo 2",sans-serif;font-weight:800;color:white;';
+  ballSmall.textContent = 'A';
+  arena.appendChild(ballSmall);
+
+  // Big ball (left, grows with slider)
+  const ballBig = document.createElement('div');
+  ballBig.style.cssText = 'position:absolute;border-radius:50%;background:radial-gradient(circle at 35% 35%,#7c6bff,#3a2080);display:flex;align-items:center;justify-content:center;font-family:"Baloo 2",sans-serif;font-weight:800;color:white;transition:width 0.3s,height 0.3s,left 0.3s,top 0.3s;';
+  ballBig.textContent = 'B';
+  arena.appendChild(ballBig);
+
+  // Atom canvas for big ball
+  const atomCanvas = document.createElement('canvas');
+  atomCanvas.style.cssText = 'position:absolute;inset:0;border-radius:50%;pointer-events:none;';
+  ballBig.appendChild(atomCanvas);
+
+  function updateSlider(val) {
+    const arenaW = arena.clientWidth || 500;
+    const arenaH = arena.clientHeight || 280;
+    const size = 64 + val * 12;
+    const cx = arenaW * 0.3;
+    const cy = arenaH * 0.45;
+    const cx2 = arenaW * 0.72;
+    const cy2 = arenaH * 0.45;
+
+    ballBig.style.width = size + 'px';
+    ballBig.style.height = size + 'px';
+    ballBig.style.left = (cx - size/2) + 'px';
+    ballBig.style.top = (cy - size/2) + 'px';
+
+    ballSmall.style.left = (cx2 - 32) + 'px';
+    ballSmall.style.top = (cy2 - 32) + 'px';
+
+    atomCanvas.width = size; atomCanvas.height = size;
+    drawAtomDots(atomCanvas, Math.round(2 + val * 1.5));
+
+    const sw = 2 + val * 2.5;
+    const arL = document.getElementById('s4-arrow-lr');
+    const arR = document.getElementById('s4-arrow-rl');
+    arL.setAttribute('stroke-width', sw);
+    arR.setAttribute('stroke-width', sw);
+    // Arrow from B → A direction (B drar A)
+    arL.setAttribute('x1', cx + size/2 + 8); arL.setAttribute('y1', cy);
+    arL.setAttribute('x2', cx2 - 40);         arL.setAttribute('y2', cy2);
+    // Arrow from A → B direction (A drar B)
+    arR.setAttribute('x1', cx2 - 36);         arR.setAttribute('y1', cy2 + 12);
+    arR.setAttribute('x2', cx + size/2 + 12); arR.setAttribute('y2', cy + 12);
+
+    // Update arrow markers size
+    document.getElementById('arr4L').setAttribute('markerWidth', Math.min(8, 3 + sw*0.5));
+    document.getElementById('arr4R').setAttribute('markerWidth', Math.min(8, 3 + sw*0.5));
+
+    if (val >= 10 && !state.s4MaxReached) {
+      state.s4MaxReached = true;
+      feedback.className = 'feedback-box correct';
+      feedback.textContent = 'Mer massa = starkare dragning. Alla drar mer!';
+      soundPling();
+      next.classList.add('visible');
+    }
+  }
+
+  const onSliderInput = () => updateSlider(parseInt(slider.value));
+  slider.removeEventListener('input', slider._s4handler);
+  slider._s4handler = onSliderInput;
+  slider.addEventListener('input', onSliderInput);
+  setTimeout(() => updateSlider(1), 50);
+
+  next.addEventListener('click', () => goTo(5), { once: true });
+}
+
+// ─── Step 5: Äpplet och Jorden ───────────────────────────────────────────────
+function initStep5() {
+  const arena = document.getElementById('s5-arena');
+  const answersDiv = document.getElementById('s5-answers');
+  const feedback = document.getElementById('s5-feedback');
+  const next = document.getElementById('s5-next');
+  arena.innerHTML = '';
+  state.s5Errors = 0;
+  state.s5Done = false;
+
+  // SVG arrows
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('width', '100%'); svg.setAttribute('height', '100%');
+  svg.style.cssText = 'position:absolute;inset:0;overflow:visible;pointer-events:none;';
+  svg.innerHTML = `
+    <defs>
+      <marker id="arr5big" markerWidth="12" markerHeight="12" refX="6" refY="6" orient="auto">
+        <path d="M0,0 L12,6 L0,12 Z" fill="#06d6a0"/>
+      </marker>
+      <marker id="arr5small" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+        <path d="M0,0 L6,3 L0,6 Z" fill="#7c6bff"/>
+      </marker>
+    </defs>
+    <line id="s5-arr-earth" stroke="#06d6a0" stroke-width="8" marker-end="url(#arr5big)"/>
+    <line id="s5-arr-apple" stroke="#7c6bff" stroke-width="2" marker-end="url(#arr5small)"/>
+  `;
+  arena.appendChild(svg);
+
+  // Earth
+  const earth = document.createElement('div');
+  earth.style.cssText = 'position:absolute;left:8%;top:50%;transform:translateY(-50%);width:110px;height:110px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#4a90d9,#1a5090);display:flex;align-items:center;justify-content:center;font-size:3rem;box-shadow:0 0 24px rgba(74,144,217,0.5);';
+  earth.textContent = '🌍';
+  arena.appendChild(earth);
+
+  const earthLbl = document.createElement('div');
+  earthLbl.style.cssText = 'position:absolute;left:8%;top:calc(50% + 65px);transform:translateX(8px);font-size:0.8rem;color:var(--text-dim);font-weight:600;';
+  earthLbl.textContent = 'Massor av atomer';
+  arena.appendChild(earthLbl);
+
+  // Apple
+  const apple = document.createElement('div');
+  apple.style.cssText = 'position:absolute;right:12%;top:50%;transform:translateY(-50%);width:72px;height:72px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#6abf6a,#2d7a2d);display:flex;align-items:center;justify-content:center;font-size:2rem;';
+  apple.textContent = '🍎';
+  arena.appendChild(apple);
+
+  const appleLbl = document.createElement('div');
+  appleLbl.style.cssText = 'position:absolute;right:12%;top:calc(50% + 44px);font-size:0.8rem;color:var(--text-dim);font-weight:600;';
+  appleLbl.textContent = 'Lite atomer';
+  arena.appendChild(appleLbl);
+
+  // Draw arrows after layout
+  setTimeout(() => {
+    const ar = arena.getBoundingClientRect();
+    const er = earth.getBoundingClientRect();
+    const apr = apple.getBoundingClientRect();
+    const ex = er.left - ar.left + er.width/2;
+    const ey = er.top - ar.top + er.height/2;
+    const ax = apr.left - ar.left + apr.width/2;
+    const ay = apr.top - ar.top + apr.height/2;
+    const dx = ax - ex, dy = ay - ey;
+    const len = Math.sqrt(dx*dx + dy*dy);
+    const ux = dx/len, uy = dy/len;
+    const s5e = document.getElementById('s5-arr-earth');
+    const s5a = document.getElementById('s5-arr-apple');
+    // Earth → Apple (big arrow, earth pulls apple)
+    s5e.setAttribute('x1', ex + ux*58); s5e.setAttribute('y1', ey + uy*58);
+    s5e.setAttribute('x2', ax - ux*44); s5e.setAttribute('y2', ay - uy*44);
+    // Apple → Earth (tiny arrow, apple pulls earth — barely visible)
+    s5a.setAttribute('x1', ax - ux*40); s5a.setAttribute('y1', ay - uy*40 + 14);
+    s5a.setAttribute('x2', ex + ux*60); s5a.setAttribute('y2', ey + uy*60 + 14);
+  }, 60);
+
+  // Answers
+  answersDiv.innerHTML = '';
+  const opts = [
+    { key: 'A', txt: 'Jorden har så mycket mer massa', correct: true },
+    { key: 'B', txt: 'Äpplet är för litet', correct: false },
+    { key: 'C', txt: 'Äpplet drar inte alls', correct: false },
+  ];
+  opts.forEach(o => {
+    const btn = document.createElement('button');
+    btn.className = 'answer-btn';
+    btn.textContent = o.key + ') ' + o.txt;
+    btn.addEventListener('click', () => {
+      if (state.s5Done) return;
+      answersDiv.querySelectorAll('button').forEach(b => b.disabled = true);
+      if (o.correct) {
+        state.s5Done = true;
+        btn.classList.add('correct');
+        soundPling();
+        feedback.className = 'feedback-box correct';
+        feedback.textContent = 'Precis! Jorden har enormt mycket mer massa. Därför märker vi bara Jordens drag.';
+        earth.style.boxShadow = '0 0 40px rgba(6,214,160,0.7)';
+        next.classList.add('visible');
+      } else {
+        state.s5Errors++;
+        btn.classList.add('wrong');
+        soundBonk();
+        if (o.key === 'C') {
+          feedback.className = 'feedback-box wrong';
+          feedback.textContent = 'Äpplet drar faktiskt i Jorden! Men Jordens massa är så stor att Jorden knappt rör sig. Titta på pilarna.';
+        } else {
+          feedback.className = 'feedback-box wrong';
+          feedback.textContent = 'Nästan! Äpplet drar lite — men Jorden drar MYCKET mer. Det handlar om massa.';
+        }
+        if (state.s5Errors >= 3) {
+          // Full scaffold
+          setTimeout(() => {
+            answersDiv.querySelectorAll('button').forEach(b => { b.disabled = false; b.classList.remove('wrong'); });
+            const rightBtn = answersDiv.querySelector('[data-correct]');
+            opts.forEach((op, i) => {
+              if (op.correct) answersDiv.children[i].style.borderColor = 'var(--green)';
+            });
+          }, 1000);
+        } else if (state.s5Errors >= 2) {
+          feedback.textContent += ' Titta på pilarna. Vilken är tjockast?';
+          setTimeout(() => {
+            answersDiv.querySelectorAll('button').forEach(b => { b.disabled = false; b.classList.remove('wrong'); });
+          }, 1200);
+        } else {
+          setTimeout(() => {
+            answersDiv.querySelectorAll('button').forEach(b => { b.disabled = false; b.classList.remove('wrong'); });
+          }, 1200);
+        }
+      }
+    });
+    answersDiv.appendChild(btn);
+  });
+
+  next.addEventListener('click', () => goTo(6), { once: true });
+}
+
+// ─── Step 6: Månen ────────────────────────────────────────────────────────────
+function initStep6() {
+  const arena = document.getElementById('s6-arena');
+  const text = document.getElementById('s6-text');
+  const answersDiv = document.getElementById('s6-answers');
+  const feedback = document.getElementById('s6-feedback');
+  const next = document.getElementById('s6-next');
+  arena.innerHTML = '';
+  state.s6Errors = 0;
+  state.s6Done = false;
+
+  // Moon surface
+  const surface = document.createElement('div');
+  surface.style.cssText = 'position:absolute;bottom:0;left:0;right:0;height:70px;background:linear-gradient(#4a4a2a,#2a2a12);border-radius:0 0 24px 24px;';
+  arena.appendChild(surface);
+
+  // Craters
+  ['20%','55%','75%'].forEach((x, i) => {
+    const c = document.createElement('div');
+    const sz = [24,18,30][i];
+    c.style.cssText = `position:absolute;bottom:${40+i*5}px;left:${x};width:${sz}px;height:${sz/2}px;border-radius:50%;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);`;
+    arena.appendChild(c);
+  });
+
+  // Stars
+  for (let i = 0; i < 20; i++) {
+    const s = document.createElement('div');
+    s.style.cssText = `position:absolute;width:2px;height:2px;background:white;border-radius:50%;left:${Math.random()*96}%;top:${Math.random()*60}%;opacity:${0.4+Math.random()*0.6};`;
+    arena.appendChild(s);
+  }
+
+  // Astronaut
+  const astro = document.createElement('div');
+  astro.style.cssText = 'position:absolute;left:calc(50% - 35px);bottom:70px;width:70px;height:70px;font-size:3rem;display:flex;align-items:center;justify-content:center;cursor:grab;user-select:none;touch-action:none;';
+  astro.textContent = '👨‍🚀';
+  arena.appendChild(astro);
+
+  // Moon label
+  const moonLbl = document.createElement('div');
+  moonLbl.style.cssText = 'position:absolute;top:12px;left:50%;transform:translateX(-50%);font-size:0.85rem;color:rgba(255,255,255,0.5);font-weight:600;';
+  moonLbl.textContent = '🌕 Månens yta';
+  arena.appendChild(moonLbl);
+
+  let falling = false;
+  const groundBottom = 70;
+
+  astro.addEventListener('pointerdown', e => {
+    if (falling) return;
+    e.preventDefault(); astro.setPointerCapture(e.pointerId);
+    soundLift();
+  });
+  astro.addEventListener('pointermove', e => {
+    if (falling) return;
+    const pr = arena.getBoundingClientRect();
+    let newBottom = pr.bottom - e.clientY - 35;
+    newBottom = Math.max(groundBottom, Math.min(newBottom, arena.clientHeight - 70));
+    astro.style.bottom = newBottom + 'px';
+    astro.style.left = 'calc(50% - 35px)';
+  });
+  astro.addEventListener('pointerup', () => {
+    if (falling) return;
+    const currentBottom = parseInt(astro.style.bottom) || groundBottom;
+    if (currentBottom > groundBottom + 20) {
+      // Fall back slowly (moon gravity = weaker)
+      falling = true;
+      astro.style.cursor = 'default';
+      soundDunk();
+      const startBottom = currentBottom;
+      const duration = 1200; // slower than earth
+      const start = performance.now();
+      function fallAnim(now) {
+        const t = Math.min((now - start) / duration, 1);
+        const eased = t * t;
+        astro.style.bottom = (startBottom * (1 - eased) + groundBottom * eased) + 'px';
+        if (t < 1) requestAnimationFrame(fallAnim);
+        else {
+          astro.style.bottom = groundBottom + 'px';
+          onAstroLanded();
+        }
+      }
+      requestAnimationFrame(fallAnim);
+    } else {
+      astro.style.bottom = groundBottom + 'px';
+    }
+  });
+
+  function onAstroLanded() {
+    text.textContent = 'Månen har också massa. Månen drar också! Varför faller astronauten tillbaka?';
+    answersDiv.style.display = 'flex';
+    answersDiv.innerHTML = '';
+    const opts = [
+      { key: 'A', txt: 'Månen har massa och drar', correct: true },
+      { key: 'B', txt: 'Det finns luft på Månen', correct: false },
+      { key: 'C', txt: 'Rymddräkten är tung', correct: false },
+    ];
+    opts.forEach(o => {
+      const btn = document.createElement('button');
+      btn.className = 'answer-btn';
+      btn.textContent = o.key + ') ' + o.txt;
+      btn.addEventListener('click', () => {
+        if (state.s6Done) return;
+        answersDiv.querySelectorAll('button').forEach(b => b.disabled = true);
+        if (o.correct) {
+          state.s6Done = true;
+          btn.classList.add('correct');
+          soundPling();
+          feedback.className = 'feedback-box correct';
+          feedback.textContent = 'Ja! Månen har massa — mindre än Jorden, men den drar ändå. Gravitation finns överallt där det finns massa.';
+          next.classList.add('visible');
+        } else {
+          state.s6Errors++;
+          btn.classList.add('wrong');
+          soundBonk();
+          feedback.className = 'feedback-box wrong';
+          if (o.key === 'B') {
+            feedback.textContent = 'Det finns nästan ingen luft på Månen. Men Månen har massa — och allt med massa drar!';
+          } else {
+            feedback.textContent = 'Rymddräkten spelar ingen roll. Det är Månens massa som drar!';
+          }
+          if (state.s6Errors >= 2) {
+            // Show arrows as scaffold
+            showMoonArrows(arena, astro);
+          }
+          setTimeout(() => {
+            answersDiv.querySelectorAll('button').forEach(b => { b.disabled = false; b.classList.remove('wrong'); });
+          }, 1200);
+        }
+      });
+      answersDiv.appendChild(btn);
+    });
+  }
+
+  next.addEventListener('click', () => goTo(7), { once: true });
+}
+
+function showMoonArrows(arena, astro) {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('width', '100%'); svg.setAttribute('height', '100%');
+  svg.style.cssText = 'position:absolute;inset:0;pointer-events:none;overflow:visible;';
+  svg.innerHTML = `
+    <defs>
+      <marker id="arrMoon" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#ffd166"/>
+      </marker>
+    </defs>
+    <line stroke="#ffd166" stroke-width="4" marker-end="url(#arrMoon)"
+      x1="50%" y1="30" x2="50%" y2="85%"/>
+  `;
+  arena.appendChild(svg);
+}
+
+// ─── Step 7: Rymdlabbet ───────────────────────────────────────────────────────
+function initStep7() {
+  const arena = document.getElementById('s7-arena');
+  const feedback = document.getElementById('s7-feedback');
+  const next = document.getElementById('s7-next');
+  arena.innerHTML = '';
+
+  // Stars bg
+  for (let i = 0; i < 30; i++) {
+    const s = document.createElement('div');
+    s.style.cssText = `position:absolute;width:${1+Math.random()*2}px;height:${1+Math.random()*2}px;background:white;border-radius:50%;left:${Math.random()*98}%;top:${Math.random()*98}%;opacity:${0.3+Math.random()*0.7};`;
+    arena.appendChild(s);
+  }
+
+  // SVG for arrows
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('width', '100%'); svg.setAttribute('height', '100%');
+  svg.style.cssText = 'position:absolute;inset:0;pointer-events:none;overflow:visible;';
+  svg.innerHTML = `
+    <defs>
+      <marker id="arrLab" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#ffd166"/>
+      </marker>
+    </defs>
+    <line id="lab-arrow" stroke="#ffd166" stroke-width="0" marker-end="url(#arrLab)" opacity="0"/>
+  `;
+  arena.appendChild(svg);
+
+  // Planets: stone (medium), gas (large), moon (small)
+  const planets = [
+    { label: '🪨', mass: 4, name: 'Stenplanet', left: '8%', top: '30%', size: 80 },
+    { label: '🌌', mass: 10, name: 'Gasplanet', left: '55%', top: '15%', size: 110 },
+    { label: '🌑', mass: 2, name: 'Liten måne', left: '70%', top: '65%', size: 60 },
+  ];
+
+  planets.forEach(p => {
+    const el = document.createElement('div');
+    el.style.cssText = `position:absolute;left:${p.left};top:${p.top};width:${p.size}px;height:${p.size}px;border-radius:50%;background:radial-gradient(circle at 35% 35%,rgba(255,255,255,0.2),rgba(0,0,0,0.5));display:flex;align-items:center;justify-content:center;font-size:${p.size*0.45}px;box-shadow:0 0 ${p.mass*3}px rgba(124,107,255,0.3);`;
+    el.textContent = p.label;
+    el.setAttribute('data-mass', p.mass);
+    el.setAttribute('data-name', p.name);
+    arena.appendChild(el);
+    // Label
+    const lbl = document.createElement('div');
+    lbl.style.cssText = `position:absolute;left:${p.left};top:calc(${p.top} + ${p.size + 4}px);font-size:0.75rem;color:var(--text-dim);font-weight:600;white-space:nowrap;`;
+    lbl.textContent = p.name;
+    arena.appendChild(lbl);
+  });
+
+  // Testboll (draggable)
+  const testball = document.createElement('div');
+  testball.style.cssText = 'position:absolute;left:calc(40% - 25px);top:calc(50% - 25px);width:50px;height:50px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ffffff,#aaaaaa);cursor:grab;user-select:none;touch-action:none;box-shadow:0 0 12px rgba(255,255,255,0.4);display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:700;color:#333;z-index:5;';
+  testball.textContent = '●';
+  arena.appendChild(testball);
+
+  const testLbl = document.createElement('div');
+  testLbl.style.cssText = 'position:absolute;left:calc(40% - 10px);top:calc(50% + 30px);font-size:0.75rem;color:var(--text-dim);font-weight:600;';
+  testLbl.textContent = 'Testboll';
+  arena.appendChild(testLbl);
+
+  let visited = new Set();
+  let lastHmmTime = 0;
+
+  // Cache planet positions once — they don't move
+  const planetCache = [];
+  setTimeout(() => {
+    const ar = arena.getBoundingClientRect();
+    arena.querySelectorAll('[data-mass]').forEach(pl => {
+      const pr = pl.getBoundingClientRect();
+      planetCache.push({
+        x: pr.left - ar.left + pr.width/2,
+        y: pr.top - ar.top + pr.height/2,
+        mass: +pl.getAttribute('data-mass'),
+        name: pl.getAttribute('data-name'),
+        halfSize: pr.width / 2,
+      });
+    });
+  }, 80);
+
+  function updateArrow(tbX, tbY) {
+    if (!planetCache.length) return;
+    let nearest = null, nearestDist = Infinity;
+    planetCache.forEach(p => {
+      const dist = Math.sqrt((tbX - p.x)**2 + (tbY - p.y)**2);
+      if (dist < nearestDist) { nearestDist = dist; nearest = p; }
+    });
+    const arrow = document.getElementById('lab-arrow');
+    if (!nearest || nearestDist > 200) {
+      arrow.setAttribute('opacity', 0);
+      arrow.setAttribute('stroke-width', 0);
+      return;
+    }
+    const sw = Math.max(1, nearest.mass * 0.8 - nearestDist * 0.015);
+    const dx = nearest.x - tbX, dy = nearest.y - tbY;
+    const len = Math.sqrt(dx*dx+dy*dy);
+    const ux = dx/len, uy = dy/len;
+    arrow.setAttribute('x1', tbX + ux*28); arrow.setAttribute('y1', tbY + uy*28);
+    arrow.setAttribute('x2', nearest.x - ux*(nearest.halfSize+8)); arrow.setAttribute('y2', nearest.y - uy*(nearest.halfSize+8));
+    arrow.setAttribute('stroke-width', Math.max(1, sw));
+    arrow.setAttribute('opacity', Math.min(1, sw * 0.3 + 0.3));
+    const now = Date.now();
+    if (now - lastHmmTime > 400) { soundHmm(); lastHmmTime = now; }
+    visited.add(nearest.name);
+    if (visited.size >= 2 && !next.classList.contains('visible')) {
+      feedback.className = 'feedback-box info';
+      feedback.textContent = 'Gasplaneten drar mest — störst massa! Fortsätt utforska, tryck sen Nästa.';
+      next.classList.add('visible');
+    }
+  }
+
+  let tbX = (arena.clientWidth * 0.4) || 200;
+  let tbY = (arena.clientHeight * 0.5) || 180;
+  let active = false;
+
+  testball.addEventListener('pointerdown', e => {
+    e.preventDefault(); testball.setPointerCapture(e.pointerId);
+    active = true; soundLift();
+  });
+  testball.addEventListener('pointermove', e => {
+    if (!active) return;
+    const pr = arena.getBoundingClientRect();
+    tbX = e.clientX - pr.left;
+    tbY = e.clientY - pr.top;
+    testball.style.left = (tbX - 25) + 'px';
+    testball.style.top = (tbY - 25) + 'px';
+    testLbl.style.left = (tbX - 10) + 'px';
+    testLbl.style.top = (tbY + 30) + 'px';
+    updateArrow(tbX, tbY);
+  });
+  testball.addEventListener('pointerup', () => { active = false; });
+
+  next.addEventListener('click', () => goTo(8), { once: true });
+}
+
+// ─── Step 8: Konsolidering ────────────────────────────────────────────────────
+function initStep8() {
+  const arena = document.getElementById('s8-arena');
+  const answersDiv = document.getElementById('s8-answers');
+  const feedback = document.getElementById('s8-feedback');
+  const reflection = document.getElementById('s8-reflection');
+  const teaser = document.getElementById('s8-teaser');
+  const canvas = document.getElementById('fireworks-canvas');
+  arena.style.overflow = 'hidden';
+
+  // Sky+ground same as step 1
+  arena.style.background = 'linear-gradient(180deg, #1a3a6e 0%, #3d8ef8 60%, #5cb85c 80%, #3d7a3d 100%)';
+
+  // Apple with arrows
+  const apple = document.createElement('div');
+  apple.style.cssText = 'position:absolute;left:calc(50% - 40px);top:40px;font-size:3rem;width:80px;height:80px;display:flex;align-items:center;justify-content:center;';
+  apple.textContent = '🍎';
+  arena.appendChild(apple);
+
+  // Earth under ground
+  const earthHint = document.createElement('div');
+  earthHint.style.cssText = 'position:absolute;bottom:4px;left:50%;transform:translateX(-50%);font-size:0.75rem;color:rgba(255,255,255,0.6);font-weight:600;';
+  earthHint.textContent = '🌍 Jordens massa drar';
+  arena.appendChild(earthHint);
+
+  // Arrows (apple ↔ earth)
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('width', '100%'); svg.setAttribute('height', '100%');
+  svg.style.cssText = 'position:absolute;inset:0;pointer-events:none;overflow:visible;';
+  svg.innerHTML = `
+    <defs>
+      <marker id="arr8down" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#06d6a0"/>
+      </marker>
+      <marker id="arr8up" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto">
+        <path d="M0,0 L5,2.5 L0,5 Z" fill="#7c6bff"/>
+      </marker>
+    </defs>
+    <line stroke="#06d6a0" stroke-width="6" marker-end="url(#arr8down)" x1="50%" y1="90" x2="50%" y2="84%"/>
+    <line stroke="#7c6bff" stroke-width="2" marker-end="url(#arr8up)" x1="calc(50% + 8)" y1="82%" x2="calc(50% + 8)" y2="95"/>
+  `;
+  arena.appendChild(svg);
+
+  answersDiv.innerHTML = '';
+  state.s8Done = false;
+  const opts = [
+    { key: 'A', txt: 'Äpplet och Jorden drar i varandra. Jorden har mer massa, så äpplet rör sig mest.', correct: true },
+    { key: 'B', txt: 'Äpplet är tungt', correct: false },
+    { key: 'C', txt: 'Inget håller upp det', correct: false },
+  ];
+  opts.forEach(o => {
+    const btn = document.createElement('button');
+    btn.className = 'answer-btn';
+    btn.textContent = o.key + ') ' + o.txt;
+    btn.addEventListener('click', () => {
+      if (state.s8Done) return;
+      answersDiv.querySelectorAll('button').forEach(b => b.disabled = true);
+      if (o.correct) {
+        state.s8Done = true;
+        btn.classList.add('correct');
+        soundPling();
+        feedback.className = 'feedback-box correct';
+        feedback.textContent = 'Du förstår gravitation! Allt med massa drar i allt annat. Mer massa = starkare drag.';
+        launchFireworks(canvas);
+        setTimeout(() => {
+          reflection.style.display = 'block';
+          buildReflectionCards();
+        }, 1800);
+      } else {
+        soundBonk();
+        btn.classList.add('wrong');
+        feedback.className = 'feedback-box wrong';
+        feedback.textContent = 'Titta på pilarna igen — de pekar åt båda håll!';
+        setTimeout(() => {
+          answersDiv.querySelectorAll('button').forEach(b => { b.disabled = false; b.classList.remove('wrong'); });
+        }, 1200);
+      }
+    });
+    answersDiv.appendChild(btn);
+  });
+
+  function buildReflectionCards() {
+    const grid = document.getElementById('reflection-cards');
+    grid.innerHTML = '';
+    const cards = [
+      { icon: '🍎', txt: 'Äpplet drar i Jorden' },
+      { icon: '🌕', txt: 'Månen har gravitation' },
+      { icon: '✨', txt: 'Allt drar i allt' },
+    ];
+    cards.forEach(c => {
+      const card = document.createElement('div');
+      card.className = 'reflection-card';
+      card.innerHTML = `<div class="card-icon">${c.icon}</div><div>${c.txt}</div>`;
+      card.addEventListener('click', () => {
+        grid.querySelectorAll('.reflection-card').forEach(x => x.classList.remove('chosen'));
+        card.classList.add('chosen');
+        soundPop();
+        setTimeout(() => { teaser.style.display = 'block'; }, 400);
+      });
+      grid.appendChild(card);
+    });
+  }
+}
+
+function launchFireworks(canvas) {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  canvas.width = canvas.parentElement.offsetWidth;
+  canvas.height = canvas.parentElement.offsetHeight;
+  const ctx = canvas.getContext('2d');
+  const particles = [];
+  const colors = ['#ffd166','#06d6a0','#7c6bff','#ff9f1c','#ffffff'];
+  for (let i = 0; i < 80; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 1 + Math.random() * 4;
+    particles.push({
+      x: canvas.width / 2, y: canvas.height / 2,
+      vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 2,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      life: 1, size: 2 + Math.random() * 4
+    });
+  }
+  soundPop(); setTimeout(soundPop, 120); setTimeout(soundPop, 240);
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let alive = false;
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.vy += 0.08; p.life -= 0.018;
+      if (p.life > 0) {
+        alive = true;
+        ctx.globalAlpha = p.life;
+        ctx.fillStyle = p.color;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+      }
+    });
+    ctx.globalAlpha = 1;
+    if (alive) requestAnimationFrame(draw);
+    else ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  draw();
+}
+
+// ─── Boot ─────────────────────────────────────────────────────────────────────
+function boot() {
+  renderProgress();
+  document.getElementById('step-1').classList.add('active');
+  initStep1();
+
+  // Lazy-init steps when navigated to
+  const origGoTo = goTo;
+  window.goTo = function(n) {
+    origGoTo(n);
+    if (n === 2) initStep2();
+    else if (n === 3) initStep3();
+    else if (n === 4) initStep4();
+    else if (n === 5) initStep5();
+    else if (n === 6) initStep6();
+    else if (n === 7) initStep7();
+    else if (n === 8) initStep8();
+  };
+}
+boot();
+
+// ─── Drag helper ─────────────────────────────────────────────────────────────
+function makeDraggable(el, onMove, onEnd) {
+  let startX, startY, elX, elY, active = false;
+  el.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    el.setPointerCapture(e.pointerId);
+    active = true;
+    const r = el.getBoundingClientRect();
+    const pr = el.parentElement.getBoundingClientRect();
+    elX = r.left - pr.left; elY = r.top - pr.top;
+    startX = e.clientX; startY = e.clientY;
+    el.classList.add('grabbed');
+    soundLift();
+  });
+  el.addEventListener('pointermove', e => {
+    if (!active) return;
+    e.preventDefault();
+    const dx = e.clientX - startX, dy = e.clientY - startY;
+    elX += dx; elY += dy;
+    startX = e.clientX; startY = e.clientY;
+    el.style.left = elX + 'px'; el.style.top = elY + 'px';
+    if (onMove) onMove(elX, elY, e);
+  });
+  el.addEventListener('pointerup', e => {
+    if (!active) return;
+    active = false;
+    el.classList.remove('grabbed');
+    if (onEnd) onEnd(elX, elY, e);
+  });
+}
+</script>
+</body>
+</html>
