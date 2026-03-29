@@ -71,6 +71,9 @@ Verifiera mot **design.md**:
 - [ ] Har varje skärm en do-komponent (minst Constructive)?
 - [ ] Börjar appen med guided challenge, inte förklaring?
 - [ ] Vardagsförankring i steg 1?
+- [ ] **Visuella variabler:** Stämmer implementationen med deklarationstabellen i design.md? Används samma variabel konsekvent genom alla steg?
+- [ ] **Prediction-steg:** Har alla ⚡-markerade moment ett prediction-steg (gissning → utfall → förklaring)?
+- [ ] **State-feedback sync:** Refererar feedbacktext till visuella element? Om ja — verifierar koden att elementet är synligt och signalerat (puls/blink) innan texten visas?
 
 Verifiera mot **principer.md**:
 - [ ] Språknivå och max ord/skärm stämmer med åldersgruppen?
@@ -78,6 +81,7 @@ Verifiera mot **principer.md**:
 - [ ] Inga tidsgränser?
 - [ ] Fail states är uppmuntrande, inte straffande?
 - [ ] Touch: Pointer Events, inte mouse events?
+- [ ] Temporal contiguity: text + visuellt element visas samtidigt, inte sekventiellt?
 
 Verifiera mot **barnapp-design**:
 - [ ] Karaktärsfull font (inte Arial/Inter/Roboto)?

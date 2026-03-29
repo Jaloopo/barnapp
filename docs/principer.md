@@ -39,6 +39,23 @@ För appar med ämnesinnehåll (kemi, fysik, biologi, astronomi): Perplexity-res
 
 *Lärdomen: "väte och syre reagerar kemiskt" ≠ "de blandas". Appen kan vara åldersmässigt förenklad, men förenklingen ska vara ett aktivt val, inte en miss.*
 
+### Prediction-steg vid kontraintuitiva moment (obligatoriskt)
+
+När ett steg visar ett utfall som bryter mot barnets förväntade intuition (t.ex. "lika stora krafter trots olika massa"):
+1. **Predict:** Låt barnet gissa utfallet innan det visas
+2. **Observe:** Visa det korrekta utfallet
+3. **Explain:** Förklara explicit varför, med text som adresserar just diskrepansen
+
+Kontraintuitiva moment markeras med ⚡ i design.md. Misconceptions som ska adresseras dokumenteras i `docs/misconceptions-register.md`.
+
+*Lärdomen: fysik-1-gravitation visade lika stora pilar (Newton 3) utan prediction-steg — barnet fick ingen chans att konfrontera sin naïve theory att "tyngre drar starkare." Utan prediction error fastnar den felaktiga modellen kvar bredvid den korrekta (Kapur 2010, Tippett 2010).*
+
+### Developmental progression-check (obligatorisk)
+
+Varje steg i sessionsstrukturen ska introducera maximalt *ett* nytt koncept. Om steg N+1 förutsätter en insikt som inte etablerats i steg N — lägg till ett mellansteg.
+
+*Lärdomen: fysik-1-gravitation hoppade från "massa väger olika" (steg 2, nedåt-paradigm) till "bollar drar i varandra i rymden" (steg 3, ömsesidighet). Det saknades ett steg som etablerar att massa drar i alla riktningar, inte bara "nedåt."*
+
 ---
 
 ## B. INTERAKTIVITETSDESIGN
@@ -79,6 +96,12 @@ Barn 6–8: inga bisatser, inga passiva former, inga facktermer utan bildstöd, 
 
 **Metafor-regel:** Undvik abstrakta liknelser. Test: kan en 7-åring rita det? Animationen agerar metafor — texten ska vara bokstavlig.
 
+**Visuella variabler:** Varje visuell variabel som bär information (piltjocklek, storlek, färg, animationshastighet) ska deklareras explicit i design.md med en tabell: *variabel → vad den representerar → konsekvent i hela modulen?* Variabeln får inte byta betydelse mellan steg utan att det deklareras.
+
+*Lärdomen: fysik-1-gravitation använde piltjocklek som kraft i steg 4 och som acceleration i steg 5 — utan att det beslutades. Sonnet kodade mot olika implicita semantiker.*
+
+**State-feedback sync:** Feedbacktext som refererar till ett visuellt element ("Titta på pilarna") kräver att elementet är synligt och signalerat (pulserar/blinkar) exakt samtidigt som texten visas. Temporal contiguity är kritisk för 8-åringar — de kan inte läsa text och sedan leta upp ett element utan att tappa information (Mayer, Spatial + Temporal Contiguity).
+
 **Expertise Reversal:** Minska scaffolding när eleven visar förståelse.
 
 **Seductive details:** Lekfullhet OK om separerat från lärinnehållet.
@@ -99,7 +122,11 @@ Designa för nyfikenhet. Fail state: "Intressant! Vad hände?" — aldrig poäng
 
 *Bedömning genom handlingar, inte testfrågor.*
 
-- **Stealth assessment:** Spåra antal försök, feltyper (systematiska = misconception), tid per steg
+- **Stealth assessment:** Spåra antal försök, feltyper (systematiska = misconception), tid per steg. Obligatoriska datapunkter i design.md:
+  - Prediction choice (vad barnet gissade vid ⚡-moment)
+  - Dwell time efter surprise (paus innan "Nästa" korrelerar med kognitiv bearbetning)
+  - Systematisk parameterändring (hypotesprövning vs. slumpmässigt klickande)
+  - Aktiv placering/val (visar applicerad förståelse vs. trial-and-error)
 - **Adaptionsregel:** Fel 1 → visuell markering. Fel 2 → delvis ledtråd. Fel 3 → fullständig scaffold.
 - **Kombinerad feedback:** Motiverande + förklarande + nivåanpassning — alla tre krävs.
 - **Gate-keeping:** Demonstrera förståelse innan nästa moment — som utforskning, inte test. Gäller INTE under guided challenge (A1).

@@ -17,6 +17,13 @@ Testad av: [barn/vuxen + ålder om barn]
 
 ### Fungerade bra
 - [beskriv vad som fungerade, detta hjälper review.md]
+
+### RCA (valfritt men värdefullt)
+Om du kan identifiera varför problemet uppstod:
+- Rotorsak: [t.ex. "odeklarerad semantik för piltjocklek", "feedbacktext refererar till osynligt element"]
+- Är det en implementationsbugg eller ett designproblem?
+- Påverkar rotorsaken fler ställen i modulen?
+- Förslag till designregel (om generaliserbara lärdomar finns)
 ```
 
 ## Exempel
@@ -35,4 +42,9 @@ Testad av: barn 8 år
 ### Fungerade bra
 - Guided challenge i steg 1 fångade intresset direkt
 - Scaffolding vid fel 2 hjälpte utan att ge bort svaret
+
+### RCA
+- Rotorsak: Touch target 40px, under minimum 60px för ålder 8
+- Implementationsbugg — design.md specificerade 80px
+- Påverkar troligen även steg 5 (samma komponenttyp)
 ```

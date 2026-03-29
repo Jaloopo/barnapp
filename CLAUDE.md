@@ -16,11 +16,33 @@ Interaktiva läroappar för barn 6–12, servade via GitHub Pages. Varje app är
 
 ---
 
+## Rollfördelning
+
+| Agent | Ansvarar för | När |
+|-------|-------------|-----|
+| **Opus** | Designbeslut, arbetsflöde, prompts till externa verktyg, uppdatering av principer/regler | Designfas, review, principändringar |
+| **Sonnet** | Implementation (kod, enkla doc-uppdateringar, buggfixar) | Byggfas, iteration |
+| **Perplexity** | Domänfakta — vad som är vetenskapligt sant, misconceptions, forskning | Steg 1 i designflödet |
+| **NotebookLM** | Kognitiv/pedagogisk granskning — hur fakta paketeras för lärande | Steg 3 i designflödet |
+| **Människa** | Test, godkännande, vision, extern research-förmedling | Hela processen |
+
+**Kostnadsregel:** Opus används för beslut som kräver omdöme — design, principändringar, avvägningar, review. Sonnet används för implementation och enkla uppdateringar. Om uppgiften kan lösas lika bra av Sonnet, använd Sonnet.
+
+---
+
 ## Flöden
 
-### 1. Idé → Design (Opus)
+### 1. Idé → Design (7-stegsflödet)
 Trigger: användaren ger en idé, t.ex. "barnet vill lära sig om stjärnor"
 
+**Steg 1 — Extern faktaresearch [Perplexity]** (obligatoriskt för naturvetenskap)
+Opus formulerar domänfrågor och ger användaren en färdig prompt:
+- Vilka misconceptions har barn X år om konceptet?
+- Vilken forskning finns om effektiva vardagsexempel?
+- Vilka förenklingar är försvarbara vs. skapar seglivade fel?
+- Korsreferera mot `docs/misconceptions-register.md`
+
+**Steg 2 — Preliminär modulplan [Opus]**
 1. Läs `docs/index.yaml` — vad har barnet gjort? Vilka koncept är upplåsta?
 2. Föreslå 2–3 vägar med bryggor från tidigare appar
 3. Användaren väljer väg
@@ -28,50 +50,71 @@ Trigger: användaren ger en idé, t.ex. "barnet vill lära sig om stjärnor"
    - Vilka koncept *förutsätter* den nya appen att barnet redan förstår?
    - Finns det en befintlig app i index.yaml som täcker varje prerequisite-koncept?
    - Om ett prerequisite-koncept saknas → föreslå att den modulen byggs först
-   - Dokumentera analysen explicit: "Appen förutsätter X. Täcks av [app-id] / Saknas → bygga [förslag] först."
-   - **Tumregel:** Om mer än ett konceptsteg hoppas över (t.ex. "atomer → ström" utan "elektroner") saknas en prerequisite-app.
-5. Bedöm research-behov:
-   - 🟢 **Klarar mig** — principer.md + index + tidigare reviews räcker
-   - 🟡 **Perplexity rekommenderas** — sakfakta jag är osäker på → ge färdig prompt
-   - 🔴 **NotebookLM rekommenderas** — pedagogisk fråga utan stöd i principer.md → ge färdig prompt
-6. Om research: användaren klistrar svar, annars gå vidare
-7. Läs `docs/principer.md` + designmallen i `docs/design-prompt.md`
-8. Skriv `design.md` i rätt mapp (`docs/[ämne]/[ämne]-[nr]-[slug]/design.md`)
-9. Uppdatera `docs/index.yaml` med ny entry (status: design)
-10. Commit + push till main (se Git-policy)
-11. Avsluta med copy-paste-instruktion till användaren: `Skicka detta i en ny session: "/bygg docs/[ämne]/[ämne]-[nr]-[slug]"`
+   - **Tumregel:** Om mer än ett konceptsteg hoppas över saknas en prerequisite-app.
+5. **Developmental progression-check:** Kontrollera att varje steg i planen maximalt introducerar *ett* nytt koncept. Om ett steg förutsätter en insikt som inte etablerats i föregående steg — lägg till ett mellansteg.
+6. Lista övningar/steg + lärandemål per steg (inte fullständigt designdokument ännu)
 
-### 2. Design → Bygg
+**Steg 3 — Kognitiv/pedagogisk granskning [NotebookLM]** (pre-flight check)
+Opus formulerar en prompt och ger användaren. Obligatorisk input: preliminärplan + `docs/misconceptions-register.md`. Prompten frågar:
+1. Vilka naïve theories har barn om detta, och hur ska visualiseringen korrigera snarare än förstärka dem?
+2. Finns steg som bryter mot Mayers multimediaprinciper (Spatial Contiguity, Coherence, Temporal Contiguity)?
+3. Hur kan stealth assessment byggas in?
+4. Saknas något developmental progression-steg?
+
+**Steg 4 — Kompletterande research [Perplexity, vid behov]**
+Om NotebookLM identifierar frågor utanför sitt corpus.
+
+**Steg 5 — Fullständigt designdokument [Opus]**
+1. Läs `docs/principer.md` + `docs/design-prompt.md`
+2. Sammanväg Perplexity + NotebookLM-svar
+3. Skriv `design.md` i rätt mapp (`docs/[ämne]/[ämne]-[nr]-[slug]/design.md`)
+   - Inkludera obligatorisk tabell: **Visuella variabler**
+   - Markera kontraintuitiva moment med **prediction-steg**
+4. Uppdatera `docs/index.yaml` med ny entry (status: design)
+5. Uppdatera `docs/misconceptions-register.md` med nya entries
+6. Commit + push till main
+
+**Steg 6 — Implementation [Sonnet]**
+Avsluta med copy-paste-instruktion: `Skicka detta i en ny session: "/bygg docs/[ämne]/[ämne]-[nr]-[slug]"`
+
+**Steg 7 — Test + buggrapport [Människa]**
+Rapport enligt `docs/feedback-mall.md` → Opus tar beslut om justering.
+
+### 2. Design → Bygg (Sonnet)
 Trigger: användaren säger `/bygg [mapp]` eller `bygg [mapp]`
 
 **→ Använd `/bygg`-skillen** (`.claude/skills/bygg/SKILL.md`). Den hanterar hela flödet: läs design → validera mot principer → bygg inkrementellt → self-check → simplify → uppdatera index → commit+push.
 
-### 3. Feedback → Iteration
+### 3. Feedback → Iteration (Sonnet, Opus vid designfrågor)
 Trigger: användaren rapporterar problem efter testning
 
 1. Läs feedback (helst enligt `docs/feedback-mall.md`)
 2. Läs aktuell `design.md` + `index.html`
-3. Justera koden, kör self-check (se `/bygg`-skillen för checklistan), commit + push till main
+3. **Sonnet** fixar buggar och implementationsfel
+4. **Opus** kallas in om feedbacken avslöjar designproblem (felaktig visuell semantik, saknade steg, misconception-risker)
+5. Kör self-check (se `/bygg`-skillen för checklistan), commit + push till main
 
-### 4. Review → Lärande
+### 4. Review → Lärande (Opus)
 Trigger: efter att en app testats och godkänts
 
 1. Skriv `review.md` i appens mapp:
    - Vad fungerade
    - Problem och lösningar
    - Ny princip? (signal att uppdatera principer.md)
-2. Uppdatera `docs/index.yaml` (status: klar)
-3. Commit + push till main (se Git-policy)
+2. Uppdatera `docs/misconceptions-register.md` med lärdomar
+3. Uppdatera `docs/index.yaml` (status: klar)
+4. Commit + push till main (se Git-policy)
 
 ---
 
 ## Mappstruktur
 ```
 docs/
-  principer.md          ← pedagogiska riktlinjer
-  design-prompt.md      ← mall för design.md
-  index.yaml            ← övningsindex med koncept/prerequisites/unlocks
-  feedback-mall.md      ← mall för testfeedback
+  principer.md              ← pedagogiska riktlinjer
+  design-prompt.md          ← mall för design.md
+  index.yaml                ← övningsindex med koncept/prerequisites/unlocks
+  feedback-mall.md          ← mall för testfeedback
+  misconceptions-register.md ← kända naïve theories per ämne (obligatorisk input i steg 3)
   [ämne]/
     [ämne]-[nr]-[slug]/
       design.md         ← skrivs i flöde 1
@@ -124,6 +167,8 @@ Skills ligger i `.claude/skills/`. `barnapp-design` och `frontend-design` aktive
 ---
 
 ## Framtida utveckling
-- **`/design`-skill:** Kapsla in Flöde 1 (Opus-design) som skill
+- **`/design`-skill:** Kapsla in Flöde 1 (7-stegsflödet) som skill — efter att flödet validerats manuellt i minst en modul
+- **`/fix`-skill:** Kapsla in Flöde 3 (Feedback → Iteration)
+- **`/review`-skill:** Kapsla in Flöde 4 (Review → Lärande) inkl. misconceptions-register-uppdatering
 - **Review-hook:** Post-push hook som påminner om review.md
 - **CI:** Validera index.yaml + self-check som GitHub Action

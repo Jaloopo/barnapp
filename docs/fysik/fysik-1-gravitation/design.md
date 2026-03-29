@@ -11,6 +11,33 @@
 
 ---
 
+## Visuella variabler
+
+| Variabel | Representerar | Konsekvent i hela modulen? |
+|---|---|---|
+| Piltjocklek (SVG stroke-width) | Kraft (Newton 3) — alltid lika i bägge riktningar | Ja — i alla steg där pilar visas (3–8) |
+| Animationshastighet (bollrörelse) | Rörelseeffekt / acceleration — lättare boll rör sig snabbare | Ja — steg 3, 4, 5 |
+| Fartstreck (korta linjer bakom boll) | Signaling för hastighet — förstärker animationshastighet visuellt | Ja — visas när boll rör sig, längre streck = snabbare |
+| Bollstorlek + antal atomprickar | Massa | Ja — genom hela modulen |
+| Auditory icon: dovhet/tyngd i ljud | Massa — dovare ljud = mer massa | Ja — synkad med slider/massändring |
+
+**Designbeslut:** Pilar representerar kraft, inte acceleration. Lika tjocka åt båda håll oavsett massaskillnad (Newton 3, kvalitativt). Acceleration visas enbart via animationshastighet + fartstreck + förklarande text. Barnet behöver aldrig härleda kopplingen själv — texten förklarar explicit.
+
+---
+
+## Misconceptions (från misconceptions-register.md)
+
+| Misconception | Adresseras i steg | Hur |
+|---|---|---|
+| "Bara Jorden drar" | 3, 5, 6 | Pilar åt båda håll, Månen drar astronaut |
+| "Gravitation kräver luft" | 6 | Månen har ingen luft men drar ändå |
+| "Gravitation = magnetism" | — | Skyddas mot: analogi undviks helt |
+| "Gravitation bara vid fall" | 3 | Bollar dras kontinuerligt, inte bara vid fall |
+| "Tyngre har starkare kraft åt sitt håll" | 4 ⚡ | Prediction-steg → lika pilar → "lättare rör sig mer" |
+| "Tyngre faller snabbare" | — | Medvetet utelämnat (se "Vad appen INTE gör") |
+
+---
+
 ## Lärandemål
 
 **Eleven ska förstå att allt med massa drar i allt annat (gravitation), och att mer massa ger starkare dragning — inte att bara Jorden drar, och inte att gravitation bara finns när saker faller.**
@@ -56,6 +83,16 @@
 - **Feedback rätt:** Vågen tippar, mjukt "dunk"-ljud. Text: "Fler atomer = mer massa. Tyngre!"
 - **Feedback fel:** Vågen tippar lite. "Den har lite massa. Men den andra har ännu fler atomer. Prova den!"
 
+### Steg 2b — Massa drar från alla håll (nytt mellansteg)
+
+- **Do-komponent:** En ensam stor boll i rymden (rymdbakgrund, inget golv). Rymddamm (små prickar) dras långsamt mot bollen *från alla håll* — ovanifrån, underifrån, från sidorna. Barnet drar en liten sten till olika positioner runt bollen (vänster, höger, ovanför, under) och ser att stenen alltid glider mot bollen oavsett riktning.
+- **Vardagsförankring → abstraktion:** Raderar "upp/ner"-paradigmet från steg 1–2 innan ömsesidighet introduceras i steg 3.
+- **CRA-nivå:** Konkret → Representationell (rymddamm synliggör dragningen)
+- **Layout:** Rymdbakgrund. Stor boll med synliga atomprickar centrerad. Liten sten (dragbar, 80×80 px) som barnet placerar fritt. Rymddamm som partiklar.
+- **Text:** "Massa drar. Inte bara nedåt — från alla håll! Dra stenen var du vill."
+- **Interaktionstyp:** Drag-and-drop (fritt placera stenen)
+- **Feedback:** Stenen glider alltid mot bollen. "Massan drar från alla riktningar. Det finns inget 'ner' i rymden!"
+
 ### Steg 3 — Kärnkoncept: "Allt drar i allt"
 
 - **Do-komponent:** Två bollar på en tom yta (inget golv, rymdbakgrund). De dras långsamt mot varandra. Barnet kan dra dem isär, men de glider tillbaka. Pilar visas åt båda håll — boll A drar i B, B drar i A.
@@ -66,25 +103,27 @@
 - **Feedback:** Pillarna syns alltid åt båda håll. När barnet drar isär: "De drar i varandra hela tiden. Det kallas gravitation."
 - **Nyckeldesign:** Pilar alltid åt BÅDA håll — adresserar direkt missuppfattningen "bara Jorden drar."
 
-### Steg 4 — Mer massa, starkare drag
+### Steg 4 — Mer massa, starkare drag ⚡
 
-- **Do-komponent:** Barnet har en slider som gör en av bollarna större (fler atomer syns inuti). Pilarna ändrar tjocklek: större boll = tjockare pilar åt båda håll. Barnet experimenterar fritt.
-- **CRA-nivå:** Representationell → Abstrakt (pilarnas tjocklek = kraftens styrka)
-- **Layout:** Samma rymdbakgrund. Två bollar centrerade. Slider i botten ("Lägg till massa"). Piltjocklek uppdateras i realtid.
-- **Text:** "Dra reglaget. Vad händer med dragningen när bollen får mer massa?"
-- **Interaktionstyp:** Slider (stort handtag, 80 px)
-- **Feedback:** Pilarna tjocknar synligt. Text efter utforskning: "Mer massa = starkare dragning. Alla drar mer!"
-- **Gate-keeping:** Barnet måste dra slidern till max en gång och observera pilarna innan "Nästa" aktiveras.
+- **⚡ Kontraintuitivt moment: Newton 3 — krafterna är lika stora åt båda håll oavsett massaskillnad.**
+- **Do-komponent:**
+  1. **Predict:** Barnet ser två bollar med olika massa. Fråga: "Om den stora bollen drar i den lilla — vilken pil tror du blir tjockast?" Barnet trycker på en boll.
+  2. **Observe:** Slider som ökar massaskillnaden. Pilarna förblir lika tjocka åt båda håll. Men animationen visar att den lättare bollen rör sig snabbare mot den tunga. Fartstreck bakom den lättare bollen. Auditory icon: svisch-ljud vars intensitet matchar hastighet.
+  3. **Explain:** "Överraskning! Krafterna är alltid lika stora åt båda håll. Men den lilla bollen är lättare att flytta på — titta, den rör sig mer!" (Text visas exakt samtidigt som animationen — temporal contiguity.)
+- **CRA-nivå:** Representationell → Abstrakt (pilarnas tjocklek = kraft, animationshastighet = rörelseeffekt)
+- **Layout:** Samma rymdbakgrund. Två bollar centrerade. Slider i botten ("Lägg till massa"). Piltjocklek lika i realtid. Fartstreck bakom snabbare boll.
+- **Interaktionstyp:** Tap (prediction) + Slider (stort handtag, 80 px)
+- **Feedback:** Pilar lika tjocka, lättare boll rör sig snabbare med fartstreck. Text + animation synkade.
+- **Gate-keeping:** Barnet måste (1) göra en prediction, (2) dra slidern till max en gång, (3) se förklaringstexten innan "Nästa" aktiveras.
 
 ### Steg 5 — Tillbaka till vardagen: Jorden och äpplet
 
-- **Do-komponent:** Samma pilar-vy, men nu är ena bollen en liten jordglob och andra ett äpple. Pilar åt båda håll — men pilen från Jorden är ENORMT mycket tjockare. Fråga: "Äpplet drar också i Jorden. Varför märker vi det inte?"
+- **Do-komponent:** Samma pilar-vy, men nu är ena bollen en liten jordglob och andra ett äpple. Pilar lika tjocka åt båda håll (konsekvent med steg 4 — kraft är lika). Animationen visar att äpplet rör sig (faller) medan Jorden står stilla. Fartstreck bakom äpplet. Fråga: "Samma kraft åt båda håll. Varför rör sig bara äpplet?"
 - **CRA-nivå:** Representationell (pilar) + koppling tillbaka till konkret (äpplet från steg 1)
-- **Layout:** Jordglob (stor, vänster) med synliga atomer. Äpple (litet, höger). Pilar emellan — Jordens pil dominant.
-- **Svarsalternativ (tap):** (A) "Jorden har så mycket mer massa" (B) "Äpplet är för litet" (C) "Äpplet drar inte alls"
-- **Feedback rätt (A):** "Precis! Jorden har enormt mycket mer massa. Därför märker vi bara Jordens drag." Jordgloben lyser kort.
-- **Feedback fel (C):** "Äpplet drar faktiskt i Jorden! Men Jordens massa är så stor att Jorden knappt rör sig. Titta på pilarna."
-- **Feedback fel (B):** "Nästan! Äpplet drar lite — men Jorden drar MYCKET mer. Det handlar om massa."
+- **Layout:** Jordglob (stor, vänster) med synliga atomer. Äpple (litet, höger). Pilar emellan — lika tjocka. Äpplet animeras mot Jorden, Jorden står stilla. Fartstreck bakom äpplet.
+- **Svarsalternativ (tap):** (A) "Jorden har så mycket massa att den knappt rör sig" (B) "Äpplet är lättare att flytta på" (C) "Äpplet drar inte alls"
+- **Feedback rätt (A eller B):** "Precis! Samma kraft — men Jorden har så enorm massa att den knappt rör sig. Du drar också i Jorden! Men Jorden märker det inte." Jordgloben lyser kort.
+- **Feedback fel (C):** "Äpplet drar faktiskt i Jorden — lika mycket! Men Jorden har så enorm massa att den knappt rör sig. Titta på pilarna — lika tjocka!" (Pilar pulserar — signaling.)
 
 ### Steg 6 — Månen: gravitation finns överallt
 
@@ -111,8 +150,9 @@
 - **Do-komponent:** Återkoppling till steg 1. Samma äpple, samma fråga: "Varför faller äpplet?" Men nu med pilar och massa-kunskap.
 - **CRA-nivå:** Abstrakt (barnet formulerar principen)
 - **Layout:** Samma äpple + mark som steg 1, men nu med synliga pilar.
-- **Svarsalternativ (tap):** (A) "Äpplet och Jorden drar i varandra. Jorden har mer massa, så äpplet rör sig mest." (B) "Äpplet är tungt" (C) "Inget håller upp det"
-- **Feedback rätt (A):** Fireworks-animation + "Du förstår gravitation! Allt med massa drar i allt annat. Mer massa = starkare drag."
+- **Svarsalternativ (tap):** (A) "Äpplet och Jorden drar i varandra lika mycket. Men Jorden är så tung att bara äpplet rör sig." (B) "Äpplet är tungt" (C) "Inget håller upp det"
+- **Feedback rätt (A):** Pilar visas (lika tjocka åt båda håll) + fartstreck bakom äpplet + fireworks-animation. "Du förstår gravitation! Allt med massa drar i allt annat — lika mycket åt båda håll!"
+- **Feedback fel (B/C):** Pilar visas (triggas *innan* texten) + pilar pulserar. "Titta på pilarna — de pekar åt båda håll, lika tjocka! Jorden och äpplet drar lika mycket. Men äpplet är lättare, så det rör sig mest." (State-feedback sync: pilar synliga och signalerade före texten.)
 - **Reflektionsfråga (visuellt val):** "Vad var mest förvånande?" — tre bildkort: (1) Äpplet drar i Jorden (2) Månen har gravitation (3) Allt drar i allt. Barnet trycker på ett kort, kort animation.
 - **Teaser till astro-1-fusion:** Animerat gasmoln som dras ihop av pilar. Text: "Gravitation drar ihop gasmolnet. Vad händer när det pressas ihop tillräckligt? Det tar vi nästa gång!"
 
@@ -120,7 +160,7 @@
 
 ## Scaffolding-nivåer
 
-Gäller steg 2, 4, 5, 6 (ej steg 1 — guided challenge):
+Gäller steg 2, 4, 5, 6 (ej steg 1 — guided challenge, ej steg 2b/3/7 — utforskande):
 
 - **Fel 1:** Pilar blinkar kort mot rätt svar. Ingen text.
 - **Fel 2:** Text-ledtråd: "Titta på pilarna. Vilken är tjockast?" / "Titta på atomerna inuti. Vilken har flest?"
@@ -178,6 +218,33 @@ Gäller steg 2, 4, 5, 6 (ej steg 1 — guided challenge):
 - **Rörliga targets:** Nej. Bollarna i steg 3 glider men är ej interaktionsmål under rörelse — barnet drar dem när de står stilla.
 - **SVG för pilar** — stroke-width styrs dynamiskt för att visa kraftstyrka.
 - **`prefers-reduced-motion`:** Pulsanimationer, fireworks och gasmoln-teaser avstängs. Fall-animationer förkortas. Pilar visas statiskt.
+
+---
+
+## Stealth assessment
+
+| Datapunkt | Steg | Indikerar |
+|---|---|---|
+| Prediction choice i steg 4 (vilken boll barnet tror har tjockast pil) | 4 | Bär barnet på "tyngre = starkare kraft åt sitt håll"? |
+| Dwell time efter surprise (sekunder innan "Nästa" efter att lika pilar visats) | 4 | Längre paus = kognitiv bearbetning av anomali |
+| Systematisk parameterändring (drar slider extremt + pausar vs. sveper oavbrutet) | 4, 7 | Hypotesprövning vs. slumpmässigt utforskande |
+| Aktiv placering av testboll (strategiskt nära tung planet vs. slumpmässigt) | 7 | Applicerad förståelse för massa → dragning |
+| Korrekt svar steg 8 utan scaffold | 8 | Konceptuell förståelse etablerad |
+
+---
+
+## Developmental progression-check
+
+| Steg → Steg | Nytt koncept | Brygga | OK? |
+|---|---|---|---|
+| 1 → 2 | Massa som "mängd materia" | "Varje prick är atomer. Fler atomer = mer massa." | Ja |
+| 2 → 2b | Massa drar i alla riktningar, inte bara "ner" | Rymdbakgrund, inget golv, rymddamm från alla håll | **Nytt steg (insatt efter NLM-granskning)** |
+| 2b → 3 | Ömsesidighet — båda drar i varandra | Från "en boll drar damm" till "två bollar drar varandra" | Ja |
+| 3 → 4 | Newton 3 — lika kraft, olika rörelse | Prediction-steg, explicit förklaring | Ja (⚡ prediction) |
+| 4 → 5 | Tillbaka till vardag — Jorden + äpple | Samma pilsemantik, konkret koppling | Ja |
+| 5 → 6 | Generalisering — gravitation på Månen | Bekant bild (astronaut), samma logik | Ja |
+| 6 → 7 | Fri utforskning | Applicera allt, inga nya koncept | Ja |
+| 7 → 8 | Konsolidering | Återkoppling till steg 1 | Ja |
 
 ---
 

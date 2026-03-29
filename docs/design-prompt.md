@@ -37,6 +37,14 @@ Lista varje koncept appen förutsätter. För varje koncept:
 
 Om ett prerequisite saknas: designa INTE vidare förrän prerequisite-appen finns (eller ett aktivt beslut tagits att hoppa över, med motivering).
 
+### Misconceptions (obligatoriskt för naturvetenskap)
+Hämta kända misconceptions från `docs/misconceptions-register.md`. Lista de som är relevanta för denna modul:
+- **Misconception:** [vad barnet troligen tror]
+- **Adresseras i steg:** [nummer] — **Hur:** [kort beskrivning]
+- **Risk att förstärka:** [ja/nej] — om ja, beskriv skyddsåtgärd
+
+Nya misconceptions som identifierats via Perplexity/NotebookLM → lägg till i registret.
+
 ### Lärandemål
 Ett enda, mätbart lärandemål. Formulera som: "Eleven ska förstå att X, inte Y."
 
@@ -44,6 +52,15 @@ Ett enda, mätbart lärandemål. Formulera som: "Eleven ska förstå att X, inte
 - Ålder:
 - Primär enhet (mobil/iPad/laptop):
 - Touch target-storlek (px):
+
+### Visuella variabler (obligatoriskt)
+Deklarera varje visuell variabel som bär information i modulen. Variabeln ska användas konsekvent genom alla steg — om den ändrar betydelse mellan steg, deklarera det explicit.
+
+| Variabel | Representerar | Konsekvent i hela modulen? |
+|---|---|---|
+| [t.ex. Piltjocklek] | [t.ex. kraft — alltid lika i bägge riktningar] | [Ja/Nej + förklaring] |
+| [t.ex. Animationshastighet] | [t.ex. rörelseeffekt/acceleration] | [Ja/Nej + förklaring] |
+| [t.ex. Storlek] | [t.ex. massa] | [Ja/Nej + förklaring] |
 
 ### Sessionsstruktur
 Lista varje skärm/steg i ordning. För varje steg:
@@ -55,6 +72,7 @@ Lista varje skärm/steg i ordning. För varje steg:
   - Interaktionstyp (tap / drag / slider / etc.):
   - Visuell feedback vid rätt svar:
   - Visuell feedback vid fel svar:
+  - **Kontraintuitivt moment?** Om ja → markera med ⚡ och beskriv prediction-steg (gissning → utfall → förklaring)
 
 ### Guided challenge (steg 1)
 Beskriv exakt hur appen börjar med en utmaning INNAN förklaring.
@@ -93,6 +111,19 @@ Lista ljud-händelser och karaktär (kort/mjukt/skarpt):
 - Vanilla JS eller React (motivera):
 - Animationer (lista konkret vad som animeras):
 - Rörliga targets? Nej (om inte starkt motiverat):
+
+### Developmental progression-check (obligatorisk)
+Gå igenom stegen i sekvens. Kontrollera för varje stegpar (N → N+1):
+- Introducerar steg N+1 ett koncept som inte etablerats i steg N eller tidigare?
+- Om ja → lägg till ett mellansteg som bygger bryggan.
+
+**Tumregel:** Varje steg ska introducera maximalt *ett* nytt koncept. Om ett steg kräver att barnet gör två kognitiva språng samtidigt, saknas ett mellansteg.
+
+### Stealth assessment (obligatoriskt)
+Lista 3–5 datapunkter att samla in utan att barnet märker det:
+- Vad mäts (t.ex. "gissning i prediction-steg")?
+- Vad indikerar det (t.ex. "bär på misconception X")?
+- I vilket steg?
 
 ### Vad appen INTE gör
 Lista 3–5 saker som medvetet utelämnats och varför.
