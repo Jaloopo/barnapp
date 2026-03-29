@@ -1,0 +1,18 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(git push*)",
+            "command": "BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null); if [ -n \"$BRANCH\" ] && [ \"$BRANCH\" != \"main\" ] && [ \"$BRANCH\" != \"HEAD\" ]; then echo \"Auto-mergar $BRANCH -> main...\"; git checkout main && git merge --ff-only \"$BRANCH\" && git push origin main && git checkout \"$BRANCH\" && echo '{\"systemMessage\": \"Mergad till main och pushad.\"}'; fi",
+            "timeout": 60,
+            "statusMessage": "Mergar till main..."
+          }
+        ]
+      }
+    ]
+  }
+}
