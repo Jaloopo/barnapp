@@ -33,25 +33,19 @@ Trigger: användaren ger en idé, t.ex. "barnet vill lära sig om stjärnor"
 7. Skriv `design.md` i rätt mapp (`docs/[ämne]/[ämne]-[nr]-[slug]/design.md`)
 8. Uppdatera `docs/index.yaml` med ny entry (status: design)
 9. Commit + push till main (se Git-policy)
-10. Avsluta med copy-paste-instruktion till användaren: `Skicka detta i en ny session: "bygg docs/[ämne]/[ämne]-[nr]-[slug]"`
+10. Avsluta med copy-paste-instruktion till användaren: `Skicka detta i en ny session: "/bygg docs/[ämne]/[ämne]-[nr]-[slug]"`
 
-### 2. Design → Bygg (Sonnet räcker)
-Trigger: användaren säger "bygg [mapp]" eller pekar på en design.md
+### 2. Design → Bygg
+Trigger: användaren säger `/bygg [mapp]` eller `bygg [mapp]`
 
-1. Läs `design.md` i angiven mapp — bindande beslut som inte får ändras
-2. Läs `docs/principer.md` för pedagogiska riktlinjer
-3. **Om design.md strider mot principer.md → flagga till användaren, bygg inte vidare**
-4. Bygg `index.html` i samma mapp — **följ Byggordningen steg för steg** (Write skeleton → Edit sektioner). Skriv INTE hela filen i ett Write-anrop.
-5. Kör self-check
-6. Uppdatera `docs/index.yaml` (status: byggd)
-7. Commit + push till main (se Git-policy)
+**→ Använd `/bygg`-skillen** (`.claude/skills/bygg/SKILL.md`). Den hanterar hela flödet: läs design → validera mot principer → bygg inkrementellt → self-check → simplify → uppdatera index → commit+push.
 
 ### 3. Feedback → Iteration
 Trigger: användaren rapporterar problem efter testning
 
 1. Läs feedback (helst enligt `docs/feedback-mall.md`)
 2. Läs aktuell `design.md` + `index.html`
-3. Justera koden, kör self-check, commit + push till main (se Git-policy)
+3. Justera koden, kör self-check (se `/bygg`-skillen för checklistan), commit + push till main
 
 ### 4. Review → Lärande
 Trigger: efter att en app testats och godkänts
@@ -78,13 +72,26 @@ docs/
       index.html        ← byggs i flöde 2
       review.md         ← skrivs i flöde 4
 ```
-GitHub Pages serverar från `docs/`. App-URL: `https://[user].github.io/barnapp/[ämne]/[ämne]-[nr]-[slug]/`
+GitHub Pages serverar från `docs/`. App-URL: `https://jaloopo.github.io/barnapp/[ämne]/[ämne]-[nr]-[slug]/`
+
+---
+
+## Skills
+
+| Skill | Syfte |
+|-------|-------|
+| `/bygg` | Bygger index.html från design.md — hela Flöde 2 |
+| `barnapp-design` | Visuellt designsystem för barnappar (överstyr frontend-design) |
+| `frontend-design` | Anti-AI-slop baseline (officiell Anthropic-skill) |
+| `/simplify` | Kodkvalitet-pass efter bygge (inbyggd) |
+
+Skills ligger i `.claude/skills/`. `barnapp-design` och `frontend-design` aktiveras automatiskt vid bygge. `/bygg` triggas av användaren.
 
 ---
 
 ## Tekniska regler
 
-**Format:** En enda HTML-fil. CSS och JS inline. Inga externa beroenden utom eventuellt Google Fonts via CDN.
+**Format:** En enda HTML-fil. CSS och JS inline. Inga externa beroenden utom Google Fonts via CDN.
 
 **Välj rätt verktyg:**
 - Vanilla HTML/JS för enkla appar (en interaktionstyp)
@@ -106,56 +113,11 @@ GitHub Pages serverar från `docs/`. App-URL: `https://[user].github.io/barnapp/
 - Respektera `prefers-reduced-motion`
 - localStorage tillåtet — wrappa i try/catch (privat surfning kan blocka)
 
-**Byggordning — iterativt (viktigt för att undvika timeout):**
-
-> **Teknisk regel:** Skriv ALDRIG hela index.html i ett enda Write-anrop.
-> Filer över ~200 rader riskerar timeout. Bygg istället inkrementellt:
-
-1. **Write** — Skriv skeleton (~100–150 rader): `<!DOCTYPE html>`, grundläggande CSS-variabler, steg-navigation, tomma steg-containers, och en minimal JS-struktur med event listeners men utan logik. Inga detaljer.
-2. **Edit** — Implementera interaktionslogik för steg 1–3 (lägg till JS-funktioner och HTML-innehåll i respektive steg-containers)
-3. **Edit** — Implementera interaktionslogik för steg 4–6 (eller resterande steg)
-4. **Edit** — Lägg till visuell feedback + CSS-animationer
-5. **Edit** — Lägg till scaffolding-nivåer
-6. **Edit** — Lägg till ljud (Web Audio API)
-7. Self-check mot design.md
-
-Varje Edit-anrop ändrar bara en del av filen (~50–150 rader åt gången) och riskerar inte timeout.
+**Byggordning:** Se `/bygg`-skillen — skriv ALDRIG hela index.html i ett enda Write-anrop.
 
 ---
 
-## Self-check
-Innan du rapporterar klart, verifiera mot design.md:
-- [ ] Touch targets matchar beslutet?
-- [ ] CRA-nivåer implementerade som specificerat?
-- [ ] Scaffolding-djup stämmer?
-- [ ] Gate-keeping på rätt ställen?
-- [ ] Har varje skärm en do-komponent (minst Constructive)?
-- [ ] Börjar appen med guided challenge, inte förklaring?
-- [ ] Vardagsförankring i steg 1?
-
-Verifiera även mot `docs/principer.md`:
-- [ ] Språknivå och max ord/skärm stämmer med åldersgruppen?
-- [ ] `prefers-reduced-motion` hanteras?
-- [ ] Inga tidsgränser?
-- [ ] Fail states är uppmuntrande, inte straffande?
-- [ ] Touch: Pointer Events, inte mouse events?
-
----
-
-## Vanliga misstag att undvika
-- Rörliga touch targets (pulsera/glöd istället för rotera)
-- Poetiska metaforer i text (test: kan en 7-åring rita det?)
-- Facktermer utan trestegsbrygga: upplevelse → vardag → etikett
-- Fler än ett lärandemål (flagga om design.md verkar täcka flera)
-- Text som inte sitter intill det den beskriver
-- Auto-progression (eleven styr takten, alltid)
-- Textfält för barns reflektion (använd flerval/visuellt val)
-- Poängsystem/stjärnor som primär motivator
-
----
-
-## Framtida utveckling (v0.2)
-- **Skills:** Opus-design och Sonnet-bygg som separata skills, triggas automatiskt
-- **Hooks:** Post-push hook som påminner om review.md
-- **Automatisk research:** WebSearch-integration istället för manuell Perplexity
+## Framtida utveckling
+- **`/design`-skill:** Kapsla in Flöde 1 (Opus-design) som skill
+- **Review-hook:** Post-push hook som påminner om review.md
 - **CI:** Validera index.yaml + self-check som GitHub Action
