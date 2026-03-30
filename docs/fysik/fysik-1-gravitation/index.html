@@ -327,6 +327,21 @@
   }
 
   /* Responsive */
+  /* Speed streaks */
+  .speed-streak {
+    position: absolute; pointer-events: none;
+    height: 3px; border-radius: 2px;
+    background: rgba(255,255,255,0.55);
+    transition: opacity 0.1s;
+  }
+
+  /* Arrow signal pulse (step 8 wrong answer) */
+  @keyframes arrowSignalPulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+  }
+  .arrow-signaling { animation: arrowSignalPulse 0.55s ease-in-out 5; }
+
   @media (max-width: 480px) {
     .step-title { font-size: 1.2rem; }
     .step-text { font-size: 1rem; padding: 12px 14px; }
@@ -364,6 +379,15 @@
     <button class="next-btn" id="s2-next">Nästa →</button>
   </div>
 
+  <!-- Step 2b: Massa drar från alla håll -->
+  <div class="step-panel" id="step-2b">
+    <h1 class="step-title">Massa drar från alla håll!</h1>
+    <p class="step-text">Massa drar. Inte bara nedåt — från alla håll! Dra stenen var du vill.</p>
+    <div class="arena" id="s2b-arena" style="height:320px;"></div>
+    <div class="feedback-box" id="s2b-feedback"></div>
+    <button class="next-btn" id="s2b-next">Nästa →</button>
+  </div>
+
   <!-- Step 3: Allt drar i allt -->
   <div class="step-panel" id="step-3">
     <h1 class="step-title">Allt drar i allt!</h1>
@@ -373,12 +397,13 @@
     <button class="next-btn" id="s3-next">Nästa →</button>
   </div>
 
-  <!-- Step 4: Mer massa, starkare drag -->
+  <!-- Step 4: Newton 3 prediction -->
   <div class="step-panel" id="step-4">
-    <h1 class="step-title">Mer massa, starkare drag</h1>
-    <p class="step-text">Dra reglaget. Vad händer med dragningen när bollen får mer massa?</p>
+    <h1 class="step-title">Mer massa — starkare drag?</h1>
+    <p class="step-text" id="s4-text">Boll B är tyngre. Om B drar i A — vilken pil tror du blir tjockast? Tryck på bollen du tror drar hårdast!</p>
     <div class="arena" id="s4-arena" style="height:280px;"></div>
-    <div class="slider-wrap">
+    <div class="answer-grid" id="s4-predict-btns" style="max-width:480px;"></div>
+    <div class="slider-wrap" id="s4-slider-wrap" style="display:none;">
       <div class="slider-label">Lägg till massa →</div>
       <input type="range" class="big-slider" id="s4-slider" min="1" max="10" value="1">
     </div>
@@ -438,10 +463,13 @@
 </main>
 
 <script>
+// ─── Step sequence (2b is the new intermediate step) ────────────────────────
+const STEPS = [1, 2, '2b', 3, 4, 5, 6, 7, 8];
+
 // ─── State ───────────────────────────────────────────────────────────────────
 const state = {
   step: 1,
-  totalSteps: 8,
+  totalSteps: STEPS.length, // 9
   s2Errors: 0,
   s5Errors: 0,
   s5Done: false,
@@ -449,6 +477,11 @@ const state = {
   s6Done: false,
   s8Done: false,
   s4MaxReached: false,
+  s4PredictDone: false,
+  s4PredictChoice: null,
+  s4DwellStart: 0,
+  // stealth assessment
+  assessment: [],
 };
 
 // ─── Audio ────────────────────────────────────────────────────────────────────
@@ -478,6 +511,25 @@ function soundLift() { playTone(440, 0.08, 'sine', 0.2); }
 function soundSwoosh() { playTone(300, 0.15, 'sine', 0.15, 200); }
 function soundHmm() { playTone(200, 0.25, 'sine', 0.1, 0); }
 function soundPop() { playTone(500, 0.06, 'square', 0.2); }
+// Massa-ljud: dovare (lägre frekvens) = mer massa (normMass 0–1)
+function soundMass(normMass) {
+  const freq = 180 - normMass * 120; // 180 Hz (lite massa) → 60 Hz (mycket massa)
+  playTone(freq, 0.22, 'sine', 0.28);
+}
+// Svisch-ljud: kortare puls som signalerar rörelse/hastighet
+function soundWhoosh() { playTone(380, 0.07, 'sine', 0.12, 350); }
+
+// ─── Stealth assessment ───────────────────────────────────────────────────────
+function logAssessment(event, data) {
+  try {
+    const entry = { event, data, ts: Date.now() };
+    state.assessment.push(entry);
+    const key = 'gravitation_assessment';
+    const stored = JSON.parse(localStorage.getItem(key) || '[]');
+    stored.push(entry);
+    localStorage.setItem(key, JSON.stringify(stored.slice(-200)));
+  } catch(e) {}
+}
 
 // ─── Step 1: Guided challenge ─────────────────────────────────────────────────
 function initStep1() {
@@ -729,7 +781,7 @@ function initStep2() {
     makeDraggable(ball, null, (x, y) => tryDrop(ball, x, y));
   });
 
-  next.addEventListener('click', () => goTo(3), { once: true });
+  next.addEventListener('click', () => goTo('2b'), { once: true });
 }
 
 function drawAtomDots(canvas, count) {
@@ -748,6 +800,129 @@ function drawAtomDots(canvas, count) {
     ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.fill();
   }
   ctx.restore();
+}
+
+// ─── Step 2b: Massa drar från alla håll ──────────────────────────────────────
+function initStep2b() {
+  const arena = document.getElementById('s2b-arena');
+  const feedback = document.getElementById('s2b-feedback');
+  const next = document.getElementById('s2b-next');
+  arena.innerHTML = '';
+
+  const AW = arena.clientWidth || 500;
+  const AH = 320;
+
+  // Starfield
+  for (let i = 0; i < 45; i++) {
+    const s = document.createElement('div');
+    s.style.cssText = `position:absolute;width:${1+Math.random()*2}px;height:${1+Math.random()*2}px;background:white;border-radius:50%;left:${Math.random()*98}%;top:${Math.random()*98}%;opacity:${0.3+Math.random()*0.7};pointer-events:none;`;
+    arena.appendChild(s);
+  }
+
+  // Big central ball
+  const BALL_R = 50; // radius
+  const ballEl = document.createElement('div');
+  ballEl.style.cssText = `position:absolute;width:${BALL_R*2}px;height:${BALL_R*2}px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#7c6bff,#3a2080);left:calc(50% - ${BALL_R}px);top:calc(50% - ${BALL_R}px);display:flex;align-items:center;justify-content:center;box-shadow:0 0 32px rgba(124,107,255,0.55);z-index:2;`;
+  const ballCvs = document.createElement('canvas');
+  ballCvs.width = BALL_R*2; ballCvs.height = BALL_R*2;
+  ballCvs.style.cssText = 'position:absolute;inset:0;border-radius:50%;pointer-events:none;';
+  drawAtomDots(ballCvs, 18);
+  ballEl.appendChild(ballCvs);
+  arena.appendChild(ballEl);
+
+  // Space dust particles drifting toward ball from all directions
+  const DUST = 28;
+  const dustData = [];
+  for (let i = 0; i < DUST; i++) {
+    const d = document.createElement('div');
+    d.style.cssText = 'position:absolute;width:3px;height:3px;background:rgba(200,200,255,0.7);border-radius:50%;pointer-events:none;z-index:1;';
+    arena.appendChild(d);
+    const angle = (i / DUST) * Math.PI * 2 + Math.random() * 0.4;
+    const r = 90 + Math.random() * 80;
+    dustData.push({ el: d, angle, r, speed: 0.18 + Math.random() * 0.15 });
+  }
+
+  let dustAnimId;
+  const ballCx = AW / 2, ballCy = AH / 2;
+  function animDust() {
+    dustData.forEach(p => {
+      p.r -= p.speed;
+      if (p.r < BALL_R + 6) { // reset when reaching ball
+        p.r = 100 + Math.random() * 70;
+        p.angle = Math.random() * Math.PI * 2;
+      }
+      const x = ballCx + Math.cos(p.angle) * p.r;
+      const y = ballCy + Math.sin(p.angle) * p.r;
+      p.el.style.left = (x - 1.5) + 'px';
+      p.el.style.top  = (y - 1.5) + 'px';
+    });
+    dustAnimId = requestAnimationFrame(animDust);
+  }
+  animDust();
+
+  // Draggable stone
+  const STONE_R = 25;
+  const stone = document.createElement('div');
+  stone.style.cssText = `position:absolute;width:${STONE_R*2}px;height:${STONE_R*2}px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#bbb,#666);cursor:grab;user-select:none;touch-action:none;display:flex;align-items:center;justify-content:center;font-size:1.4rem;z-index:3;left:${AW*0.15}px;top:${AH*0.25}px;box-shadow:0 4px 12px rgba(0,0,0,0.5);`;
+  stone.textContent = '🪨';
+  arena.appendChild(stone);
+
+  let stoneX = AW * 0.15, stoneY = AH * 0.25;
+  let stoneActive = false, stoneSliding = false, slideId;
+  let feedbackShown = false, timesDropped = 0;
+
+  function slideToCenter() {
+    if (stoneSliding) return;
+    stoneSliding = true;
+    function frame() {
+      const tx = ballCx - STONE_R, ty = ballCy - STONE_R;
+      const dx = tx - stoneX, dy = ty - stoneY;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < BALL_R - 4) {
+        stoneSliding = false;
+        if (!feedbackShown) {
+          feedbackShown = true;
+          feedback.className = 'feedback-box correct';
+          feedback.textContent = 'Massan drar från alla riktningar. Det finns inget "ner" i rymden!';
+          soundPling();
+          next.classList.add('visible');
+        }
+        return;
+      }
+      stoneX += dx * 0.065;
+      stoneY += dy * 0.065;
+      stone.style.left = stoneX + 'px';
+      stone.style.top  = stoneY + 'px';
+      if (dist > 60) soundWhoosh();
+      slideId = requestAnimationFrame(frame);
+    }
+    frame();
+  }
+
+  stone.addEventListener('pointerdown', e => {
+    e.preventDefault(); stone.setPointerCapture(e.pointerId);
+    stoneActive = true; stoneSliding = false; cancelAnimationFrame(slideId);
+    soundLift(); stone.classList.add('grabbed');
+  });
+  stone.addEventListener('pointermove', e => {
+    if (!stoneActive) return;
+    const r = arena.getBoundingClientRect();
+    stoneX = Math.max(0, Math.min(e.clientX - r.left - STONE_R, AW - STONE_R*2));
+    stoneY = Math.max(0, Math.min(e.clientY - r.top  - STONE_R, AH - STONE_R*2));
+    stone.style.left = stoneX + 'px';
+    stone.style.top  = stoneY + 'px';
+  });
+  stone.addEventListener('pointerup', () => {
+    if (!stoneActive) return;
+    stoneActive = false; stone.classList.remove('grabbed');
+    timesDropped++;
+    setTimeout(slideToCenter, 300);
+  });
+
+  next.addEventListener('click', () => {
+    cancelAnimationFrame(dustAnimId); cancelAnimationFrame(slideId);
+    goTo(3);
+  }, { once: true });
 }
 
 // ─── Step 3: Allt drar i allt ────────────────────────────────────────────────
@@ -887,257 +1062,412 @@ function makeBallEl(label, left, top, bg, size) {
 function renderProgress() {
   const map = document.getElementById('progress-map');
   map.innerHTML = '';
-  for (let i = 1; i <= state.totalSteps; i++) {
+  const currentIdx = STEPS.indexOf(state.step);
+  STEPS.forEach((id, idx) => {
     const dot = document.createElement('div');
-    dot.className = 'step-dot' + (i === state.step ? ' active' : i < state.step ? ' done' : '');
-    dot.textContent = i;
-    dot.setAttribute('aria-label', 'Steg ' + i);
+    dot.className = 'step-dot' + (idx === currentIdx ? ' active' : idx < currentIdx ? ' done' : '');
+    dot.textContent = idx + 1;
+    dot.setAttribute('aria-label', 'Steg ' + (idx + 1));
     map.appendChild(dot);
-    if (i < state.totalSteps) {
+    if (idx < STEPS.length - 1) {
       const line = document.createElement('div');
-      line.className = 'step-line' + (i < state.step ? ' done' : '');
+      line.className = 'step-line' + (idx < currentIdx ? ' done' : '');
       map.appendChild(line);
     }
-  }
+  });
 }
 
 // ─── Navigation ──────────────────────────────────────────────────────────────
-function goTo(n) {
+function goTo(id) {
   document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
-  state.step = n;
-  document.getElementById('step-' + n).classList.add('active');
+  state.step = id;
+  document.getElementById('step-' + id).classList.add('active');
   renderProgress();
   soundSwoosh();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ─── Step 4: Mer massa, starkare drag ────────────────────────────────────────
+// ─── Step 4: Newton 3 — prediction + observe ─────────────────────────────────
 function initStep4() {
-  const arena = document.getElementById('s4-arena');
-  const slider = document.getElementById('s4-slider');
-  const feedback = document.getElementById('s4-feedback');
-  const next = document.getElementById('s4-next');
-  arena.innerHTML = '';
-  state.s4MaxReached = false;
+  const arena      = document.getElementById('s4-arena');
+  const text       = document.getElementById('s4-text');
+  const predictDiv = document.getElementById('s4-predict-btns');
+  const sliderWrap = document.getElementById('s4-slider-wrap');
+  const slider     = document.getElementById('s4-slider');
+  const feedback   = document.getElementById('s4-feedback');
+  const next       = document.getElementById('s4-next');
+
+  arena.innerHTML = ''; predictDiv.innerHTML = '';
+  predictDiv.style.display = 'flex';
+  sliderWrap.style.display = 'none';
+  feedback.className = 'feedback-box'; feedback.textContent = '';
+  next.classList.remove('visible');
+  state.s4MaxReached = false; state.s4PredictDone = false;
+  state.s4PredictChoice = null; state.s4DwellStart = 0;
   slider.value = 1;
 
-  // SVG for arrows + balls
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('width', '100%'); svg.setAttribute('height', '100%');
-  svg.style.cssText = 'position:absolute;inset:0;overflow:visible;';
-  svg.innerHTML = `
-    <defs>
-      <marker id="arr4L" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
-        <path d="M0,0 L8,4 L0,8 Z" fill="#7c6bff"/>
-      </marker>
-      <marker id="arr4R" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
-        <path d="M0,0 L8,4 L0,8 Z" fill="#ff9f1c"/>
-      </marker>
-    </defs>
-    <line id="s4-arrow-lr" stroke="#7c6bff" stroke-width="4" marker-end="url(#arr4L)"/>
-    <line id="s4-arrow-rl" stroke="#ff9f1c" stroke-width="4" marker-end="url(#arr4R)"/>
-  `;
-  arena.appendChild(svg);
+  const AW = arena.clientWidth || 500;
+  const AH = 280;
+  const CXB = AW * 0.28, CYB = AH * 0.46; // center big ball B
+  const CXA = AW * 0.72, CYA = AH * 0.46; // center small ball A
 
-  // Fixed small ball (right)
-  const ballSmall = document.createElement('div');
-  ballSmall.style.cssText = 'position:absolute;width:64px;height:64px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ff9f1c,#c06000);display:flex;align-items:center;justify-content:center;font-family:"Baloo 2",sans-serif;font-weight:800;color:white;';
-  ballSmall.textContent = 'A';
-  arena.appendChild(ballSmall);
+  // ── Phase 1: Two balls without arrows ────────────────────────────────────
+  const ballB = makeBallEl('B', (CXB-40)+'px', (CYB-40)+'px',
+    'radial-gradient(circle at 35% 35%,#7c6bff,#3a2080)', '80px');
+  ballB.style.cursor = 'pointer';
+  const atomCvs = document.createElement('canvas');
+  atomCvs.width = 80; atomCvs.height = 80;
+  atomCvs.style.cssText = 'position:absolute;inset:0;border-radius:50%;pointer-events:none;';
+  drawAtomDots(atomCvs, 12);
+  ballB.appendChild(atomCvs);
+  arena.appendChild(ballB);
 
-  // Big ball (left, grows with slider)
-  const ballBig = document.createElement('div');
-  ballBig.style.cssText = 'position:absolute;border-radius:50%;background:radial-gradient(circle at 35% 35%,#7c6bff,#3a2080);display:flex;align-items:center;justify-content:center;font-family:"Baloo 2",sans-serif;font-weight:800;color:white;transition:width 0.3s,height 0.3s,left 0.3s,top 0.3s;';
-  ballBig.textContent = 'B';
-  arena.appendChild(ballBig);
+  const ballA = makeBallEl('A', (CXA-32)+'px', (CYA-32)+'px',
+    'radial-gradient(circle at 35% 35%,#ff9f1c,#c06000)', '64px');
+  ballA.style.cursor = 'pointer';
+  arena.appendChild(ballA);
 
-  // Atom canvas for big ball
-  const atomCanvas = document.createElement('canvas');
-  atomCanvas.style.cssText = 'position:absolute;inset:0;border-radius:50%;pointer-events:none;';
-  ballBig.appendChild(atomCanvas);
-
-  function updateSlider(val) {
-    const arenaW = arena.clientWidth || 500;
-    const arenaH = arena.clientHeight || 280;
-    const size = 64 + val * 12;
-    const cx = arenaW * 0.3;
-    const cy = arenaH * 0.45;
-    const cx2 = arenaW * 0.72;
-    const cy2 = arenaH * 0.45;
-
-    ballBig.style.width = size + 'px';
-    ballBig.style.height = size + 'px';
-    ballBig.style.left = (cx - size/2) + 'px';
-    ballBig.style.top = (cy - size/2) + 'px';
-
-    ballSmall.style.left = (cx2 - 32) + 'px';
-    ballSmall.style.top = (cy2 - 32) + 'px';
-
-    atomCanvas.width = size; atomCanvas.height = size;
-    drawAtomDots(atomCanvas, Math.round(2 + val * 1.5));
-
-    const sw = 2 + val * 2.5;
-    const arL = document.getElementById('s4-arrow-lr');
-    const arR = document.getElementById('s4-arrow-rl');
-    arL.setAttribute('stroke-width', sw);
-    arR.setAttribute('stroke-width', sw);
-    // Arrow from B → A direction (B drar A)
-    arL.setAttribute('x1', cx + size/2 + 8); arL.setAttribute('y1', cy);
-    arL.setAttribute('x2', cx2 - 40);         arL.setAttribute('y2', cy2);
-    // Arrow from A → B direction (A drar B)
-    arR.setAttribute('x1', cx2 - 36);         arR.setAttribute('y1', cy2 + 12);
-    arR.setAttribute('x2', cx + size/2 + 12); arR.setAttribute('y2', cy + 12);
-
-    // Update arrow markers size
-    document.getElementById('arr4L').setAttribute('markerWidth', Math.min(8, 3 + sw*0.5));
-    document.getElementById('arr4R').setAttribute('markerWidth', Math.min(8, 3 + sw*0.5));
-
-    if (val >= 10 && !state.s4MaxReached) {
-      state.s4MaxReached = true;
-      feedback.className = 'feedback-box correct';
-      feedback.textContent = 'Mer massa = starkare dragning. Alla drar mer!';
-      soundPling();
-      next.classList.add('visible');
-    }
+  // Mass labels
+  function lbl(txt, x, y) {
+    const d = document.createElement('div');
+    d.style.cssText = `position:absolute;left:${x}px;top:${y}px;font-size:0.78rem;color:var(--text-dim);font-weight:600;text-align:center;`;
+    d.textContent = txt; arena.appendChild(d);
   }
+  lbl('Mycket massa', CXB-44, CYB+44);
+  lbl('Lite massa',   CXA-28, CYA+36);
 
-  const onSliderInput = () => updateSlider(parseInt(slider.value));
-  slider.removeEventListener('input', slider._s4handler);
-  slider._s4handler = onSliderInput;
-  slider.addEventListener('input', onSliderInput);
-  setTimeout(() => updateSlider(1), 50);
+  // Predict buttons
+  [
+    { key: 'B', txt: 'B:s pil (stora bollen drar hårdast)' },
+    { key: 'A', txt: 'A:s pil (lilla bollen drar hårdast)' },
+    { key: 'same', txt: 'Lika tjocka åt båda håll' },
+  ].forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'answer-btn';
+    btn.textContent = opt.txt;
+    btn.addEventListener('click', () => {
+      if (state.s4PredictDone) return;
+      state.s4PredictDone = true;
+      state.s4PredictChoice = opt.key;
+      logAssessment('predict_s4', { choice: opt.key });
+      predictDiv.querySelectorAll('button').forEach(b => b.disabled = true);
+      feedback.className = 'feedback-box info';
+      feedback.textContent = opt.key === 'same'
+        ? 'Intressant! Dra reglaget och kolla noggrant.'
+        : 'Bra gissning! Dra reglaget och titta på pilarna.';
+      setTimeout(showObservePhase, 700);
+    });
+    predictDiv.appendChild(btn);
+  });
 
-  next.addEventListener('click', () => goTo(5), { once: true });
+  // ── Phase 2: Observe — equal arrows + ball A oscillates faster ───────────
+  function showObservePhase() {
+    predictDiv.style.display = 'none';
+    sliderWrap.style.display = '';
+    text.textContent = 'Dra reglaget. Titta på pilarna — och vilken boll som rör sig mest!';
+    arena.innerHTML = '';
+
+    // SVG arrows (fixed EQUAL thickness — Newton 3)
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.id = 's4-svg';
+    svg.setAttribute('width', '100%'); svg.setAttribute('height', '100%');
+    svg.style.cssText = 'position:absolute;inset:0;overflow:visible;pointer-events:none;';
+    svg.innerHTML = `
+      <defs>
+        <marker id="arr4L" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 Z" fill="#7c6bff"/>
+        </marker>
+        <marker id="arr4R" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 Z" fill="#ff9f1c"/>
+        </marker>
+      </defs>
+      <line id="s4-arrow-lr" stroke="#7c6bff" stroke-width="4" marker-end="url(#arr4L)"/>
+      <line id="s4-arrow-rl" stroke="#ff9f1c" stroke-width="4" marker-end="url(#arr4R)"/>
+    `;
+    arena.appendChild(svg);
+
+    // Big ball B (grows with slider)
+    const bbig = document.createElement('div');
+    bbig.style.cssText = 'position:absolute;border-radius:50%;background:radial-gradient(circle at 35% 35%,#7c6bff,#3a2080);display:flex;align-items:center;justify-content:center;font-family:"Baloo 2",sans-serif;font-weight:800;color:white;';
+    bbig.textContent = 'B';
+    arena.appendChild(bbig);
+    const acvs = document.createElement('canvas');
+    acvs.style.cssText = 'position:absolute;inset:0;border-radius:50%;pointer-events:none;';
+    bbig.appendChild(acvs);
+
+    // Small ball A (right side, oscillates)
+    const bsml = document.createElement('div');
+    bsml.style.cssText = 'position:absolute;width:64px;height:64px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ff9f1c,#c06000);display:flex;align-items:center;justify-content:center;font-family:"Baloo 2",sans-serif;font-weight:800;color:white;';
+    bsml.textContent = 'A';
+    arena.appendChild(bsml);
+
+    // Speed streaks for ball A
+    const STREAKS = 5;
+    const streaks = [];
+    for (let i = 0; i < STREAKS; i++) {
+      const sk = document.createElement('div');
+      sk.className = 'speed-streak';
+      sk.style.cssText += 'z-index:1;';
+      arena.appendChild(sk);
+      streaks.push(sk);
+    }
+
+    let phase = 0, currentVal = 1, animId;
+    let lastAx = CXA - 32, lastSliderMove = Date.now();
+
+    function redraw(val) {
+      const size = 64 + val * 12;
+      const bx = CXB - size/2, by = CYB - size/2;
+      bbig.style.cssText = `position:absolute;left:${bx}px;top:${by}px;width:${size}px;height:${size}px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#7c6bff,#3a2080);display:flex;align-items:center;justify-content:center;font-family:"Baloo 2",sans-serif;font-weight:800;color:white;`;
+      bbig.textContent = 'B'; bbig.appendChild(acvs);
+      acvs.width = size; acvs.height = size;
+      drawAtomDots(acvs, Math.round(2 + val * 1.5));
+
+      // Ball A oscillates — amplitude and speed scale with val
+      const oscAmp   = 14 + val * 5;   // px
+      const oscSpeed = 0.018 + val * 0.016;
+      phase += oscSpeed;
+      const ax = CXA - 32 + Math.sin(phase) * oscAmp;
+      const ay = CYA - 32;
+      bsml.style.left = ax + 'px';
+      bsml.style.top  = ay + 'px';
+
+      // Speed streaks (direction & length based on velocity)
+      const vel = ax - lastAx;
+      lastAx = ax;
+      streaks.forEach((sk, i) => {
+        const len = Math.min(28, Math.abs(vel) * 10) * (1 - i * 0.18);
+        if (len < 2) { sk.style.opacity = '0'; return; }
+        sk.style.width   = len + 'px';
+        sk.style.opacity = (0.65 - i * 0.12) + '';
+        sk.style.left    = (vel < 0 ? ax + 64 : ax - len) + 'px';
+        sk.style.top     = (ay + 26 + i * 6 - 12) + 'px';
+      });
+
+      // SVG arrows — ALWAYS EQUAL thickness (4px)
+      const ARROW_SW = 4;
+      const arL = document.getElementById('s4-arrow-lr');
+      const arR = document.getElementById('s4-arrow-rl');
+      if (!arL) return;
+      arL.setAttribute('stroke-width', ARROW_SW);
+      arR.setAttribute('stroke-width', ARROW_SW);
+      const bCx = CXB, bCy = CYB;
+      const aCx = ax + 32, aCy = CYA;
+      const dx = aCx - bCx, dy = aCy - bCy;
+      const len = Math.sqrt(dx*dx+dy*dy) || 1;
+      const ux = dx/len, uy = dy/len;
+      arL.setAttribute('x1', bCx + ux*(size/2+4)); arL.setAttribute('y1', bCy + uy*(size/2+4));
+      arL.setAttribute('x2', aCx - ux*40);          arL.setAttribute('y2', aCy - uy*40);
+      arR.setAttribute('x1', aCx - ux*36);           arR.setAttribute('y1', aCy - uy*36 + 12);
+      arR.setAttribute('x2', bCx + ux*(size/2+8));  arR.setAttribute('y2', bCy + uy*(size/2+8) + 12);
+    }
+
+    function runAnim() { redraw(currentVal); animId = requestAnimationFrame(runAnim); }
+    setTimeout(() => runAnim(), 50);
+
+    const onSlider = () => {
+      const val = parseInt(slider.value);
+      const now = Date.now();
+      logAssessment('slider_s4', { val, dt: now - lastSliderMove });
+      lastSliderMove = now;
+      currentVal = val;
+      soundMass(val / 10);
+
+      if (val >= 10 && !state.s4MaxReached) {
+        state.s4MaxReached = true;
+        state.s4DwellStart = Date.now();
+        // Temporal contiguity: explain text appears WHILE animation shows fast ball A
+        text.textContent = 'Överraskning! Krafterna är lika stora åt båda håll. Men boll A är lättare att flytta — titta, den rör sig mer!';
+        feedback.className = 'feedback-box correct';
+        feedback.textContent = '⬅ Lika tjocka pilar = lika stor kraft! Men lättare boll rör sig snabbare.';
+        soundPling();
+        if (state.s4PredictDone) next.classList.add('visible');
+      }
+    };
+    slider.removeEventListener('input', slider._s4handler);
+    slider._s4handler = onSlider;
+    slider.addEventListener('input', onSlider);
+
+    next.addEventListener('click', () => {
+      cancelAnimationFrame(animId);
+      logAssessment('dwell_s4', { ms: Date.now() - (state.s4DwellStart || Date.now()) });
+      goTo(5);
+    }, { once: true });
+  }
 }
 
 // ─── Step 5: Äpplet och Jorden ───────────────────────────────────────────────
 function initStep5() {
-  const arena = document.getElementById('s5-arena');
+  const arena      = document.getElementById('s5-arena');
   const answersDiv = document.getElementById('s5-answers');
-  const feedback = document.getElementById('s5-feedback');
-  const next = document.getElementById('s5-next');
+  const feedback   = document.getElementById('s5-feedback');
+  const next       = document.getElementById('s5-next');
   arena.innerHTML = '';
-  state.s5Errors = 0;
-  state.s5Done = false;
+  answersDiv.innerHTML = '';
+  state.s5Errors = 0; state.s5Done = false;
+  next.classList.remove('visible');
 
-  // SVG arrows
+  const AW = arena.clientWidth || 500;
+  const AH = 280;
+
+  // SVG arrows — EQUAL thickness both ways (Newton 3 consistent with step 4)
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.id = 's5-svg';
   svg.setAttribute('width', '100%'); svg.setAttribute('height', '100%');
   svg.style.cssText = 'position:absolute;inset:0;overflow:visible;pointer-events:none;';
   svg.innerHTML = `
     <defs>
-      <marker id="arr5big" markerWidth="12" markerHeight="12" refX="6" refY="6" orient="auto">
-        <path d="M0,0 L12,6 L0,12 Z" fill="#06d6a0"/>
+      <marker id="arr5E" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#06d6a0"/>
       </marker>
-      <marker id="arr5small" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
-        <path d="M0,0 L6,3 L0,6 Z" fill="#7c6bff"/>
+      <marker id="arr5A" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#7c6bff"/>
       </marker>
     </defs>
-    <line id="s5-arr-earth" stroke="#06d6a0" stroke-width="8" marker-end="url(#arr5big)"/>
-    <line id="s5-arr-apple" stroke="#7c6bff" stroke-width="2" marker-end="url(#arr5small)"/>
+    <line id="s5-arr-earth" stroke="#06d6a0" stroke-width="4" marker-end="url(#arr5E)"/>
+    <line id="s5-arr-apple" stroke="#7c6bff"  stroke-width="4" marker-end="url(#arr5A)"/>
   `;
   arena.appendChild(svg);
 
-  // Earth
+  // Earth (left, fixed)
+  const EX = AW * 0.14, EY = AH * 0.5;
   const earth = document.createElement('div');
-  earth.style.cssText = 'position:absolute;left:8%;top:50%;transform:translateY(-50%);width:110px;height:110px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#4a90d9,#1a5090);display:flex;align-items:center;justify-content:center;font-size:3rem;box-shadow:0 0 24px rgba(74,144,217,0.5);';
+  earth.style.cssText = `position:absolute;width:110px;height:110px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#4a90d9,#1a5090);display:flex;align-items:center;justify-content:center;font-size:3rem;box-shadow:0 0 24px rgba(74,144,217,0.5);left:${EX-55}px;top:${EY-55}px;`;
   earth.textContent = '🌍';
   arena.appendChild(earth);
-
   const earthLbl = document.createElement('div');
-  earthLbl.style.cssText = 'position:absolute;left:8%;top:calc(50% + 65px);transform:translateX(8px);font-size:0.8rem;color:var(--text-dim);font-weight:600;';
+  earthLbl.style.cssText = `position:absolute;left:${EX-55}px;top:${EY+60}px;font-size:0.78rem;color:var(--text-dim);font-weight:600;`;
   earthLbl.textContent = 'Massor av atomer';
   arena.appendChild(earthLbl);
 
-  // Apple
+  // Apple (right, will animate toward earth)
+  const APPLE_START_X = AW * 0.82;
+  const AY = AH * 0.5;
   const apple = document.createElement('div');
-  apple.style.cssText = 'position:absolute;right:12%;top:50%;transform:translateY(-50%);width:72px;height:72px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#6abf6a,#2d7a2d);display:flex;align-items:center;justify-content:center;font-size:2rem;';
+  apple.style.cssText = `position:absolute;width:72px;height:72px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#6abf6a,#2d7a2d);display:flex;align-items:center;justify-content:center;font-size:2rem;left:${APPLE_START_X-36}px;top:${AY-36}px;`;
   apple.textContent = '🍎';
   arena.appendChild(apple);
-
   const appleLbl = document.createElement('div');
-  appleLbl.style.cssText = 'position:absolute;right:12%;top:calc(50% + 44px);font-size:0.8rem;color:var(--text-dim);font-weight:600;';
+  appleLbl.style.cssText = `position:absolute;font-size:0.78rem;color:var(--text-dim);font-weight:600;left:${APPLE_START_X-26}px;top:${AY+42}px;`;
   appleLbl.textContent = 'Lite atomer';
   arena.appendChild(appleLbl);
 
-  // Draw arrows after layout
-  setTimeout(() => {
-    const ar = arena.getBoundingClientRect();
-    const er = earth.getBoundingClientRect();
-    const apr = apple.getBoundingClientRect();
-    const ex = er.left - ar.left + er.width/2;
-    const ey = er.top - ar.top + er.height/2;
-    const ax = apr.left - ar.left + apr.width/2;
-    const ay = apr.top - ar.top + apr.height/2;
-    const dx = ax - ex, dy = ay - ey;
-    const len = Math.sqrt(dx*dx + dy*dy);
-    const ux = dx/len, uy = dy/len;
-    const s5e = document.getElementById('s5-arr-earth');
-    const s5a = document.getElementById('s5-arr-apple');
-    // Earth → Apple (big arrow, earth pulls apple)
-    s5e.setAttribute('x1', ex + ux*58); s5e.setAttribute('y1', ey + uy*58);
-    s5e.setAttribute('x2', ax - ux*44); s5e.setAttribute('y2', ay - uy*44);
-    // Apple → Earth (tiny arrow, apple pulls earth — barely visible)
-    s5a.setAttribute('x1', ax - ux*40); s5a.setAttribute('y1', ay - uy*40 + 14);
-    s5a.setAttribute('x2', ex + ux*60); s5a.setAttribute('y2', ey + uy*60 + 14);
-  }, 60);
+  // Speed streaks for apple
+  const STREAKS = 4;
+  const streaks = [];
+  for (let i = 0; i < STREAKS; i++) {
+    const sk = document.createElement('div');
+    sk.className = 'speed-streak';
+    sk.style.background = 'rgba(106,191,106,0.5)';
+    arena.appendChild(sk); streaks.push(sk);
+  }
 
-  // Answers
-  answersDiv.innerHTML = '';
-  const opts = [
-    { key: 'A', txt: 'Jorden har så mycket mer massa', correct: true },
-    { key: 'B', txt: 'Äpplet är för litet', correct: false },
-    { key: 'C', txt: 'Äpplet drar inte alls', correct: false },
-  ];
-  opts.forEach(o => {
-    const btn = document.createElement('button');
-    btn.className = 'answer-btn';
-    btn.textContent = o.key + ') ' + o.txt;
-    btn.addEventListener('click', () => {
-      if (state.s5Done) return;
-      answersDiv.querySelectorAll('button').forEach(b => b.disabled = true);
-      if (o.correct) {
-        state.s5Done = true;
-        btn.classList.add('correct');
-        soundPling();
-        feedback.className = 'feedback-box correct';
-        feedback.textContent = 'Precis! Jorden har enormt mycket mer massa. Därför märker vi bara Jordens drag.';
-        earth.style.boxShadow = '0 0 40px rgba(6,214,160,0.7)';
-        next.classList.add('visible');
-      } else {
-        state.s5Errors++;
-        btn.classList.add('wrong');
-        soundBonk();
-        if (o.key === 'C') {
-          feedback.className = 'feedback-box wrong';
-          feedback.textContent = 'Äpplet drar faktiskt i Jorden! Men Jordens massa är så stor att Jorden knappt rör sig. Titta på pilarna.';
-        } else {
-          feedback.className = 'feedback-box wrong';
-          feedback.textContent = 'Nästan! Äpplet drar lite — men Jorden drar MYCKET mer. Det handlar om massa.';
-        }
-        if (state.s5Errors >= 3) {
-          // Full scaffold
-          setTimeout(() => {
-            answersDiv.querySelectorAll('button').forEach(b => { b.disabled = false; b.classList.remove('wrong'); });
-            const rightBtn = answersDiv.querySelector('[data-correct]');
-            opts.forEach((op, i) => {
-              if (op.correct) answersDiv.children[i].style.borderColor = 'var(--green)';
-            });
-          }, 1000);
-        } else if (state.s5Errors >= 2) {
-          feedback.textContent += ' Titta på pilarna. Vilken är tjockast?';
-          setTimeout(() => {
-            answersDiv.querySelectorAll('button').forEach(b => { b.disabled = false; b.classList.remove('wrong'); });
-          }, 1200);
-        } else {
-          setTimeout(() => {
-            answersDiv.querySelectorAll('button').forEach(b => { b.disabled = false; b.classList.remove('wrong'); });
-          }, 1200);
-        }
-      }
+  function updateArrows(apX) {
+    const aCx = apX + 36, aCy = AY;
+    const eCx = EX, eCy = EY;
+    const dx = aCx - eCx, dy = aCy - eCy;
+    const dist = Math.sqrt(dx*dx+dy*dy) || 1;
+    const ux = dx/dist, uy = dy/dist;
+    const arE = document.getElementById('s5-arr-earth');
+    const arA = document.getElementById('s5-arr-apple');
+    // Earth → Apple
+    arE.setAttribute('x1', eCx + ux*60); arE.setAttribute('y1', eCy + uy*60);
+    arE.setAttribute('x2', aCx - ux*44); arE.setAttribute('y2', aCy - uy*44);
+    // Apple → Earth (offset slightly to avoid overlap)
+    arA.setAttribute('x1', aCx - ux*40); arA.setAttribute('y1', aCy - uy*40 + 14);
+    arA.setAttribute('x2', eCx + ux*62); arA.setAttribute('y2', eCy + uy*62 + 14);
+  }
+
+  // Animate apple falling toward earth
+  let appleX = APPLE_START_X - 36;
+  let vel = 0.4, animId;
+  const STOP_X = EX + 55 + 36 + 8; // stop just outside earth radius + apple half
+  let questionShown = false;
+
+  function animApple() {
+    vel += 0.18; // accelerate
+    appleX -= vel;
+
+    // Speed streaks
+    streaks.forEach((sk, i) => {
+      const len = Math.min(30, vel * 4) * (1 - i * 0.2);
+      sk.style.width   = len + 'px';
+      sk.style.opacity = (0.6 - i * 0.12) + '';
+      sk.style.left    = (appleX + 72) + 'px';
+      sk.style.top     = (AY - 36 + 25 + i * 7 - 12) + 'px';
     });
-    answersDiv.appendChild(btn);
-  });
+
+    apple.style.left = appleX + 'px';
+    appleLbl.style.left = (appleX + 10) + 'px';
+    updateArrows(appleX);
+
+    if (vel > 3) soundWhoosh();
+
+    if (appleX > STOP_X) {
+      animId = requestAnimationFrame(animApple);
+    } else {
+      // Apple stopped near earth
+      streaks.forEach(sk => sk.style.opacity = '0');
+      if (!questionShown) {
+        questionShown = true;
+        showQuestion();
+      }
+    }
+  }
+
+  // Start animation after short delay
+  setTimeout(() => {
+    updateArrows(appleX); // draw initial arrows
+    requestAnimationFrame(animApple);
+  }, 400);
+
+  function showQuestion() {
+    const opts = [
+      { key: 'A', txt: 'Jorden har så mycket massa att den knappt rör sig', correct: true },
+      { key: 'B', txt: 'Äpplet är lättare att flytta på', correct: true },
+      { key: 'C', txt: 'Äpplet drar inte alls', correct: false },
+    ];
+    opts.forEach(o => {
+      const btn = document.createElement('button');
+      btn.className = 'answer-btn';
+      btn.textContent = o.key + ') ' + o.txt;
+      btn.addEventListener('click', () => {
+        if (state.s5Done) return;
+        answersDiv.querySelectorAll('button').forEach(b => b.disabled = true);
+        if (o.correct) {
+          state.s5Done = true;
+          btn.classList.add('correct');
+          soundPling();
+          feedback.className = 'feedback-box correct';
+          feedback.textContent = 'Precis! Samma kraft åt båda håll — men Jordens enorma massa gör att den knappt rör sig. Du drar också i Jorden!';
+          earth.style.boxShadow = '0 0 40px rgba(6,214,160,0.7)';
+          next.classList.add('visible');
+        } else {
+          state.s5Errors++;
+          btn.classList.add('wrong');
+          soundBonk();
+          feedback.className = 'feedback-box wrong';
+          feedback.textContent = 'Äpplet drar faktiskt i Jorden — lika mycket! Titta på pilarna — lika tjocka! Men Jordens massa är så enorm att den knappt märker det.';
+          // Scaffold: pulse arrows on error ≥ 2
+          if (state.s5Errors >= 2) {
+            document.getElementById('s5-arr-earth')?.classList.add('arrow-signaling');
+            document.getElementById('s5-arr-apple')?.classList.add('arrow-signaling');
+            setTimeout(() => {
+              document.getElementById('s5-arr-earth')?.classList.remove('arrow-signaling');
+              document.getElementById('s5-arr-apple')?.classList.remove('arrow-signaling');
+            }, 3500);
+          }
+          if (state.s5Errors >= 3) {
+            opts.forEach((op, i) => { if (op.correct) answersDiv.children[i].style.borderColor = 'var(--green)'; });
+          }
+          setTimeout(() => {
+            answersDiv.querySelectorAll('button').forEach(b => { b.disabled = false; b.classList.remove('wrong'); });
+          }, 1300);
+        }
+      });
+      answersDiv.appendChild(btn);
+    });
+  }
 
   next.addEventListener('click', () => goTo(6), { once: true });
 }
@@ -1452,7 +1782,7 @@ function initStep8() {
   earthHint.textContent = '🌍 Jordens massa drar';
   arena.appendChild(earthHint);
 
-  // Arrows (apple ↔ earth)
+  // Arrows (apple ↔ earth) — equal thickness (Newton 3 consistent)
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('width', '100%'); svg.setAttribute('height', '100%');
   svg.style.cssText = 'position:absolute;inset:0;pointer-events:none;overflow:visible;';
@@ -1461,19 +1791,30 @@ function initStep8() {
       <marker id="arr8down" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
         <path d="M0,0 L8,4 L0,8 Z" fill="#06d6a0"/>
       </marker>
-      <marker id="arr8up" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto">
-        <path d="M0,0 L5,2.5 L0,5 Z" fill="#7c6bff"/>
+      <marker id="arr8up" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#7c6bff"/>
       </marker>
     </defs>
-    <line stroke="#06d6a0" stroke-width="6" marker-end="url(#arr8down)" x1="50%" y1="90" x2="50%" y2="84%"/>
-    <line stroke="#7c6bff" stroke-width="2" marker-end="url(#arr8up)" x1="calc(50% + 8)" y1="82%" x2="calc(50% + 8)" y2="95"/>
+    <line id="s8-arr-down" stroke="#06d6a0" stroke-width="4" marker-end="url(#arr8down)" x1="50%" y1="90" x2="50%" y2="84%"/>
+    <line id="s8-arr-up"   stroke="#7c6bff"  stroke-width="4" marker-end="url(#arr8up)"  x1="calc(50% + 10px)" y1="82%" x2="calc(50% + 10px)" y2="95"/>
   `;
   arena.appendChild(svg);
+
+  function pulseArrows(ms) {
+    const ad = document.getElementById('s8-arr-down');
+    const au = document.getElementById('s8-arr-up');
+    ad?.classList.add('arrow-signaling');
+    au?.classList.add('arrow-signaling');
+    setTimeout(() => {
+      ad?.classList.remove('arrow-signaling');
+      au?.classList.remove('arrow-signaling');
+    }, ms || 3200);
+  }
 
   answersDiv.innerHTML = '';
   state.s8Done = false;
   const opts = [
-    { key: 'A', txt: 'Äpplet och Jorden drar i varandra. Jorden har mer massa, så äpplet rör sig mest.', correct: true },
+    { key: 'A', txt: 'Äpplet och Jorden drar i varandra lika mycket. Men Jorden är så tung att bara äpplet rör sig.', correct: true },
     { key: 'B', txt: 'Äpplet är tungt', correct: false },
     { key: 'C', txt: 'Inget håller upp det', correct: false },
   ];
@@ -1489,20 +1830,24 @@ function initStep8() {
         btn.classList.add('correct');
         soundPling();
         feedback.className = 'feedback-box correct';
-        feedback.textContent = 'Du förstår gravitation! Allt med massa drar i allt annat. Mer massa = starkare drag.';
+        feedback.textContent = 'Du förstår gravitation! Allt med massa drar i allt annat — lika mycket åt båda håll!';
+        pulseArrows(2000);
         launchFireworks(canvas);
-        setTimeout(() => {
-          reflection.style.display = 'block';
-          buildReflectionCards();
-        }, 1800);
+        setTimeout(() => { reflection.style.display = 'block'; buildReflectionCards(); }, 1800);
       } else {
         soundBonk();
         btn.classList.add('wrong');
-        feedback.className = 'feedback-box wrong';
-        feedback.textContent = 'Titta på pilarna igen — de pekar åt båda håll!';
+        // Pilar triggas INNAN feedbacktext (state-feedback sync)
+        pulseArrows(3500);
+        setTimeout(() => {
+          feedback.className = 'feedback-box wrong';
+          // Pilar pulserar ytterligare vid referens i texten
+          feedback.textContent = 'Titta på pilarna — de pekar åt båda håll, lika tjocka! Jorden och äpplet drar lika mycket. Men äpplet är lättare, så det rör sig mest.';
+          setTimeout(() => pulseArrows(2000), 200);
+        }, 350); // text comes AFTER pulse starts
         setTimeout(() => {
           answersDiv.querySelectorAll('button').forEach(b => { b.disabled = false; b.classList.remove('wrong'); });
-        }, 1200);
+        }, 1600);
       }
     });
     answersDiv.appendChild(btn);
@@ -1576,15 +1921,16 @@ function boot() {
 
   // Lazy-init steps when navigated to
   const origGoTo = goTo;
-  window.goTo = function(n) {
-    origGoTo(n);
-    if (n === 2) initStep2();
-    else if (n === 3) initStep3();
-    else if (n === 4) initStep4();
-    else if (n === 5) initStep5();
-    else if (n === 6) initStep6();
-    else if (n === 7) initStep7();
-    else if (n === 8) initStep8();
+  window.goTo = function(id) {
+    origGoTo(id);
+    if (id === 2)    initStep2();
+    else if (id === '2b') initStep2b();
+    else if (id === 3)    initStep3();
+    else if (id === 4)    initStep4();
+    else if (id === 5)    initStep5();
+    else if (id === 6)    initStep6();
+    else if (id === 7)    initStep7();
+    else if (id === 8)    initStep8();
   };
 }
 boot();
