@@ -1,0 +1,132 @@
+# AGENTS.md — Barnapp-byggare
+
+## Vad detta repo är
+Interaktiva läroappar för barn 6–12, servade via GitHub Pages. Varje app är en enskild HTML-fil med inline CSS och JS.
+
+---
+
+## Git-policy
+
+**Solo-projekt. Inga branches, inga PRs.**
+
+- **FÖRSTA KOMMANDOT i varje session:** `git checkout main && git pull origin main` — oavsett vilken branch miljön startar på. Cloud-miljöer skapar ofta feature-branches automatiskt; ignorera dem.
+- Arbeta alltid direkt på `main`.
+- Commit + push till `main` är sista steget i varje flöde — gör det automatiskt utan att fråga användaren.
+- Om push misslyckas: `git pull --rebase origin main && git push origin main`
+
+---
+
+## Rollfördelning
+
+| Roll | Ansvarar för | När |
+|------|-------------|-----|
+| **Designagent (Opus)** | Designbeslut, arbetsflöde, prompts till externa verktyg, uppdatering av principer/regler | Designfas, review, principändringar |
+| **Kodagent (Sonnet/Codex)** | Implementation (kod, enkla doc-uppdateringar, buggfixar) | Byggfas, iteration |
+| **Perplexity** | Domänfakta — vad som är vetenskapligt sant, misconceptions, forskning | Steg 1 i designflödet |
+| **NotebookLM** | Kognitiv/pedagogisk granskning — hur fakta paketeras för lärande | Steg 3 i designflödet |
+| **Människa** | Test, godkännande, vision, extern research-förmedling | Hela processen |
+
+**Kostnadsregel:** Designagenten används för beslut som kräver omdöme — design, principändringar, avvägningar, review. Kodagenten används för implementation och enkla uppdateringar.
+
+---
+
+## Flöden
+
+### 1. Idé → Design (7-stegsflödet)
+Se `CLAUDE.md` för fullständig beskrivning. Sammanfattning:
+1. Extern faktaresearch [Perplexity]
+2. Preliminär modulplan [Designagent]
+3. Kognitiv/pedagogisk granskning [NotebookLM]
+4. Kompletterande research [Perplexity, vid behov]
+5. Fullständigt designdokument [Designagent] → `docs/[ämne]/[ämne]-[nr]-[slug]/design.md`
+6. Implementation [Kodagent] → `/bygg`
+7. Test + buggrapport [Människa]
+
+### 2. Design → Bygg (Kodagent)
+Trigger: användaren säger `/bygg [mapp]` eller `bygg [mapp]`
+
+**→ Använd `/bygg`-skillen** (`.agents/skills/bygg/SKILL.md`). Den hanterar hela flödet: läs design → validera mot principer → bygg inkrementellt → self-check → uppdatera index → commit+push.
+
+### 3. Feedback → Iteration
+1. Läs feedback (helst enligt `docs/feedback-mall.md`)
+2. Läs aktuell `design.md` + `index.html`
+3. Kodagenten fixar buggar och implementationsfel
+4. Designagenten kallas in om feedbacken avslöjar designproblem
+5. Kör self-check (se `/bygg`-skillen), commit + push till main
+
+### 4. Review → Lärande (Designagent)
+1. Skriv `review.md` i appens mapp
+2. Uppdatera `docs/misconceptions-register.md` med lärdomar
+3. Uppdatera `docs/index.yaml` (status: klar)
+4. Commit + push till main
+
+---
+
+## Mappstruktur
+```
+docs/                              ← ENDA KÄLLAN TILL SANNING
+  principer.md                     ← pedagogiska riktlinjer
+  design-prompt.md                 ← mall för design.md
+  index.yaml                       ← övningsindex
+  feedback-mall.md                 ← mall för testfeedback
+  misconceptions-register.md       ← kända naïve theories per ämne
+  [ämne]/
+    [ämne]-[nr]-[slug]/
+      design.md                    ← skrivs i flöde 1
+      index.html                   ← byggs i flöde 2
+      review.md                    ← skrivs i flöde 4
+```
+GitHub Pages serverar från `docs/`. App-URL: `https://jaloopo.github.io/barnapp/[ämne]/[ämne]-[nr]-[slug]/`
+
+---
+
+## Skills
+
+| Skill | Syfte |
+|-------|-------|
+| `/bygg` | Bygger index.html från design.md — hela Flöde 2 |
+| `barnapp-design` | Visuellt designsystem för barnappar (överstyr frontend-design) |
+| `frontend-design` | Anti-AI-slop baseline |
+
+Skills ligger i `.agents/skills/`. `/bygg` triggas av användaren.
+
+---
+
+## Tekniska regler
+
+**Format:** En enda HTML-fil. CSS och JS inline. Inga externa beroenden utom Google Fonts via CDN.
+
+**Välj rätt verktyg:**
+- Vanilla HTML/JS för enkla appar (en interaktionstyp)
+- React via CDN (unpkg) om appen har komplex state (quiz-träd, dynamisk scaffolding)
+
+**Feature-prioritetsordning** (om filen växer förbi ~500 rader):
+1. Interaktionslogik (kärnan)
+2. Visuell feedback (färg, animation)
+3. Scaffolding-nivåer
+4. Ljud (auditory icons via Web Audio API)
+5. Stealth assessment-datainsamling
+
+**Tekniska constraints:**
+- Web Audio API för auditory icons (korta ljud, inga melodier)
+- Drag-and-drop: HTML5 Pointer Events, undvik tunga bibliotek
+- Touch targets: minimum 44×44 CSS px (WCAG), gärna 60–80 px för barn
+- Inga element blinkar > 3 ggr/sek
+- Animationer avbrytbara — blockera inte input under animation
+- Respektera `prefers-reduced-motion`
+- localStorage tillåtet — wrappa i try/catch (privat surfning kan blocka)
+
+**Byggordning:** Se `/bygg`-skillen — skriv ALDRIG hela index.html i ett enda steg. Bygg inkrementellt.
+
+---
+
+## Parallellt arbete med Claude Code
+
+Detta repo används av både Codex och Claude Code. Reglerna:
+
+- **`docs/` är enda källan till sanning** för innehåll och regler
+- **AGENTS.md och CLAUDE.md är separata adapterlager** — ändra aldrig det andra verktygets filer utan anledning
+- **Vid ändring av gemensamma dokument** (`docs/principer.md`, `docs/design-prompt.md`, skill-innehåll): uppdatera båda adapterlagren i samma commit om de påverkas
+- **Skills speglas manuellt:** `.agents/skills/` och `.claude/skills/` har samma innehåll men anpassad syntax. Vid ändring uppdateras båda.
+- **Börja alltid med `git pull`** — den andra agenten kan ha pushat
+- **Hooks är bekvämlighet, inte beroende.** Arbetsregler som gäller båda verktygen ska finnas som text i AGENTS.md/CLAUDE.md, inte bara i hook-automation.

@@ -166,6 +166,19 @@ Skills ligger i `.claude/skills/`. `barnapp-design` och `frontend-design` aktive
 
 ---
 
+## Parallellt arbete med Codex
+
+Detta repo används av både Claude Code och Codex. Reglerna:
+
+- **`docs/` är enda källan till sanning** för innehåll och regler (`principer.md`, `design-prompt.md`, `index.yaml`, `misconceptions-register.md`, `feedback-mall.md`, alla `design.md`/`index.html`/`review.md`)
+- **CLAUDE.md och AGENTS.md är separata adapterlager** — de innehåller verktygsspecifika instruktioner. Ändra aldrig det andra verktygets filer utan anledning.
+- **Vid ändring av gemensamma dokument** (`docs/principer.md`, `docs/design-prompt.md`, skill-innehåll): uppdatera båda adapterlagren i samma commit om de påverkas.
+- **Skills speglas manuellt:** `.claude/skills/` och `.agents/skills/` har samma innehåll men anpassad syntax. Vid ändring uppdateras båda.
+- **Börja alltid med `git pull`** — den andra agenten kan ha pushat.
+- **Hooks är bekvämlighet, inte beroende.** Arbetsregler som gäller båda verktygen ska finnas som text i CLAUDE.md/AGENTS.md, inte bara i hook-automation.
+
+---
+
 ## Framtida utveckling
 - **`/design`-skill:** Kapsla in Flöde 1 (7-stegsflödet) som skill — efter att flödet validerats manuellt i minst en modul
 - **`/fix`-skill:** Kapsla in Flöde 3 (Feedback → Iteration)
