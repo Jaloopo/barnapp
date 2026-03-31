@@ -185,7 +185,7 @@ Agenter kan ha globala workflow-skills installerade (t.ex. `obra/superpowers`). 
 
 - **Repo-workflow har alltid företräde.** Barnappens flöden (Flöde 1–4), git-policy och mappstruktur gäller oavsett vilka globala skills som är installerade.
 - **Superpowers är personligt overlay**, inte repots officiella workflow. Använd det som komplement där det inte krockar.
-- **Rekommenderade skills:** `verification-before-completion`, `systematic-debugging`, `brainstorming` (för större designfrågor).
+- **Rekommenderade skills:** `verification-before-completion`, `systematic-debugging`, `brainstorming` (endast för större designfrågor; det får inte dra vidare till `writing-plans`, worktrees eller branch-baserad execution när det krockar med repo-workflowet).
 - **Använd inte i detta repo:** `using-git-worktrees`, `finishing-a-development-branch` (krockar med main-only), `writing-plans` som obligatoriskt steg (vi har design.md), `subagent-driven-development` som standard (överdimensionerat), `test-driven-development` som standard (ingen testinfrastruktur).
 
 ---
