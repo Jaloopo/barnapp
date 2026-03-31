@@ -1,7 +1,12 @@
-# /bygg — Bygg lärapp från design.md
+---
+name: bygg
+description: Bygg en barnlärapp från design.md. Triggas med "bygg [mapp]" eller explicit begäran om skillen bygg. Läser design, kontrollerar principer, bygger inkrementellt, kör self-check, gör ett simplify-pass, uppdaterar index och committar.
+---
+
+# bygg — Bygg lärapp från design.md
 
 ## Trigger
-Användaren säger `/bygg docs/[ämne]/[ämne]-[nr]-[slug]` eller `bygg docs/[ämne]/[ämne]-[nr]-[slug]`.
+Användaren säger `bygg docs/[ämne]/[ämne]-[nr]-[slug]` eller ber uttryckligen att använda skillen `bygg`.
 
 ## Förutsättningar
 - En `design.md` finns i angiven mapp
@@ -66,7 +71,7 @@ Verifiera mot **design.md**:
 - [ ] Börjar appen med guided challenge, inte förklaring?
 - [ ] Vardagsförankring i steg 1?
 - [ ] **Visuella variabler:** Stämmer implementationen med deklarationstabellen i design.md? Används samma variabel konsekvent genom alla steg?
-- [ ] **Prediction-steg:** Har alla markerade moment ett prediction-steg (gissning → utfall → förklaring)?
+- [ ] **Prediction-steg:** Har alla ⚡-markerade moment ett prediction-steg (gissning → utfall → förklaring)?
 - [ ] **State-feedback sync:** Refererar feedbacktext till visuella element? Om ja — verifierar koden att elementet är synligt och signalerat (puls/blink) innan texten visas?
 
 Verifiera mot **principer.md**:
@@ -86,11 +91,15 @@ Verifiera mot **barnapp-design**:
 
 Om något misslyckas: åtgärda innan du går vidare.
 
-### 4. Uppdatera index.yaml
+### 4. Gör ett simplify-pass
+
+Gör ett simplify-pass på den byggda `index.html` för att rensa upp kodkvalitet innan commit.
+
+### 5. Uppdatera index.yaml
 
 Ändra appens status till `byggd` i `docs/index.yaml`.
 
-### 5. Commit och push
+### 6. Commit och push
 
 ```bash
 git add docs/[ämne]/[ämne]-[nr]-[slug]/index.html docs/index.yaml
@@ -100,7 +109,7 @@ git push origin main
 
 Om push misslyckas: `git pull --rebase origin main && git push origin main`
 
-### 6. Rapportera klart
+### 7. Rapportera klart
 
 Avsluta med:
 ```

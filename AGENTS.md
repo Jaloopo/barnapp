@@ -33,26 +33,64 @@ Interaktiva läroappar för barn 6–12, servade via GitHub Pages. Varje app är
 ## Flöden
 
 ### 1. Idé → Design (7-stegsflödet)
-Se `CLAUDE.md` för fullständig beskrivning. Sammanfattning:
-1. Extern faktaresearch [Perplexity]
-2. Preliminär modulplan [Designagent]
-3. Kognitiv/pedagogisk granskning [NotebookLM]
-4. Kompletterande research [Perplexity, vid behov]
-5. Fullständigt designdokument [Designagent] → `docs/[ämne]/[ämne]-[nr]-[slug]/design.md`
-6. Implementation [Kodagent] → `/bygg`
-7. Test + buggrapport [Människa]
+Trigger: användaren ger en idé, t.ex. "barnet vill lära sig om stjärnor"
+
+**Steg 1 — Extern faktaresearch [Perplexity]** (obligatoriskt för naturvetenskap)
+Designagenten formulerar domänfrågor och ger användaren en färdig prompt:
+- Vilka misconceptions har barn X år om konceptet?
+- Vilken forskning finns om effektiva vardagsexempel?
+- Vilka förenklingar är försvarbara vs. skapar seglivade fel?
+- Korsreferera mot `docs/misconceptions-register.md`
+
+**Steg 2 — Preliminär modulplan [Designagent]**
+1. Läs `docs/index.yaml` — vad har barnet gjort? Vilka koncept är upplåsta?
+2. Föreslå 2–3 vägar med bryggor från tidigare appar
+3. Användaren väljer väg
+4. **Prerequisite-analys (obligatorisk):**
+   - Vilka koncept *förutsätter* den nya appen att barnet redan förstår?
+   - Finns det en befintlig app i index.yaml som täcker varje prerequisite-koncept?
+   - Om ett prerequisite-koncept saknas → föreslå att den modulen byggs först
+   - **Tumregel:** Om mer än ett konceptsteg hoppas över saknas en prerequisite-app.
+5. **Developmental progression-check:** Kontrollera att varje steg i planen maximalt introducerar *ett* nytt koncept. Om ett steg förutsätter en insikt som inte etablerats i föregående steg — lägg till ett mellansteg.
+6. Lista övningar/steg + lärandemål per steg (inte fullständigt designdokument ännu)
+
+**Steg 3 — Kognitiv/pedagogisk granskning [NotebookLM]** (pre-flight check)
+Designagenten formulerar en prompt och ger användaren. Obligatorisk input: preliminärplan + `docs/misconceptions-register.md`. Prompten frågar:
+1. Vilka naïve theories har barn om detta, och hur ska visualiseringen korrigera snarare än förstärka dem?
+2. Finns steg som bryter mot Mayers multimediaprinciper (Spatial Contiguity, Coherence, Temporal Contiguity)?
+3. Hur kan stealth assessment byggas in?
+4. Saknas något developmental progression-steg?
+
+**Steg 4 — Kompletterande research [Perplexity, vid behov]**
+Om NotebookLM identifierar frågor utanför sitt corpus.
+
+**Steg 5 — Fullständigt designdokument [Designagent]**
+1. Läs `docs/principer.md` + `docs/design-prompt.md`
+2. Sammanväg Perplexity + NotebookLM-svar
+3. Skriv `design.md` i rätt mapp (`docs/[ämne]/[ämne]-[nr]-[slug]/design.md`)
+   - Inkludera obligatorisk tabell: **Visuella variabler**
+   - Markera kontraintuitiva moment med **prediction-steg**
+4. Uppdatera `docs/index.yaml` med ny entry (status: design)
+5. Uppdatera `docs/misconceptions-register.md` med nya entries
+6. Commit + push till main
+
+**Steg 6 — Implementation [Kodagent]**
+Avsluta med copy-paste-instruktion: `Skicka detta i en ny session: "bygg docs/[ämne]/[ämne]-[nr]-[slug]"`
+
+**Steg 7 — Test + buggrapport [Människa]**
+Rapport enligt `docs/feedback-mall.md` → Designagenten tar beslut om justering.
 
 ### 2. Design → Bygg (Kodagent)
-Trigger: användaren säger `/bygg [mapp]` eller `bygg [mapp]`
+Trigger: användaren säger `bygg [mapp]` eller ber uttryckligen att använda skillen `bygg`
 
-**→ Använd `/bygg`-skillen** (`.agents/skills/bygg/SKILL.md`). Den hanterar hela flödet: läs design → validera mot principer → bygg inkrementellt → self-check → uppdatera index → commit+push.
+**→ Använd skillen `bygg`** (`.agents/skills/bygg/SKILL.md`). Den hanterar hela flödet: läs design → validera mot principer → bygg inkrementellt → self-check → simplify-pass → uppdatera index → commit+push.
 
 ### 3. Feedback → Iteration
 1. Läs feedback (helst enligt `docs/feedback-mall.md`)
 2. Läs aktuell `design.md` + `index.html`
 3. Kodagenten fixar buggar och implementationsfel
 4. Designagenten kallas in om feedbacken avslöjar designproblem
-5. Kör self-check (se `/bygg`-skillen), commit + push till main
+5. Kör self-check + simplify-pass (se skillen `bygg`), commit + push till main
 
 ### 4. Review → Lärande (Designagent)
 1. Skriv `review.md` i appens mapp
@@ -84,11 +122,11 @@ GitHub Pages serverar från `docs/`. App-URL: `https://jaloopo.github.io/barnapp
 
 | Skill | Syfte |
 |-------|-------|
-| `/bygg` | Bygger index.html från design.md — hela Flöde 2 |
+| `bygg` | Bygger index.html från design.md — hela Flöde 2 |
 | `barnapp-design` | Visuellt designsystem för barnappar (överstyr frontend-design) |
 | `frontend-design` | Anti-AI-slop baseline |
 
-Skills ligger i `.agents/skills/`. `/bygg` triggas av användaren.
+Skills ligger i `.agents/skills/`. Skillen `bygg` triggas av användaren.
 
 ---
 
@@ -116,7 +154,7 @@ Skills ligger i `.agents/skills/`. `/bygg` triggas av användaren.
 - Respektera `prefers-reduced-motion`
 - localStorage tillåtet — wrappa i try/catch (privat surfning kan blocka)
 
-**Byggordning:** Se `/bygg`-skillen — skriv ALDRIG hela index.html i ett enda steg. Bygg inkrementellt.
+**Byggordning:** Se skillen `bygg` — skriv ALDRIG hela index.html i ett enda steg. Bygg inkrementellt.
 
 ---
 
@@ -127,6 +165,6 @@ Detta repo används av både Codex och Claude Code. Reglerna:
 - **`docs/` är enda källan till sanning** för innehåll och regler
 - **AGENTS.md och CLAUDE.md är separata adapterlager** — ändra aldrig det andra verktygets filer utan anledning
 - **Vid ändring av gemensamma dokument** (`docs/principer.md`, `docs/design-prompt.md`, skill-innehåll): uppdatera båda adapterlagren i samma commit om de påverkas
-- **Skills speglas manuellt:** `.agents/skills/` och `.claude/skills/` har samma innehåll men anpassad syntax. Vid ändring uppdateras båda.
+- **Skill-spegling:** Tillåtna skillnader mellan `.claude/skills/` och `.agents/skills/` är metadata, verktygssyntax och lätt språkjustering. Inga workflow-skillnader utan uttryckligt beslut i `CLAUDE.md`. Vid ändring uppdateras båda.
 - **Börja alltid med `git pull`** — den andra agenten kan ha pushat
 - **Hooks är bekvämlighet, inte beroende.** Arbetsregler som gäller båda verktygen ska finnas som text i AGENTS.md/CLAUDE.md, inte bara i hook-automation.

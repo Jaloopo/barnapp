@@ -1,3 +1,8 @@
+---
+name: barnapp-design
+description: Designriktlinjer för barnläroappar (6–12 år). Överstyr frontend-design med barnvänliga constraints. Aktiveras automatiskt vid bygge av appar i detta repo.
+---
+
 # Barnapp-design — visuellt designsystem för läroappar
 
 Detta skill kompletterar `frontend-design`-skillen med regler specifika för interaktiva läroappar riktade till barn 6–12 år. Vid konflikt vinner alltid denna skill.
