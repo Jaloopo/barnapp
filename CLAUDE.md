@@ -179,6 +179,17 @@ Detta repo används av både Claude Code och Codex. Reglerna:
 
 ---
 
+## Externa workflow-verktyg (Superpowers m.fl.)
+
+Agenter kan ha globala workflow-skills installerade (t.ex. `obra/superpowers`). Policy:
+
+- **Repo-workflow har alltid företräde.** Barnappens flöden (Flöde 1–4), git-policy och mappstruktur gäller oavsett vilka globala skills som är installerade.
+- **Superpowers är personligt overlay**, inte repots officiella workflow. Använd det som komplement där det inte krockar.
+- **Rekommenderade skills:** `verification-before-completion`, `systematic-debugging`, `brainstorming` (för större designfrågor).
+- **Använd inte i detta repo:** `using-git-worktrees`, `finishing-a-development-branch` (krockar med main-only), `writing-plans` som obligatoriskt steg (vi har design.md), `subagent-driven-development` som standard (överdimensionerat), `test-driven-development` som standard (ingen testinfrastruktur).
+
+---
+
 ## Framtida utveckling
 - **`/design`-skill:** Kapsla in Flöde 1 (7-stegsflödet) som skill — efter att flödet validerats manuellt i minst en modul
 - **`/fix`-skill:** Kapsla in Flöde 3 (Feedback → Iteration)

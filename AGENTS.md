@@ -168,3 +168,14 @@ Detta repo används av både Codex och Claude Code. Reglerna:
 - **Skill-spegling:** Tillåtna skillnader mellan `.claude/skills/` och `.agents/skills/` är metadata, verktygssyntax och lätt språkjustering. Inga workflow-skillnader utan uttryckligt beslut i `CLAUDE.md`. Vid ändring uppdateras båda.
 - **Börja alltid med `git pull`** — den andra agenten kan ha pushat
 - **Hooks är bekvämlighet, inte beroende.** Arbetsregler som gäller båda verktygen ska finnas som text i AGENTS.md/CLAUDE.md, inte bara i hook-automation.
+
+---
+
+## Externa workflow-verktyg (Superpowers m.fl.)
+
+Agenter kan ha globala workflow-skills installerade (t.ex. `obra/superpowers`). Policy:
+
+- **Repo-workflow har alltid företräde.** Barnappens flöden (Flöde 1–4), git-policy och mappstruktur gäller oavsett vilka globala skills som är installerade.
+- **Superpowers är personligt overlay**, inte repots officiella workflow. Använd det som komplement där det inte krockar.
+- **Rekommenderade skills:** `verification-before-completion`, `systematic-debugging`, `brainstorming` (för större designfrågor).
+- **Använd inte i detta repo:** `using-git-worktrees`, `finishing-a-development-branch` (krockar med main-only), `writing-plans` som obligatoriskt steg (vi har design.md), `subagent-driven-development` som standard (överdimensionerat), `test-driven-development` som standard (ingen testinfrastruktur).
