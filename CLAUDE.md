@@ -65,7 +65,7 @@ Opus formulerar en prompt och ger användaren. Obligatorisk input: preliminärpl
 Om NotebookLM identifierar frågor utanför sitt corpus.
 
 **Steg 5 — Fullständigt designdokument [Opus]**
-1. Läs `docs/principer.md` + `docs/design-prompt.md`
+1. Läs `docs/principer.md` + `docs/design-prompt.md` (+ `docs/ui-mini-system.md` när designen påverkar gemensamma UI-mönster eller landing page)
 2. Sammanväg Perplexity + NotebookLM-svar
 3. Skriv `design.md` i rätt mapp (`docs/[ämne]/[ämne]-[nr]-[slug]/design.md`)
    - Inkludera obligatorisk tabell: **Visuella variabler**
@@ -84,6 +84,7 @@ Rapport enligt `docs/feedback-mall.md` → Opus tar beslut om justering.
 Trigger: användaren säger `/bygg [mapp]` eller `bygg [mapp]`
 
 **→ Använd `/bygg`-skillen** (`.claude/skills/bygg/SKILL.md`). Den hanterar hela flödet: läs design → validera mot principer → bygg inkrementellt → self-check → simplify → uppdatera index → commit+push.
+Vid visuellt arbete som ska följa repots gemensamma baseline: läs också `docs/ui-mini-system.md`.
 
 ### 3. Feedback → Iteration (Sonnet, Opus vid designfrågor)
 Trigger: användaren rapporterar problem efter testning
@@ -112,6 +113,7 @@ Trigger: efter att en app testats och godkänts
 docs/
   principer.md              ← pedagogiska riktlinjer
   design-prompt.md          ← mall för design.md
+  ui-mini-system.md         ← liten visuell baseline för startsida och kommande moduler
   index.yaml                ← övningsindex med koncept/prerequisites/unlocks
   feedback-mall.md          ← mall för testfeedback
   misconceptions-register.md ← kända naïve theories per ämne (obligatorisk input i steg 3)
@@ -170,9 +172,9 @@ Skills ligger i `.claude/skills/`. `barnapp-design` och `frontend-design` aktive
 
 Detta repo används av både Claude Code och Codex. Reglerna:
 
-- **`docs/` är enda källan till sanning** för innehåll och regler (`principer.md`, `design-prompt.md`, `index.yaml`, `misconceptions-register.md`, `feedback-mall.md`, alla `design.md`/`index.html`/`review.md`)
+- **`docs/` är enda källan till sanning** för innehåll och regler (`principer.md`, `design-prompt.md`, `ui-mini-system.md`, `index.yaml`, `misconceptions-register.md`, `feedback-mall.md`, alla `design.md`/`index.html`/`review.md`)
 - **CLAUDE.md och AGENTS.md är separata adapterlager** — de innehåller verktygsspecifika instruktioner. Ändra aldrig det andra verktygets filer utan anledning.
-- **Vid ändring av gemensamma dokument** (`docs/principer.md`, `docs/design-prompt.md`, skill-innehåll): uppdatera båda adapterlagren i samma commit om de påverkas.
+- **Vid ändring av gemensamma dokument** (`docs/principer.md`, `docs/design-prompt.md`, `docs/ui-mini-system.md`, skill-innehåll): uppdatera båda adapterlagren i samma commit om de påverkas.
 - **Skill-spegling:** Tillåtna skillnader mellan `.claude/skills/` och `.agents/skills/` är metadata, verktygssyntax och lätt språkjustering. Inga workflow-skillnader utan uttryckligt beslut i `CLAUDE.md`. Vid ändring uppdateras båda.
 - **Börja alltid med `git pull`** — den andra agenten kan ha pushat.
 - **Hooks är bekvämlighet, inte beroende.** Arbetsregler som gäller båda verktygen ska finnas som text i CLAUDE.md/AGENTS.md, inte bara i hook-automation.

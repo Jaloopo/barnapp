@@ -39,6 +39,8 @@ Kort sagt: tänk "välgjord lärmiljö" snarare än "app store", "spel" eller "d
 - Kant: `#e6d8c6`
 - Primär text: `#2d241d`
 - Dämpad text: `#6f6256`
+- Standardskugga: `0 14px 32px rgba(113, 89, 61, 0.09), 0 4px 12px rgba(113, 89, 61, 0.05)`
+- Starkare skugga: `0 18px 38px rgba(113, 89, 61, 0.12), 0 6px 16px rgba(113, 89, 61, 0.06)`
 
 ### Ämnesfärger
 
@@ -66,6 +68,7 @@ Kort sagt: tänk "välgjord lärmiljö" snarare än "app store", "spel" eller "d
 - Luft ska kännas generös, men inte tom
 - Rubrik och undertitel centreras på landningssidan
 - Ämnesgrupper får egen etikett i versaler med respektive ämnesaccent
+- På mobil behålls samma grundlayout, men med mindre mått, tätare spacing och något mindre ikon-/kortstorlek
 
 Två kolumner kan användas senare när innehållet verkligen kräver det, men ska inte vara default för barnets första överblick.
 
@@ -79,6 +82,7 @@ Två kolumner kan användas senare när innehållet verkligen kräver det, men s
 - Mjuk skugga
 - Färgad vänsteraccent som huvudmarkör för ämne
 - Ikonbricka i ämnets mjuka accentfärg
+- Mjuk hover-lyft och något starkare skugga för klickbara kort
 - Innehållsordning:
   1. titel
   2. kort beskrivning
@@ -103,7 +107,16 @@ Används för innehåll som ännu inte går att öppna.
 - Ingen badge
 - Status skrivs i kortets text, till exempel `Kommer snart`
 
-## 6. Språk på UI-nivå
+## 6. Progression och status i UI
+
+- `upcoming` används bara ur barnets perspektiv: detta kan du inte öppna ännu
+- Utvecklarstatus som `design`, `byggd` och `klar` hör hemma i `index.yaml`, inte i barnets UI
+- Om en modul i en ämneskedja är `upcoming` ska senare moduler i samma huvudkedja också vara `upcoming`, om de inte uttryckligen är fristående sidospår
+- En featured-modul får visa riktning, men ska inte bryta komponentfamiljen
+- Klickbara kort använder mjuk hover-lyft som baseline
+- `prefers-reduced-motion` ska alltid respekteras genom att stänga av transitioner och onödig rörelse
+
+## 7. Språk på UI-nivå
 
 - Skriv varmt, kort och konkret
 - Undvik produkt- eller projektstatusspråk som `klar`, `byggd`, `design` som primära UI-element för barnet
@@ -112,7 +125,7 @@ Används för innehåll som ännu inte går att öppna.
   - `Kommer snart`
 - Texten ska hjälpa barnet att välja nästa steg, inte förklara utvecklingsstatus
 
-## 7. Vad kommande moduler kan återanvända
+## 8. Vad kommande moduler kan återanvända
 
 Nya moduler behöver inte se exakt ut som startsidan, men bör gärna återanvända:
 
@@ -125,7 +138,7 @@ Nya moduler behöver inte se exakt ut som startsidan, men bör gärna återanvä
 
 När en modul blir mer interaktiv får den gärna vara mer levande än startsidan, men den bör fortfarande kännas som samma produktfamilj.
 
-## 8. Undvik
+## 9. Undvik
 
 - badges som standardmönster
 - pilar och handritade "börja här"-markörer
@@ -135,8 +148,9 @@ När en modul blir mer interaktiv får den gärna vara mer levande än startsida
 - hård asymmetri eller stökiga grid-layouter
 - kalla, tekniska blåvita miljöer
 - alltför många visuella signaler samtidigt
+- `upcoming` som blandning av barnets progression och utvecklarstatus
 
-## 9. Status
+## 10. Status
 
 Detta är en praktisk baseline, inte ett slutgiltigt designsystem.
 

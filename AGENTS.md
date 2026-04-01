@@ -65,7 +65,7 @@ Designagenten formulerar en prompt och ger användaren. Obligatorisk input: prel
 Om NotebookLM identifierar frågor utanför sitt corpus.
 
 **Steg 5 — Fullständigt designdokument [Designagent]**
-1. Läs `docs/principer.md` + `docs/design-prompt.md`
+1. Läs `docs/principer.md` + `docs/design-prompt.md` (+ `docs/ui-mini-system.md` när designen påverkar gemensamma UI-mönster eller landing page)
 2. Sammanväg Perplexity + NotebookLM-svar
 3. Skriv `design.md` i rätt mapp (`docs/[ämne]/[ämne]-[nr]-[slug]/design.md`)
    - Inkludera obligatorisk tabell: **Visuella variabler**
@@ -84,6 +84,7 @@ Rapport enligt `docs/feedback-mall.md` → Designagenten tar beslut om justering
 Trigger: användaren säger `bygg [mapp]` eller ber uttryckligen att använda skillen `bygg`
 
 **→ Använd skillen `bygg`** (`.agents/skills/bygg/SKILL.md`). Den hanterar hela flödet: läs design → validera mot principer → bygg inkrementellt → self-check → simplify-pass → uppdatera index → commit+push.
+Vid visuellt arbete som ska följa repots gemensamma baseline: läs också `docs/ui-mini-system.md`.
 
 ### 3. Feedback → Iteration
 1. Läs feedback (helst enligt `docs/feedback-mall.md`)
@@ -105,6 +106,7 @@ Trigger: användaren säger `bygg [mapp]` eller ber uttryckligen att använda sk
 docs/                              ← ENDA KÄLLAN TILL SANNING
   principer.md                     ← pedagogiska riktlinjer
   design-prompt.md                 ← mall för design.md
+  ui-mini-system.md                ← liten visuell baseline för startsida och kommande moduler
   index.yaml                       ← övningsindex
   feedback-mall.md                 ← mall för testfeedback
   misconceptions-register.md       ← kända naïve theories per ämne
@@ -164,7 +166,7 @@ Detta repo används av både Codex och Claude Code. Reglerna:
 
 - **`docs/` är enda källan till sanning** för innehåll och regler
 - **AGENTS.md och CLAUDE.md är separata adapterlager** — ändra aldrig det andra verktygets filer utan anledning
-- **Vid ändring av gemensamma dokument** (`docs/principer.md`, `docs/design-prompt.md`, skill-innehåll): uppdatera båda adapterlagren i samma commit om de påverkas
+- **Vid ändring av gemensamma dokument** (`docs/principer.md`, `docs/design-prompt.md`, `docs/ui-mini-system.md`, skill-innehåll): uppdatera båda adapterlagren i samma commit om de påverkas
 - **Skill-spegling:** Tillåtna skillnader mellan `.claude/skills/` och `.agents/skills/` är metadata, verktygssyntax och lätt språkjustering. Inga workflow-skillnader utan uttryckligt beslut i `CLAUDE.md`. Vid ändring uppdateras båda.
 - **Börja alltid med `git pull`** — den andra agenten kan ha pushat
 - **Hooks är bekvämlighet, inte beroende.** Arbetsregler som gäller båda verktygen ska finnas som text i AGENTS.md/CLAUDE.md, inte bara i hook-automation.
