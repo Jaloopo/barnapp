@@ -19,8 +19,9 @@ Användaren säger `bygg docs/[ämne]/[ämne]-[nr]-[slug]` eller ber uttrycklige
 1. Läs `design.md` i angiven mapp — detta är **bindande beslut** som inte får ändras
 2. Läs `docs/principer.md` för pedagogiska riktlinjer
 3. Läs `barnapp-design`-skillen för visuella riktlinjer
-4. **Om design.md strider mot principer.md → STOPPA och flagga till användaren**
-5. Bekräfta kort för användaren: "Bygger [titel], [antal steg] steg, [ålder], [vanilla/React]"
+4. Läs `docs/ui-mini-system.md` för repots visuella baseline när modulen ska följa eller utöka delade UI-mönster
+5. **Om design.md strider mot principer.md → STOPPA och flagga till användaren**
+6. Bekräfta kort för användaren: "Bygger [titel], [antal steg] steg, [ålder], [vanilla/React]"
 
 ### 2. Bygg inkrementellt (ALDRIG hela filen i ett steg)
 
