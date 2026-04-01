@@ -86,7 +86,7 @@ Rapport enligt `docs/feedback-mall.md` → Opus tar beslut om justering.
 ### 2. Design → Bygg (Sonnet)
 Trigger: användaren säger `/bygg [mapp]` eller `bygg [mapp]`
 
-**→ Använd `/bygg`-skillen** (`.claude/skills/bygg/SKILL.md`). Den hanterar hela flödet: läs design → validera mot principer → bygg inkrementellt → self-check → simplify → uppdatera index → commit+push.
+**→ Använd `/bygg`-skillen** (`.claude/skills/bygg/SKILL.md`). Den hanterar hela flödet: läs design → validera mot principer → bygg inkrementellt → self-check → simplify → uppdatera index + landningssida → commit+push.
 Vid visuellt arbete som ska följa repots gemensamma baseline: läs också `docs/ui-mini-system.md`.
 
 ### 3. Feedback → Iteration (Sonnet, Opus vid designfrågor)

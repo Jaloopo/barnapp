@@ -97,14 +97,16 @@ Om något misslyckas: åtgärda innan du går vidare.
 
 Kör `/simplify` på den byggda `index.html` för att rensa upp kodkvalitet innan commit.
 
-### 5. Uppdatera index.yaml
+### 5. Uppdatera index och landningssida
 
 Ändra appens status till `byggd` i `docs/index.yaml`.
+
+Uppdatera också `docs/index.html` så att modulen går att nå från landningssidan. Om modulen är första byggbara steget i en ämneskedja ska den bli klickbar startpunkt där. Om senare steg redan är byggda ska deras kort och progressionstext också justeras så att kedjan känns sammanhängande från startsidan.
 
 ### 6. Commit och push
 
 ```bash
-git add docs/[ämne]/[ämne]-[nr]-[slug]/index.html docs/index.yaml
+git add docs/[ämne]/[ämne]-[nr]-[slug]/index.html docs/index.yaml docs/index.html
 git commit -m "bygg: [ämne]-[nr]-[slug] — [kort beskrivning]"
 git push origin main
 ```

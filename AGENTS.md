@@ -86,7 +86,7 @@ Rapport enligt `docs/feedback-mall.md` → Designagenten tar beslut om justering
 ### 2. Design → Bygg (Kodagent)
 Trigger: användaren säger `bygg [mapp]` eller ber uttryckligen att använda skillen `bygg`
 
-**→ Använd skillen `bygg`** (`.agents/skills/bygg/SKILL.md`). Den hanterar hela flödet: läs design → validera mot principer → bygg inkrementellt → self-check → simplify-pass → uppdatera index → commit+push.
+**→ Använd skillen `bygg`** (`.agents/skills/bygg/SKILL.md`). Den hanterar hela flödet: läs design → validera mot principer → bygg inkrementellt → self-check → simplify-pass → uppdatera index + landningssida → commit+push.
 Vid visuellt arbete som ska följa repots gemensamma baseline: läs också `docs/ui-mini-system.md`.
 
 ### 3. Feedback → Iteration
