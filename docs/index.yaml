@@ -55,7 +55,7 @@ appar:
       - kemi-1-atomer
     unlocks:
       - el-1-ledare
-    status: design
+    status: byggd
 
   - id: el-1-ledare
     ämne: el
