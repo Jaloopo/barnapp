@@ -45,17 +45,17 @@ appar:
 
   - id: el-0-elektroner
     ämne: el
-    titel: Elektronerna som rör sig — vad är ström?
+    titel: Elektroner på utsidan — små steg i material
     ålder: 8-9
     koncept:
-      - elektroner kretsar runt kärnan
-      - yttre elektroner kan hoppa mellan atomer
-      - ström är elektroner som vandrar
+      - elektroner sitter på atomens utsida
+      - olika material håller elektroner olika hårt
+      - många elektroner kan ta små steg vidare samtidigt
     prerequisites:
       - kemi-1-atomer
     unlocks:
       - el-1-ledare
-    status: planerad
+    status: design
 
   - id: el-1-ledare
     ämne: el

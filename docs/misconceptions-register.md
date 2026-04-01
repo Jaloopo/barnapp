@@ -38,6 +38,16 @@ Kända naïve theories per ämnesområde. Fylls på vid varje ny modul. Obligato
 
 ---
 
+## Elektricitet och elektroner (el-0-elektroner)
+
+| Misconception | Ålder | Källa | Forskare/referens | Adresseras i modul? |
+|---|---|---|---|---|
+| "En elektron åker hela vägen genom materialet" | 8–vuxen | P/NLM | Osborne 1983; Shipstone et al. 1988 | Ja — steg 6 (prediction-steg + samtidigt ett-stegsskifte) |
+| "Elektroner är samma sak som energi, ljus eller kraft" | 8–12 | P/NLM | Niedderer 2001 | Ja — steg 2 och 7 |
+| "Elektricitet är något som skickas ut och tar slut" | 8–12 | P/NLM | Osborne 1983; SPACE-projektet / Nuffield | Skyddas mot — ordet `ström` skjuts upp och ingen elektron lämnar kedjan |
+
+---
+
 ## Mall för nya entries
 
 ```
