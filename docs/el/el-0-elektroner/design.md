@@ -52,13 +52,15 @@ Eleven ska förstå att elektroner sitter på atomens utsida och att många elek
 | Vita hempositioner i kedjan | Att varje elektron bara får flytta ett steg i taget | Ja — varje steg i kedjeanimationen landar i nästa position, aldrig längre |
 | Blå knuffvåg | En yttre knuff som sprider rörelse i kedjan | Ja — används bara när barnet själv startar en knuff |
 
+**Begränsning för hela modulen:** Bara en synlig elektron visas per atom i alla steg. Detta är ett medvetet pedagogiskt val för att undvika att implementationen råkar återskapa ett skal- eller banmönster.
+
 ## Sessionsstruktur
 
 ### Steg 1 — Inuti sladden (Guided challenge)
 
 - **Do-komponent (vad gör eleven aktivt?):** Barnet väljer mellan två materialkedjor och gissar i vilken en liten knuff lättast sprider sig.
 - **CRA-nivå (Konkret / Representationell / Abstrakt):** Konkret → Representationell
-- **Layout (beskriv i ord var elementen ligger, t.ex. "tre bollar i rad, drag-zone under"):** Överst en enkel vardagsbild av en sladd till en lampa. Under sladden ett förstoringsglas som zoomar in till två stora kedjekort sida vid sida. Varje kedja visar 4 atomer i rad med en gul prick på utsidan av varje atom.
+- **Layout (beskriv i ord var elementen ligger, t.ex. "tre bollar i rad, drag-zone under"):** Överst en enkel vardagsbild av en sladd till en lampa. Under sladden ett förstoringsglas som zoomar in till två stora kedjekort sida vid sida. Kedjekorten ska vara extremt visuellt enkla: bara fyra runda former i rad med en gul prick nära utsidan på varje, inga etiketter och inget som kräver att barnet redan vet vad en atom är.
 - **Text på skärmen (skriv ut exakt, max enligt ålderstabellen i principer.md):** "Har du sett en sladd? Inuti finns pyttesmå delar i kedjor. I vilken kedja tror du att en liten knuff sprider sig lättast?"
 - **Interaktionstyp (tap / drag / slider / etc.):** Tap på vänster eller höger kedja
 - **Visuell feedback vid rätt svar:** Inget rätt/fel här. Vald kedja får varm glöd och texten "Bra gissning! Nu zoomar vi in."
@@ -113,7 +115,7 @@ Eleven ska förstå att elektroner sitter på atomens utsida och att många elek
 
 - **Do-komponent (vad gör eleven aktivt?):** Barnet väljer först vilken av två små bilder som det tror stämmer. Sedan visas utfallet i en längre kedja.
 - **CRA-nivå (Konkret / Representationell / Abstrakt):** Representationell → Abstrakt
-- **Layout (beskriv i ord var elementen ligger, t.ex. "tre bollar i rad, drag-zone under"):** Två stora valkort överst. Kort A visar en enda gul prick som far långt. Kort B visar många gula prickar som alla flyttar sig en position. Under korten finns den riktiga kedjan i full bredd.
+- **Layout (beskriv i ord var elementen ligger, t.ex. "tre bollar i rad, drag-zone under"):** Två stora valkort överst. Kort A visar en enda gul prick som far långt. Kort B visar många gula prickar som alla flyttar sig en position. Under korten finns den riktiga kedjan i full bredd. Kedjan i detta steg ska hållas kort: max 4–5 atomer, så att barnet kan följa varje prick visuellt.
 - **Text på skärmen (skriv ut exakt, max enligt ålderstabellen i principer.md):** "Vad tror du händer? Välj en bild först."
 - **Interaktionstyp (tap / drag / slider / etc.):** Tap på ett valkort, sedan tap på "Se vad som händer"
 - **Visuell feedback vid rätt svar:** Kedjan visar att alla prickar flyttar sig ett steg samtidigt. Texten tänds exakt under kedjan: "Alla tar ett steg samtidigt. Ingen åker hela vägen."
@@ -182,10 +184,11 @@ Appen börjar med ett vardagsobjekt barnet känner igen: en sladd till en lampa.
   - mjuk puls på elektronen i steg 2
   - drag + fjäderretur i steg 3
   - synkron replay av två kedjor i steg 4
-  - blå knuffvåg genom kedjan i steg 5
+  - mycket kort knuffmarkering vid första atomen i steg 5
   - samtidigt ett-stegsskifte i steg 5 och 6
   - kort slow-motion replay i steg 4 och 6
 - **Rörliga targets? Nej (om inte starkt motiverat):** Nej. Alla tryckytor är statiska när barnet ska interagera med dem. Rörelse sker först efter att input redan givits.
+- **Viktig implementationsnot:** Knuffen får inte visualiseras som något som "åker genom" hela kedjan. Om en blå markering används ska den vara mycket kortlivad och bara synas nära första atomen innan resultatet visas som nästan simultana små steg.
 
 ## Developmental progression-check (obligatorisk)
 
@@ -229,7 +232,7 @@ Gå igenom stegen i sekvens. Kontrollera för varje stegpar (N → N+1):
    Barnet får först uppleva fenomenet "lösare/hårdare" innan orden namnges i `el-1-ledare`.
 
 4. **Banor, skal och flera elektroner per atom visas inte.**
-   Det minskar risken för planetsystemsmodellen och för att barnet frågar varför "fel" elektron hoppar.
+   Det minskar risken för planetsystemsmodellen och för att barnet frågar varför "fel" elektron hoppar. Bara en synlig elektron per atom används genom hela modulen.
 
 5. **Vilket nästa steg i ämnet utelämnas medvetet, och varför är det lämpligt för denna åldersgrupp?**
    Nästa steg är att testa riktiga material och sätta orden `ledare` och `isolator` på skillnaden. Det utelämnas här för att 8–9-åringen först ska få en stabil mikromodell utan ytterligare fackord.
