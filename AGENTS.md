@@ -74,6 +74,9 @@ Om NotebookLM identifierar frågor utanför sitt corpus.
 5. Uppdatera `docs/misconceptions-register.md` med nya entries
 6. Commit + push till main
 
+**Review-gate före implementation**
+Första gången Codex driver designen för en modul, och alltid för prerequisite-moduler eller moduler med tydliga kontraintuitiva moment, ska en kort Opus-review göras innan Steg 6 (implementation).
+
 **Steg 6 — Implementation [Kodagent]**
 Avsluta med copy-paste-instruktion: `Skicka detta i en ny session: "bygg docs/[ämne]/[ämne]-[nr]-[slug]"`
 

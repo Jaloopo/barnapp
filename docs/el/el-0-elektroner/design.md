@@ -100,12 +100,12 @@ Eleven ska förstå att elektroner sitter på atomens utsida och att många elek
 
 ### Steg 5 — Först händer inget
 
-- **Do-komponent (vad gör eleven aktivt?):** Barnet tittar på en lösare kedja och märker att inget rör sig förrän barnet själv trycker på knuffknappen.
+- **Do-komponent (vad gör eleven aktivt?):** Barnet tittar på en kort kedjebit och märker att inget händer förrän barnet själv trycker på knuffknappen.
 - **CRA-nivå (Konkret / Representationell / Abstrakt):** Representationell
-- **Layout (beskriv i ord var elementen ligger, t.ex. "tre bollar i rad, drag-zone under"):** En materialkedja med fyra atomer i rad. Varje atom har en gul prick på utsidan och en vit hemposition bredvid nästa atom. Under kedjan en stor knapp: "Knuffa".
+- **Layout (beskriv i ord var elementen ligger, t.ex. "tre bollar i rad, drag-zone under"):** En kort kedjebit med två atomer i rad. Den första elektronen har en vit hemposition ett steg framför sig. Resten av materialet anas diskret åt höger men är inte i fokus. Under kedjebiten finns en stor knapp: "Knuffa".
 - **Text på skärmen (skriv ut exakt, max enligt ålderstabellen i principer.md):** "Titta noga. Först händer inget. Tryck på knuffen."
 - **Interaktionstyp (tap / drag / slider / etc.):** Tap på stor knapp
-- **Visuell feedback vid rätt svar:** När barnet trycker går en blå knuffvåg genom kedjan och alla elektroner flyttar sig ett steg till nästa vita position.
+- **Visuell feedback vid rätt svar:** När barnet trycker går en blå knuff in från vänster och den första elektronen tar ett litet steg till nästa vita position. Animationen pausar där och visar att något startade först när barnet gav knuffen.
 - **Visuell feedback vid fel svar:** Ingen felväg finns; om barnet väntar länge börjar knuffknappen pulsera.
 - **Kontraintuitivt moment?** Nej
 
@@ -122,9 +122,9 @@ Eleven ska förstå att elektroner sitter på atomens utsida och att många elek
 
 ### Steg 7 — Det här lärde du dig
 
-- **Do-komponent (vad gör eleven aktivt?):** Barnet väljer en bild som bäst visar vad en elektron är, och trycker sedan på det som var mest överraskande idag.
+- **Do-komponent (vad gör eleven aktivt?):** Barnet väljer en bild som bäst visar vad en elektron är.
 - **CRA-nivå (Konkret / Representationell / Abstrakt):** Abstrakt
-- **Layout (beskriv i ord var elementen ligger, t.ex. "tre bollar i rad, drag-zone under"):** Tre sammanfattningskort i en kolumn: "på utsidan", "lösare/hårdare", "alla små steg". Under dem tre bildval: gul prick vid atom, blixt, batteri. Längst ner tre reflektionskort med små illustrationer från appen.
+- **Layout (beskriv i ord var elementen ligger, t.ex. "tre bollar i rad, drag-zone under"):** Tre sammanfattningskort i en kolumn: "på utsidan", "lösare/hårdare", "alla små steg". Under dem tre bildval: gul prick vid atom, blixt, batteri.
 - **Text på skärmen (skriv ut exakt, max enligt ålderstabellen i principer.md):** "Elektronen sitter på utsidan. Vissa material håller hårdare. I vissa kedjor kan alla ta små steg. Vilken bild visar en elektron?"
 - **Interaktionstyp (tap / drag / slider / etc.):** Tap
 - **Visuell feedback vid rätt svar:** Bilden med gul prick vid atomen får grön markering. Sluttext: "Ja. Nästa gång testar du vilka riktiga material där små steg är lätta."
@@ -153,7 +153,7 @@ Appen börjar med ett vardagsobjekt barnet känner igen: en sladd till en lampa.
 
 - **Hur sammanfattas det barnet lärt sig?** Tre kort återger modulens tre kärninsikter: elektronen sitter på utsidan, olika material håller olika hårt, och i en kedja tar alla små steg samtidigt.
 - **Återkoppling till guided challenge i steg 1?** Barnets första gissning från steg 1 visas igen som "Du gissade på den här kedjan först". Därefter visas vilken kedja som faktiskt lät knuffen sprida sig lättare.
-- **Reflektionsfråga (flerval/visuellt val, aldrig textfält):** "Vad var mest överraskande?" med tre bildkort: elektronen på utsidan, lösare/hårdare, alla tar ett steg samtidigt.
+- **Reflektionsfråga (flerval/visuellt val, aldrig textfält):** Ingen separat extra reflektionsuppgift i appen. Konsolideringen hålls till ett enda bildval för att undvika för hög kognitiv belastning i sista steget.
 
 ## Metakognition
 
@@ -193,8 +193,8 @@ Gå igenom stegen i sekvens. Kontrollera för varje stegpar (N → N+1):
 - **Steg 1 → 2:** Steg 2 lägger bara till var elektronen sitter. Inget mellansteg behövs.
 - **Steg 2 → 3:** Steg 3 lägger bara till att kärnan håller fast elektronen. Inget mellansteg behövs.
 - **Steg 3 → 4:** Steg 4 lägger bara till att olika material håller olika hårt. Inget mellansteg behövs.
-- **Steg 4 → 5:** Steg 5 lägger bara till att en knuff behövs för rörelse. Det bygger direkt på "lösare/hårdare" och hoppar inte till ordet `ström`.
-- **Steg 5 → 6:** Steg 6 lägger bara till den kontraintuitiva insikten att alla tar ett steg samtidigt. Prediction-steg finns inbyggt, så inget extra mellansteg behövs.
+- **Steg 4 → 5:** Steg 5 lägger bara till att en knuff kan starta ett första litet steg. Det bygger direkt på "lösare/hårdare" och hoppar inte till ordet `ström`.
+- **Steg 5 → 6:** Steg 5 visar bara att något börjar röra sig efter en knuff. Steg 6 lägger sedan till den kontraintuitiva insikten att många elektroner tar ett steg samtidigt. Prediction-steg finns därför kvar som ett äkta nytt moment.
 - **Steg 6 → 7:** Steg 7 konsoliderar utan nytt ämnesinnehåll.
 
 **Tumregel:** Varje steg ska introducera maximalt *ett* nytt koncept. Den tidigare planen att namnge `ström` här har tagits bort för att undvika två kognitiva språng i samma modul.
