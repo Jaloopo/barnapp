@@ -480,7 +480,7 @@
                       fontSize: 15,
                       fontWeight: 800,
                     }}>
-                      Idag tittar du in i sladden.
+                      Idag ser du vad som finns inuti en sladd.
                     </p>
                     <h1 style={{
                       margin: 0,
@@ -1117,7 +1117,7 @@
               fontSize: 14,
               pointerEvents: "none"
             }}>
-              Ytterzonen
+              Utsidan
             </div>
           )}
         </div>
@@ -1130,7 +1130,7 @@
           <StepHeading
             eyebrow="Guided challenge"
             title="Var sprider sig en liten knuff lättast?"
-            text="Har du sett en sladd? Inuti finns pyttesmå delar i kedjor. I vilken kedja tror du att en liten knuff sprider sig lättast?"
+            text="Har du sett en sladd? Inuti finns pyttesmå delar som sitter på rad efter varandra. I vilken kedja tror du att en liten knuff kan åka vidare lättast?"
           />
 
           <div style={{
@@ -1234,7 +1234,7 @@
           <StepHeading
             eyebrow="Steg 2"
             title="Vilken prick är elektronen?"
-            text="Tryck på storatomen i mitten. Elektronen är inte kärnan och den är inte hela ljuszonen."
+            text="Tryck på den lilla gula pricken. Det är elektronen!"
           />
 
           <div style={{
@@ -1264,7 +1264,7 @@
               }}>
                 {[
                   ["Kärna", "nucleus"],
-                  ["Ytterzon", "zone"],
+                  ["Utsidan", "zone"],
                   ["Gul prick", "electron"]
                 ].map(([label, part]) => (
                   <ChoicePill key={part} active={selected === part} onClick={() => onPick(part)}>
@@ -1505,8 +1505,8 @@
         <div>
           <StepHeading
             eyebrow="Steg 4"
-            title="Samma lilla knuff, olika hårt"
-            text="Tryck lika på båda. I vilken kedja sitter elektronerna lösare?"
+            title="Lika knuff – men olika lätt att flytta"
+            text="Tryck lika på båda. I vilken kedja är det lättare att flytta elektronerna?"
           />
 
           <div style={{
@@ -1940,7 +1940,7 @@
               onClick={() => onChoose("one")}
             />
             <PredictionCard
-              title="Alla tar ett steg"
+              title="Alla flyttar sig ett steg"
               mode="all"
               active={choice === "all"}
               dim={revealed && !correct}
@@ -1964,8 +1964,8 @@
                 <SimultaneousChain shifted={shifted} wave={wave} />
                 <FeedbackCard tone={correct ? "green" : "blue"}>
                   {correct
-                    ? "Alla tar ett steg samtidigt. Ingen åker hela vägen."
-                    : "Titta på alla prickar. Varje elektron tar bara ett litet steg."}
+                    ? "Alla flyttar sig ett steg samtidigt. Ingen åker hela vägen."
+                    : "Titta – inte bara en prick rör sig. Alla prickar tar ett litet steg var."}
                 </FeedbackCard>
                 <div>
                   <PrimaryButton onClick={onNext}>Jag såg det</PrimaryButton>
@@ -2086,7 +2086,7 @@
           <StepHeading
             eyebrow="Steg 7"
             title="Det här lärde du dig"
-            text="Elektronen sitter på utsidan. Vissa material håller hårdare. I vissa kedjor kan alla ta små steg. Vilken bild visar en elektron?"
+            text="Elektronen sitter på utsidan. Vissa material håller fast elektronen hårdare. I vissa kedjor kan alla ta små steg. Vilken bild visar en elektron?"
           />
 
           <div style={{
@@ -2100,7 +2100,7 @@
             }}>
               {[
                 "Elektronen sitter på utsidan",
-                "Vissa material håller hårdare",
+                "Vissa material håller fast elektronen hårdare",
                 "Alla kan ta små steg"
               ].map((text) => (
                 <div key={text} style={{
@@ -2160,8 +2160,8 @@
             {finalChoice && (
               <FeedbackCard tone={pickedCorrect ? "green" : "blue"}>
                 {pickedCorrect
-                  ? "Ja. Elektronen är den gula pricken vid atomen. Nästa gång testar du vilka riktiga material där små steg är lätta."
-                  : "Blixten och batteriet är inte elektronen. Titta på den gula pricken vid atomen."}
+                  ? "Ja. Elektronen är den gula pricken vid atomen. Nästa gång får du testa i vilka riktiga material elektroner lätt kan ta små steg."
+                  : "Blixten och batteriet visar inte elektronen. Titta på den gula pricken vid atomen."}
               </FeedbackCard>
             )}
           </div>
