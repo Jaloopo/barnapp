@@ -47,7 +47,7 @@ Eleven ska förstå att elektroner sitter på atomens utsida och att många elek
 | Gul prick | Elektron | Ja — samma färg och form i alla steg |
 | Orange/rött kärnkluster | Atomkärnan | Ja — kärnan ändrar aldrig betydelse |
 | Ljus ytterzon runt kärnan | Platsen där elektronen sitter på utsidan | Ja — används i steg 2–7 utan ringbanor |
-| Ytterzonens bredd | Hur lätt elektronen kan röra sig i just det materialet | Ja — bredare zon = lösare, smalare zon = hårdare |
+| Skålformens djup | Hur hårt materialet håller elektronen | Ja — djup skål = hårdare, grund skål = lösare. Ersätter den tidigare abstrakta "ytterzonens bredd". |
 | Återfjädringens hastighet | Hur hårt materialet håller elektronen | Ja — snabb/stel retur = hårdare, långsammare/mjuk retur = lösare |
 | Vita hempositioner i kedjan | Att varje elektron bara får flytta ett steg i taget | Ja — varje steg i kedjeanimationen landar i nästa position, aldrig längre |
 | Blå knuffvåg | En yttre knuff som sprider rörelse i kedjan | Ja — används bara när barnet själv startar en knuff |
@@ -58,10 +58,10 @@ Eleven ska förstå att elektroner sitter på atomens utsida och att många elek
 
 ### Steg 1 — Inuti sladden (Guided challenge)
 
-- **Do-komponent (vad gör eleven aktivt?):** Barnet väljer mellan två materialkedjor och gissar i vilken en liten knuff lättast sprider sig.
+- **Do-komponent (vad gör eleven aktivt?):** Barnet väljer mellan två materialkedjor och gissar i vilken en liten knuff lättast kan åka vidare.
 - **CRA-nivå (Konkret / Representationell / Abstrakt):** Konkret → Representationell
 - **Layout (beskriv i ord var elementen ligger, t.ex. "tre bollar i rad, drag-zone under"):** Överst en enkel vardagsbild av en sladd till en lampa. Under sladden ett förstoringsglas som zoomar in till två stora kedjekort sida vid sida. Kedjekorten ska vara extremt visuellt enkla: bara fyra runda former i rad med en gul prick nära utsidan på varje, inga etiketter och inget som kräver att barnet redan vet vad en atom är.
-- **Text på skärmen (skriv ut exakt, max enligt ålderstabellen i principer.md):** "Har du sett en sladd? Inuti finns pyttesmå delar i kedjor. I vilken kedja tror du att en liten knuff sprider sig lättast?"
+- **Text på skärmen (skriv ut exakt, max enligt ålderstabellen i principer.md):** "Har du sett en sladd? Inuti finns pyttesmå delar som sitter på rad efter varandra. I vilken rad tror du att en liten knuff kan åka vidare lättast?"
 - **Interaktionstyp (tap / drag / slider / etc.):** Tap på vänster eller höger kedja
 - **Visuell feedback vid rätt svar:** Inget rätt/fel här. Vald kedja får varm glöd och texten "Bra gissning! Nu zoomar vi in."
 - **Visuell feedback vid fel svar:** Inget fel i guided challenge
@@ -72,9 +72,9 @@ Eleven ska förstå att elektroner sitter på atomens utsida och att många elek
 - **Do-komponent (vad gör eleven aktivt?):** Barnet trycker på olika delar av en stor atom för att hitta elektronen.
 - **CRA-nivå (Konkret / Representationell / Abstrakt):** Representationell
 - **Layout (beskriv i ord var elementen ligger, t.ex. "tre bollar i rad, drag-zone under"):** En stor atom i mitten. Kärnan är ett orange kluster i centrum. En gul prick syns i ytterzonen till höger. Tre stora tryckytor: kärna, ytterzon och gul prick.
-- **Text på skärmen (skriv ut exakt, max enligt ålderstabellen i principer.md):** "Vilken prick är elektronen? Tryck på den."
+- **Text på skärmen (skriv ut exakt, max enligt ålderstabellen i principer.md):** "Tryck på den lilla gula pricken. Det är elektronen!"
 - **Interaktionstyp (tap / drag / slider / etc.):** Tap
-- **Visuell feedback vid rätt svar:** Den gula pricken pulserar, etiketten "Elektron" dyker upp precis intill, och texten blir "Ja. Elektronen sitter på utsidan av kärnan."
+- **Visuell feedback vid rätt svar:** Den gula pricken pulserar, etiketten "Elektron" dyker upp precis intill, och texten blir "Ja! Elektronen sitter på utsidan av kärnan."
 - **Visuell feedback vid fel svar:** Fel del skakar mjukt. Efter andra felet tonas resten ner och den gula pricken får en mjuk puls.
 - **Kontraintuitivt moment?** Nej
 
@@ -83,59 +83,84 @@ Eleven ska förstå att elektroner sitter på atomens utsida och att många elek
 - **Do-komponent (vad gör eleven aktivt?):** Barnet drar den gula pricken lite åt sidan och ser hur den fjädrar tillbaka.
 - **CRA-nivå (Konkret / Representationell / Abstrakt):** Konkret → Representationell
 - **Layout (beskriv i ord var elementen ligger, t.ex. "tre bollar i rad, drag-zone under"):** Samma stora atom som i steg 2, nu med en diskret finger-ikon vid elektronen. Under atomen en kort textremsa.
-- **Text på skärmen (skriv ut exakt, max enligt ålderstabellen i principer.md):** "Prova att dra elektronen lite. Ser du? Kärnan håller fast den."
+- **Text på skärmen (skriv ut exakt, max enligt ålderstabellen i principer.md):** "Dra elektronen lite åt sidan. Ser du? Kärnan håller fast den."
 - **Interaktionstyp (tap / drag / slider / etc.):** Drag
 - **Visuell feedback vid rätt svar:** Elektronen rör sig en kort bit och fjädrar tillbaka. En kort mjuk linje visar att den hålls kvar.
 - **Visuell feedback vid fel svar:** Om barnet drar i kärnan händer inget, och elektronen pulserar som nästa ledtråd.
 - **Kontraintuitivt moment?** Nej
 
-### Steg 4 — Samma lilla knuff, olika hårt
+### Steg 4 — Knuffa elektronen
 
-- **Do-komponent (vad gör eleven aktivt?):** Barnet trycker på samma "putta lite"-knapp under två materialkedjor och jämför hur mycket de yttre elektronerna rör sig. Sedan väljer barnet vilken kedja som höll lösare.
-- **CRA-nivå (Konkret / Representationell / Abstrakt):** Representationell
-- **Layout (beskriv i ord var elementen ligger, t.ex. "tre bollar i rad, drag-zone under"):** Två kedjekort sida vid sida. Under varje kort finns en stor knapp med ett finger. Efter jämförelsen visas två valknappar: "vänster kedja" och "höger kedja".
-- **Text på skärmen (skriv ut exakt, max enligt ålderstabellen i principer.md):** "Tryck lika på båda. I vilken kedja sitter elektronerna lösare?"
-- **Interaktionstyp (tap / drag / slider / etc.):** Tap
-- **Visuell feedback vid rätt svar:** Rätt kedja får grön ram och replay i slow motion. Text: "Ja. I den här kedjan sitter elektronerna lösare."
-- **Visuell feedback vid fel svar:** Båda knuffarna spelas upp igen, nu med tydligare ytterzoner och returrörelse markerad.
+- **Do-komponent (vad gör eleven aktivt?):** Barnet trycker på en knuffknapp och ser hur en liten kraft träffar elektronen utifrån. Elektronen rör sig — och fjädrar tillbaka.
+- **CRA-nivå (Konkret / Representationell / Abstrakt):** Konkret → Representationell
+- **Layout (beskriv i ord var elementen ligger, t.ex. "tre bollar i rad, drag-zone under"):** Samma stora atom som i steg 3. Till vänster om atomen finns en stor knapp med en liten pil som pekar mot elektronen — det är knuffknappen. Under atomen en kort textremsa.
+- **Text på skärmen (skriv ut exakt, max enligt ålderstabellen i principer.md):** "Tryck på knappen. Den knuffar elektronen. Vad händer?"
+- **Interaktionstyp (tap / drag / slider / etc.):** Tap på knuffknappen
+- **Visuell feedback vid rätt svar:** En synlig blå puff åker från knappen och träffar elektronen. Elektronen rör sig en bit utåt — och fjädrar tillbaka. Texten blir: "Elektronen fick en knuff! Men kärnan drog tillbaka den."
+- **Visuell feedback vid fel svar:** Ingen felväg; om barnet väntar börjar knuffknappen pulsera.
 - **Kontraintuitivt moment?** Nej
+- **Designmotivering:** Detta steg definierar "knuff" som extern kraft genom handling. Barnet har dragit elektronen själv (steg 3) och ser nu att en utifrån-knuff gör samma sak. Utan detta steg möter barnet ordet "knuff" i steg 5 utan att ha upplevt vad det betyder.
 
-### Steg 5 — Först händer inget
+### Steg 5 — Samma knuff, olika lätt
 
-- **Do-komponent (vad gör eleven aktivt?):** Barnet tittar på en kort kedjebit och märker att inget händer förrän barnet själv trycker på knuffknappen.
+- **Do-komponent (vad gör eleven aktivt?):** Barnet trycker på samma knuffknapp under två atomer sida vid sida och jämför hur mycket elektronerna rör sig. Ytterzonen runt varje atom visas som en *skålform* — en djup skål respektive en grund skål. Barnet väljer sedan vilken atom som höll elektronen lösare.
 - **CRA-nivå (Konkret / Representationell / Abstrakt):** Representationell
-- **Layout (beskriv i ord var elementen ligger, t.ex. "tre bollar i rad, drag-zone under"):** En kort kedjebit med två atomer i rad. Den första elektronen har en vit hemposition ett steg framför sig. Resten av materialet anas diskret åt höger men är inte i fokus. Under kedjebiten finns en stor knapp: "Knuffa".
-- **Text på skärmen (skriv ut exakt, max enligt ålderstabellen i principer.md):** "Titta noga. Först händer inget. Tryck på knuffen."
+- **Layout (beskriv i ord var elementen ligger, t.ex. "tre bollar i rad, drag-zone under"):** Två stora atomer sida vid sida. Under varje atom visas ytterzonen som en skålformad kurva — en tydligt djup och en tydligt grund. Under varje atom finns en knuffknapp. Efter att barnet knuffat båda visas två valknappar: "vänster" och "höger".
+- **Text på skärmen (skriv ut exakt, max enligt ålderstabellen i principer.md):** "Knuffa båda lika. I vilken är det lättare att flytta elektronen?"
+- **Interaktionstyp (tap / drag / slider / etc.):** Tap (knuffknapp × 2, sedan valknapp)
+- **Visuell feedback vid rätt svar:** Rätt atom (grund skål) får grön ram. Replay i slow motion. Text: "Ja! I den grunda skålen är det lättare. Kärnan håller inte lika hårt."
+- **Visuell feedback vid fel svar:** Båda knuffarna spelas upp igen med tydligare markering av hur långt elektronen rörde sig. Skålformerna förstärks visuellt.
+- **Kontraintuitivt moment?** Nej
+- **Designmotivering:** Skålanalogin ersätter det abstrakta "sitter lösare" med en visuell metafor som 8-åringar har taktil erfarenhet av — en boll i en djup skål vs en grund skål. Analogin mappar korrekt mot potentialbrunnens fysik och undviker antropomorfisering och magnetanalogi.
+
+### Steg 6 — Först händer inget
+
+- **Do-komponent (vad gör eleven aktivt?):** Barnet tittar på en kort rad med två atomer och märker att inget händer förrän barnet själv trycker på knuffknappen.
+- **CRA-nivå (Konkret / Representationell / Abstrakt):** Representationell
+- **Layout (beskriv i ord var elementen ligger, t.ex. "tre bollar i rad, drag-zone under"):** En kort rad med två atomer. Den första elektronen har en vit hemposition ett steg framför sig (mellan atom 1 och atom 2). Under raden finns en stor knapp: "Knuffa".
+- **Text på skärmen (skriv ut exakt, max enligt ålderstabellen i principer.md):** "Titta. Inget händer av sig själv. Tryck på knuffen!"
 - **Interaktionstyp (tap / drag / slider / etc.):** Tap på stor knapp
-- **Visuell feedback vid rätt svar:** När barnet trycker går en blå knuff in från vänster och den första elektronen tar ett litet steg till nästa vita position. Animationen pausar där och visar att något startade först när barnet gav knuffen.
-- **Visuell feedback vid fel svar:** Ingen felväg finns; om barnet väntar länge börjar knuffknappen pulsera.
+- **Visuell feedback vid rätt svar:** En blå knuff träffar den första elektronen. Den tar ett steg till nästa vita position och stannar. Animationen pausar tydligt. Text: "Elektronen flyttade sig ett steg. Men bara när du knuffade!"
+- **Visuell feedback vid fel svar:** Ingen felväg; om barnet väntar börjar knuffknappen pulsera.
 - **Kontraintuitivt moment?** Nej
 
-### Steg 6 — Vilken bild stämmer?
+### Steg 7 — Vad händer med grannen?
 
-- **Do-komponent (vad gör eleven aktivt?):** Barnet väljer först vilken av två små bilder som det tror stämmer. Sedan visas utfallet i en längre kedja.
+- **Do-komponent (vad gör eleven aktivt?):** Barnet knuffar den första elektronen i en kort rad med 3 atomer och ser hur elektronen landar, stannar — och sedan knuffar nästa elektron vidare. Barnet trycker på "Knuffa" och ser hela sekvensen i slow motion.
+- **CRA-nivå (Konkret / Representationell / Abstrakt):** Representationell
+- **Layout (beskriv i ord var elementen ligger, t.ex. "tre bollar i rad, drag-zone under"):** En rad med 3 atomer med vita hempositioner mellan dem. Varje atom har sin gula elektron. Under raden en stor "Knuffa"-knapp. Under animationen visas en kort textremsa som uppdateras i takt med animationen.
+- **Text på skärmen (skriv ut exakt, max enligt ålderstabellen i principer.md):** Före knuff: "Vad händer med grannens elektron? Tryck och titta!" Under animationen (synkad med rörelsen): "Elektron 1 flyttar sig…" → [paus] → "…och knuffar elektron 2 vidare!" Efter: "Varje elektron knuffar sin granne ett steg."
+- **Interaktionstyp (tap / drag / slider / etc.):** Tap på knuffknapp. Barnet kan trycka "Igen" för att se replay.
+- **Visuell feedback vid rätt svar:** Animationen körs sekventiellt och långsamt: (1) Elektron 1 lämnar sin position, glider till nästa vita plats och *stannar synligt* med en kort paus och en liten studs. (2) Elektron 2 rör sig därefter till sin nästa vita plats och stannar. (3) Elektron 3 rör sig sist. Varje elektron fastnar tydligt i sin nya position — ingen elektron passerar förbi.
+- **Visuell feedback vid fel svar:** Ingen felväg; steget är observation med replay-möjlighet.
+- **Kontraintuitivt moment?** Nej
+- **Designmotivering:** Detta steg etablerar *överföringsmekanismen* — att elektroner kan knuffa varandra vidare — som barnet behöver för att kunna prediktera i steg 8. Utan detta steg möter barnet valkorten "en åker långt" vs "alla flyttar sig" utan att ha sett hur rörelse sprids från en elektron till nästa.
+
+### Steg 8 — Vilken bild stämmer?
+
+- **Do-komponent (vad gör eleven aktivt?):** Barnet väljer först vilken av två små bilder som det tror stämmer. Sedan visas utfallet i en längre rad.
 - **CRA-nivå (Konkret / Representationell / Abstrakt):** Representationell → Abstrakt
-- **Layout (beskriv i ord var elementen ligger, t.ex. "tre bollar i rad, drag-zone under"):** Två stora valkort överst. Kort A visar en enda gul prick som far långt. Kort B visar många gula prickar som alla flyttar sig en position. Under korten finns den riktiga kedjan i full bredd. Kedjan i detta steg ska hållas kort: max 4–5 atomer, så att barnet kan följa varje prick visuellt.
-- **Text på skärmen (skriv ut exakt, max enligt ålderstabellen i principer.md):** "Vad tror du händer? Välj en bild först."
+- **Layout (beskriv i ord var elementen ligger, t.ex. "tre bollar i rad, drag-zone under"):** Två stora valkort överst. Kort A visar en enda gul prick som far långt förbi flera atomer. Kort B visar många gula prickar som alla flyttar sig en position. Under korten finns den riktiga raden med 4–5 atomer.
+- **Text på skärmen (skriv ut exakt, max enligt ålderstabellen i principer.md):** "I en längre rad — vad tror du händer? Välj en bild."
 - **Interaktionstyp (tap / drag / slider / etc.):** Tap på ett valkort, sedan tap på "Se vad som händer"
-- **Visuell feedback vid rätt svar:** Kedjan visar att alla prickar flyttar sig ett steg samtidigt. Texten tänds exakt under kedjan: "Alla tar ett steg samtidigt. Ingen åker hela vägen."
-- **Visuell feedback vid fel svar:** Samma riktiga animation visas ändå, men felkortet tonas ner och rätt kort får ljusram. Texten läggs direkt under de rörliga prickarna: "Titta på alla prickar. Varje elektron tar bara ett litet steg."
-- **Kontraintuitivt moment?** Ja → **Prediction-steg:** barnet väljer först mellan "en åker långt" och "alla tar ett steg". **Observe:** den riktiga kedjan visar det samtidiga ett-stegs-skiftet. **Explain:** texten säger explicit att ingen åker hela vägen.
+- **Visuell feedback vid rätt svar:** Raden visar att alla prickar flyttar sig ett steg nästan samtidigt. Text direkt under raden: "Alla flyttar sig ett steg. Ingen åker hela vägen."
+- **Visuell feedback vid fel svar:** Samma riktiga animation visas ändå, men felkortet tonas ner och rätt kort får ljusram. Text direkt under de rörliga prickarna: "Titta — inte bara en prick rör sig. Alla prickar tar ett litet steg var."
+- **Kontraintuitivt moment?** Ja → ⚡ **Prediction-steg:** barnet väljer först mellan "en åker långt" och "alla flyttar sig ett steg". **Observe:** den riktiga raden visar det nästan simultana ett-stegs-skiftet. **Explain:** texten säger explicit att ingen åker hela vägen.
 
-### Steg 7 — Det här lärde du dig
+### Steg 9 — Det här lärde du dig
 
 - **Do-komponent (vad gör eleven aktivt?):** Barnet väljer en bild som bäst visar vad en elektron är.
 - **CRA-nivå (Konkret / Representationell / Abstrakt):** Abstrakt
-- **Layout (beskriv i ord var elementen ligger, t.ex. "tre bollar i rad, drag-zone under"):** Tre sammanfattningskort i en kolumn: "på utsidan", "lösare/hårdare", "alla små steg". Under dem tre bildval: gul prick vid atom, blixt, batteri.
-- **Text på skärmen (skriv ut exakt, max enligt ålderstabellen i principer.md):** "Elektronen sitter på utsidan. Vissa material håller hårdare. I vissa kedjor kan alla ta små steg. Vilken bild visar en elektron?"
+- **Layout (beskriv i ord var elementen ligger, t.ex. "tre bollar i rad, drag-zone under"):** Tre sammanfattningskort i en kolumn: "på utsidan", "djup eller grund skål", "alla knuffar vidare". Under dem tre bildval: gul prick vid atom, blixt, batteri.
+- **Text på skärmen (skriv ut exakt, max enligt ålderstabellen i principer.md):** "Elektronen sitter på utsidan. Vissa material håller fast elektronen hårdare — som en djup skål. I vissa material kan alla elektroner knuffa varandra vidare, ett steg i taget. Vilken bild visar en elektron?"
 - **Interaktionstyp (tap / drag / slider / etc.):** Tap
-- **Visuell feedback vid rätt svar:** Bilden med gul prick vid atomen får grön markering. Sluttext: "Ja. Nästa gång testar du vilka riktiga material där små steg är lätta."
-- **Visuell feedback vid fel svar:** Blixt- eller batteribilden tonas ner. Den riktiga elektronen pulserar bredvid ett sammanfattningskort.
+- **Visuell feedback vid rätt svar:** Bilden med gul prick vid atomen får grön markering. Sluttext: "Ja! Nästa gång får du testa i vilka riktiga material elektroner lätt kan ta små steg."
+- **Visuell feedback vid fel svar:** Blixt- eller batteribilden tonas ner. Den riktiga elektronen pulserar bredvid ett sammanfattningskort. Text: "Blixten och batteriet visar inte elektronen. Titta på den gula pricken vid atomen."
 - **Kontraintuitivt moment?** Nej
 
 ## Guided challenge (steg 1)
 
-Appen börjar med ett vardagsobjekt barnet känner igen: en sladd till en lampa. Barnet får inte först en förklaring om elektroner, utan en fråga om ett fenomen inne i sladden: "I vilken kedja tror du att en liten knuff sprider sig lättast?" Vardagsförankringen är att sladdar finns hemma och i skolan, men det osynliga inuti är nytt. Guided challenge sparar barnets första gissning och återkopplas i sista steget när modulen sammanfattas.
+Appen börjar med ett vardagsobjekt barnet känner igen: en sladd till en lampa. Barnet får inte först en förklaring om elektroner, utan en fråga om ett fenomen inne i sladden: "I vilken rad tror du att en liten knuff kan åka vidare lättast?" Vardagsförankringen är att sladdar finns hemma och i skolan, men det osynliga inuti är nytt. Guided challenge sparar barnets första gissning och återkopplas i sista steget när modulen sammanfattas.
 
 ## Scaffolding-nivåer
 
@@ -146,27 +171,28 @@ Appen börjar med ett vardagsobjekt barnet känner igen: en sladd till en lampa.
 ## Gate-keeping
 
 - **Steg 2:** Barnet måste trycka på elektronen innan det går vidare.
-- **Steg 4:** Barnet måste identifiera vilken kedja som höll lösare.
-- **Steg 5:** Barnet måste själv utlösa knuffen.
-- **Steg 6:** Barnet måste se den riktiga animationen och välja om efter behov.
-- **Steg 1, 3, 7:** Ingen gate-keeping.
+- **Steg 4:** Barnet måste trycka på knuffknappen och se att elektronen fjädrar tillbaka.
+- **Steg 5:** Barnet måste identifiera vilken atom som höll elektronen lösare.
+- **Steg 6:** Barnet måste själv utlösa knuffen.
+- **Steg 8:** Barnet måste se den riktiga animationen och välja om efter behov.
+- **Steg 1, 3, 7, 9:** Ingen gate-keeping.
 
 ## Konsolidering (sista steget)
 
-- **Hur sammanfattas det barnet lärt sig?** Tre kort återger modulens tre kärninsikter: elektronen sitter på utsidan, olika material håller olika hårt, och i en kedja tar alla små steg samtidigt.
-- **Återkoppling till guided challenge i steg 1?** Barnets första gissning från steg 1 visas igen som "Du gissade på den här kedjan först". Därefter visas vilken kedja som faktiskt lät knuffen sprida sig lättare.
+- **Hur sammanfattas det barnet lärt sig?** Tre kort återger modulens tre kärninsikter: elektronen sitter på utsidan, olika material håller fast olika hårt (skålanalogin), och i en rad kan alla elektroner knuffa varandra vidare ett steg i taget.
+- **Återkoppling till guided challenge i steg 1?** Barnets första gissning från steg 1 visas igen som "Du gissade på den här raden först". Därefter visas vilken rad som faktiskt lät knuffen åka vidare lättare.
 - **Reflektionsfråga (flerval/visuellt val, aldrig textfält):** Ingen separat extra reflektionsuppgift i appen. Konsolideringen hålls till ett enda bildval för att undvika för hög kognitiv belastning i sista steget.
 
 ## Metakognition
 
-- **Hur visas framsteg? (Karta/stegindikator, inte poäng):** En enkel kedja med sju stora punkter i toppen. Aktuell punkt glöder, tidigare blir gröna.
-- **Lärandemål: visas riktning i början, full återkoppling i slutet:** I början står "Idag tittar du in i sladden." I slutet sammanfattas exakt vad barnet nu vet, med teaser mot nästa modul: "Nästa gång testar du riktiga material."
+- **Hur visas framsteg? (Karta/stegindikator, inte poäng):** En enkel rad med nio stora punkter i toppen. Aktuell punkt glöder, tidigare blir gröna.
+- **Lärandemål: visas riktning i början, full återkoppling i slutet:** I början står "Idag ser du vad som finns inuti en sladd." I slutet sammanfattas exakt vad barnet nu vet, med teaser mot nästa modul: "Nästa gång får du testa i vilka riktiga material elektroner lätt kan ta små steg."
 
 ## Responsivt beteende
 
-- **Mobilvy (8"): vad ändras jämfört med baslayout?** Kedjekorten staplas vertikalt. Bara en kedja visas åt gången i steg 4 och 6. Texten kortas till max två rader. Ingen samtidig jämförelse mellan tre kort i slutsteget; de blir svepkort.
-- **Surfplatta (13"): baslayout** Baslayouten är två kedjekort sida vid sida i steg 1 och 4, två valkort överst i steg 6 och tre sammanfattningskort i kolumn i steg 7.
-- **Laptop (16"): vad kan läggas till?** Vardagsbilden av sladden kan ligga kvar i vänsterkolumn samtidigt som mikrovyn visas till höger. Slow-motion replay i steg 4 och 6 kan visas i en liten sidopanel.
+- **Mobilvy (8"): vad ändras jämfört med baslayout?** Atomerna i steg 5 staplas vertikalt (en i taget). Bara en atom visas åt gången i steg 5. Texten kortas till max två rader. Ingen samtidig jämförelse mellan tre kort i slutsteget; de blir svepkort.
+- **Surfplatta (13"): baslayout** Baslayouten är två rader sida vid sida i steg 1, två atomer sida vid sida i steg 5, två valkort överst i steg 8 och tre sammanfattningskort i kolumn i steg 9.
+- **Laptop (16"): vad kan läggas till?** Vardagsbilden av sladden kan ligga kvar i vänsterkolumn samtidigt som mikrovyn visas till höger. Slow-motion replay i steg 5 och 8 kan visas i en liten sidopanel.
 
 ## Auditory icons
 
@@ -174,38 +200,51 @@ Appen börjar med ett vardagsobjekt barnet känner igen: en sladd till en lampa.
 - **Fel svar:** Dovt litet bonk, neutralt och icke-straffande
 - **Progression (går till nästa steg):** Litet pop-swoosh
 - **Knuff:** Kort fingertapp-klick
-- **Samtidigt ett-stegsskifte:** Fyra snabba tick i följd, nära varandra i tid
+- **Fjäderretur (steg 3, 4):** Mjukt boing — markerar att elektronen hålls kvar
+- **Granne-knuff (steg 7):** Kort dov klick vid varje ny position — markerar att varje elektron stannar
+- **Samtidigt ett-stegsskifte (steg 8):** Fyra snabba tick i följd, nära varandra i tid
 
 ## Tekniska beslut
 
-- **Vanilla JS eller React (motivera):** React via CDN. Modulen har flera steg med sparade prediction-val, synkroniserade kedjeanimationer, slow-motion replay och flera små state-övergångar som blir tydligare i komponentform.
+- **Vanilla JS eller React (motivera):** React via CDN. Modulen har flera steg med sparade prediction-val, synkroniserade animationer, slow-motion replay och flera små state-övergångar som blir tydligare i komponentform.
 - **Animationer (lista konkret vad som animeras):**
-  - zoom från sladd till materialkedjor i steg 1
+  - zoom från sladd till materialrader i steg 1
   - mjuk puls på elektronen i steg 2
   - drag + fjäderretur i steg 3
-  - synkron replay av två kedjor i steg 4
-  - mycket kort knuffmarkering vid första atomen i steg 5
-  - samtidigt ett-stegsskifte i steg 5 och 6
-  - kort slow-motion replay i steg 4 och 6
+  - blå knuffpuff + fjäderretur i steg 4
+  - synkron replay av två atomer med skålformer i steg 5
+  - kort knuffmarkering vid första atomen i steg 6
+  - sekventiell långsam kedjereaktion (elektron 1 → 2 → 3) i steg 7
+  - nästan simultant ett-stegsskifte i steg 8
+  - kort slow-motion replay i steg 5 och 8
 - **Rörliga targets? Nej (om inte starkt motiverat):** Nej. Alla tryckytor är statiska när barnet ska interagera med dem. Rörelse sker först efter att input redan givits.
-- **Viktig implementationsnot:** Knuffen får inte visualiseras som något som "åker genom" hela kedjan. Om en blå markering används ska den vara mycket kortlivad och bara synas nära första atomen innan resultatet visas som nästan simultana små steg.
+- **Viktig implementationsnot — knuffvisualisering:** Knuffen får inte visualiseras som något som "åker genom" hela raden. Den blå markeringen ska vara mycket kortlivad och bara synas nära första atomen.
+- **Viktig implementationsnot — steg 7 vs steg 8:** Steg 7 visar överföringen *sekventiellt och långsamt* (en elektron i taget, med tydlig paus). Steg 8 visar samma mekanism *snabbt och nästan simultant*. Skillnaden i animationshastighet är pedagogiskt avsiktlig — steg 7 bygger förståelse, steg 8 visar vad som "egentligen" händer i ett material.
 
 ## Developmental progression-check (obligatorisk)
 
 Gå igenom stegen i sekvens. Kontrollera för varje stegpar (N → N+1):
-- **Steg 1 → 2:** Steg 2 lägger bara till var elektronen sitter. Inget mellansteg behövs.
-- **Steg 2 → 3:** Steg 3 lägger bara till att kärnan håller fast elektronen. Inget mellansteg behövs.
-- **Steg 3 → 4:** Steg 4 lägger bara till att olika material håller olika hårt. Inget mellansteg behövs.
-- **Steg 4 → 5:** Steg 5 lägger bara till att en knuff kan starta ett första litet steg. Det bygger direkt på "lösare/hårdare" och hoppar inte till ordet `ström`.
-- **Steg 5 → 6:** Steg 5 visar bara att något börjar röra sig efter en knuff. Steg 6 lägger sedan till den kontraintuitiva insikten att många elektroner tar ett steg samtidigt. Prediction-steg finns därför kvar som ett äkta nytt moment.
-- **Steg 6 → 7:** Steg 7 konsoliderar utan nytt ämnesinnehåll.
+- **Steg 1 → 2:** Steg 1 visar rader av pyttesmå delar. Steg 2 zoomar in på en atom och frågar var elektronen sitter. Nytt koncept: elektronens position. ✓ Ett koncept.
+- **Steg 2 → 3:** Steg 2 identifierar elektronen. Steg 3 lägger till att kärnan håller fast den. Nytt koncept: fasthållning. ✓ Ett koncept.
+- **Steg 3 → 4:** Steg 3 visar fasthållning via drag. Steg 4 introducerar extern knuff som gör samma sak. Nytt koncept: knuff utifrån. ✓ Ett koncept. Nyckelord "knuff" definieras här genom handling.
+- **Steg 4 → 5:** Steg 4 visar knuff på en atom. Steg 5 jämför två atomer med olika skåldjup. Nytt koncept: olika material håller olika hårt. ✓ Ett koncept. Ordet "knuff" är redan definierat i steg 4.
+- **Steg 5 → 6:** Steg 5 visar skillnad mellan material. Steg 6 visar att en elektron kan ta ett steg i en rad. Nytt koncept: rörelse i en rad kräver knuff utifrån. ✓ Ett koncept.
+- **Steg 6 → 7:** Steg 6 visar att en elektron rör sig efter knuff. Steg 7 visar vad som händer med grannen — överföringsmekanismen. Nytt koncept: elektroner kan knuffa varandra vidare. ✓ Ett koncept.
+- **Steg 7 → 8:** Steg 7 visar sekventiell överföring i 3 atomer. Steg 8 frågar vad som händer i en längre rad (prediction). Nytt koncept: extrapolering + simultanitet. ✓ Ett koncept (prediction-steget hanterar det kontraintuitiva momentet).
+- **Steg 8 → 9:** Steg 9 konsoliderar utan nytt ämnesinnehåll. ✓
 
-**Tumregel:** Varje steg ska introducera maximalt *ett* nytt koncept. Den tidigare planen att namnge `ström` här har tagits bort för att undvika två kognitiva språng i samma modul.
+**Begreppskontroll:** Varje ord och begrepp som steg N+1 använder ska vara definierat genom handling i steg N eller tidigare:
+- "Knuff" — definieras i steg 4 (knuffknappen).
+- "Rad" — definieras visuellt i steg 1, benämns i text från steg 1.
+- "Granne" — definieras visuellt i steg 6 (atomer sida vid sida), benämns först i steg 7.
+- "Skål" — introduceras visuellt i steg 5. Ingen text nämner ordet "skål" förrän barnet sett formen.
+
+**Tumregel:** Varje steg ska introducera maximalt *ett* nytt koncept. Varje begrepp ska definieras genom handling, inte genom text.
 
 ## Stealth assessment (obligatoriskt)
 
 - **Vad mäts:** Barnets första val i steg 1
-  - **Vad indikerar det:** Om barnet spontant kan läsa av vilken kedja som verkar hålla lösare respektive hårdare
+  - **Vad indikerar det:** Om barnet spontant kan läsa av vilken rad som verkar hålla lösare respektive hårdare
   - **I vilket steg:** 1
 - **Vad mäts:** Första tryckpunkt i steg 2 (kärna, tom zon eller gul prick)
   - **Vad indikerar det:** Om barnet redan placerar elektronen på utsidan eller blandar ihop delarna
@@ -213,12 +252,12 @@ Gå igenom stegen i sekvens. Kontrollera för varje stegpar (N → N+1):
 - **Vad mäts:** Hur långt barnet drar elektronen i steg 3 innan det släpper
   - **Vad indikerar det:** Om barnet tolkar elektronen som fri partikel eller som något som faktiskt hålls kvar
   - **I vilket steg:** 3
-- **Vad mäts:** Antal omspelningar och svar i steg 4
-  - **Vad indikerar det:** Om barnet uppfattar "lösare/hårdare" som materialegenskap eller bara gissar
-  - **I vilket steg:** 4
-- **Vad mäts:** Val mellan "en åker långt" och "alla tar ett steg" i steg 6
+- **Vad mäts:** Antal omspelningar och svar i steg 5
+  - **Vad indikerar det:** Om barnet uppfattar skåldjup som materialegenskap eller bara gissar
+  - **I vilket steg:** 5
+- **Vad mäts:** Val mellan "en åker långt" och "alla flyttar sig ett steg" i steg 8
   - **Vad indikerar det:** Om barnet fortfarande bär på den sekventiella felmodellen
-  - **I vilket steg:** 6
+  - **I vilket steg:** 8
 
 ## Vad appen INTE gör
 

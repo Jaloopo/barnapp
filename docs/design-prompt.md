@@ -114,10 +114,21 @@ Lista ljud-händelser och karaktär (kort/mjukt/skarpt):
 
 ### Developmental progression-check (obligatorisk)
 Gå igenom stegen i sekvens. Kontrollera för varje stegpar (N → N+1):
+
+**Kontroll 1 — Ett koncept per steg:**
 - Introducerar steg N+1 ett koncept som inte etablerats i steg N eller tidigare?
 - Om ja → lägg till ett mellansteg som bygger bryggan.
 
-**Tumregel:** Varje steg ska introducera maximalt *ett* nytt koncept. Om ett steg kräver att barnet gör två kognitiva språng samtidigt, saknas ett mellansteg.
+**Kontroll 2 — Begreppskontroll (inga odefinierade ord):**
+- Använder steg N+1 ett ord, en metafor eller en visuell representation som inte *definierats genom handling* i ett tidigare steg?
+- "Definierad genom handling" = barnet har själv gjort något som etablerar ordets betydelse (tryckt, dragit, sett resultatet). Att bara ha läst ordet i en text räknas inte.
+- Om ja → lägg till ett steg där begreppet *upplevs* innan det *nämns*.
+- **Vanliga fällor:** "knuff" (definieras genom att barnet knuffar), "kedja/rad" (definieras genom att barnet ser delar i rad), "granne" (definieras genom att barnet ser atomer sida vid sida), materialegenskaper (definieras genom att barnet jämför).
+
+**Kontroll 3 — Visuell kontext:**
+- Förutsätter steg N+1 att barnet tolkar en visuell variabel (t.ex. en zon, en form, en färg) som inte introducerats explicit? Om barnet ser "en djup skål" måste skålformen ha visats i ett tidigare steg — den får inte dyka upp för första gången samtidigt som den bär information.
+
+**Tumregel:** Varje steg ska introducera maximalt *ett* nytt koncept. Varje begrepp ska definieras genom handling, inte genom text. Om ett steg kräver att barnet gör två kognitiva språng samtidigt, saknas ett mellansteg.
 
 ### Stealth assessment (obligatoriskt)
 Lista 3–5 datapunkter att samla in utan att barnet märker det:
