@@ -18,7 +18,8 @@ Användaren säger `/bygg docs/[ämne]/[ämne]-[nr]-[slug]` eller `bygg docs/[ä
 
 ### 1. Läs och validera
 1. Läs `design.md` i angiven mapp — detta är **bindande beslut** som inte får ändras
-2. Läs `docs/principer.md` för pedagogiska riktlinjer
+2. **Skärmtexter är låst kopia.** All text i fältet "Text på skärmen" ska kopieras *ordagrant* till implementationen. Ingen parafrasering, förenkling eller omformulering. Om en text verkar fel — stoppa och flagga, ändra den inte själv.
+3. Läs `docs/principer.md` för pedagogiska riktlinjer
 3. Läs `barnapp-design`-skillen för visuella riktlinjer
 4. Läs `docs/ui-mini-system.md` för repots visuella baseline när modulen ska följa eller utöka delade UI-mönster
 5. **Om design.md strider mot principer.md → STOPPA och flagga till användaren**
@@ -75,6 +76,7 @@ Verifiera mot **design.md**:
 - [ ] **Visuella variabler:** Stämmer implementationen med deklarationstabellen i design.md? Används samma variabel konsekvent genom alla steg?
 - [ ] **Prediction-steg:** Har alla ⚡-markerade moment ett prediction-steg (gissning → utfall → förklaring)?
 - [ ] **State-feedback sync:** Refererar feedbacktext till visuella element? Om ja — verifierar koden att elementet är synligt och signalerat (puls/blink) innan texten visas?
+- [ ] **Ordagrann text:** Matchar varje skärmtext i koden exakt vad design.md anger i "Text på skärmen"? Jämför ord för ord — ingen parafrasering.
 
 Verifiera mot **principer.md**:
 - [ ] Språknivå och max ord/skärm stämmer med åldersgruppen?

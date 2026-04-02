@@ -68,7 +68,7 @@ Lista varje skärm/steg i ordning. För varje steg:
   - Do-komponent (vad gör eleven aktivt?):
   - CRA-nivå (Konkret / Representationell / Abstrakt):
   - Layout (beskriv i ord var elementen ligger, t.ex. "tre bollar i rad, drag-zone under"):
-  - Text på skärmen (skriv ut exakt, max enligt ålderstabellen i principer.md):
+  - Text på skärmen (**slutgiltig kopia** — skriv ut exakt vad som ska stå. Detta är låst text som kopieras ordagrant vid implementation. Ingen parafrasering tillåten. Använd barnets ordförråd direkt. Max enligt ålderstabellen i principer.md):
   - Interaktionstyp (tap / drag / slider / etc.):
   - Visuell feedback vid rätt svar:
   - Visuell feedback vid fel svar:

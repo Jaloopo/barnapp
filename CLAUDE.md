@@ -70,9 +70,14 @@ Om NotebookLM identifierar frågor utanför sitt corpus.
 3. Skriv `design.md` i rätt mapp (`docs/[ämne]/[ämne]-[nr]-[slug]/design.md`)
    - Inkludera obligatorisk tabell: **Visuella variabler**
    - Markera kontraintuitiva moment med **prediction-steg**
-4. Uppdatera `docs/index.yaml` med ny entry (status: design)
-5. Uppdatera `docs/misconceptions-register.md` med nya entries
-6. Commit + push till main
+4. **Språkgranskning av skärmtexter (obligatorisk gate innan commit):**
+   Opus samlar alla "Text på skärmen"-fält och feedbacktexter ur design.md och formulerar prompter till användaren:
+   - **Perplexity-prompt:** "Vilka av dessa formuleringar är sannolikt svåra för ett barn på [ålder] att förstå? Föreslå enklare alternativ. Följande fackord används medvetet och ska behållas: [lista]."
+   - **NotebookLM-prompt:** "Bryter någon av dessa texter mot Mayers Coherence-, Spatial Contiguity- eller Temporal Contiguity-princip? Finns formuleringar som riskerar att förstärka naïva teorier om [ämne]?"
+   - Opus reviderar texterna i design.md baserat på svaren. Texterna i design.md är sedan **låst kopia** som kopieras ordagrant vid implementation.
+5. Uppdatera `docs/index.yaml` med ny entry (status: design)
+6. Uppdatera `docs/misconceptions-register.md` med nya entries
+7. Commit + push till main
 
 **Review-gate före implementation**
 När en moduldesign kommer från Codex, och alltid för prerequisite-moduler eller moduler med tydliga kontraintuitiva moment, gör en kort Opus-review innan Steg 6 (implementation).
